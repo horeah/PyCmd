@@ -1,0 +1,37 @@
+What's new in PyCmd 0.4?
+
+ * Copy-paste using the keyboard (both Ctrl-C/X/V and Emacs-style bindings)
+ * Persistent history of recently visited directories
+ * History and configuration files moved to %APPDATA%\PyCmd
+ * Custom PyCmd icon (embedded as a resource in PyCmd.exe)
+ * New shortcut (Ctrl-K)
+ * Delete temporary file on exit
+ * Improved word-by-word editing
+ * Bugfixes in command tokenizing, pseudo-variables
+
+
+What's new in PyCmd 0.3?
+
+ * TAB-completion for executables in the PATH
+ * TAB-completion for internal CMD.exe commands
+ * Scroll buffer using Shift-PgUp/PgDn
+ * Removed flickering when repainting the input line and prompt
+ * Smarter handling of colors to accommodate various color schemes
+ * Completion for pseudo environment variables (%CD%, %DATE%, etc)
+ * Improved automatic quoting when completing
+ * Improved handling of lower/uppercase when completing
+ * Bugfixes in ~ expansion, command tokenizing, TAB-completion, stability
+
+
+What's new in PyCmd 0.2?
+
+ * smart prompt that abbreviates directory names to save space
+ * set window title to the current directory
+ * reworked key handling; many more keyboard actions are now available
+ * added emacs key bindings
+ * '~' is now handled properly and expanded as either %HOME% or %USERPROFILE%
+ * tab-completion improvement (smarter quoting policy)
+ * command line input now works for arbitrary widths of the console window
+ * Added changelog (NEWS.txt) and project description (README.txt)
+
+ * bugfixes in the history search mechanism
