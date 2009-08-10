@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os
+import os, string, fsm
 
 # Command splitting characters
 sep_chars = ['|', '&', '>', '<']
@@ -20,51 +20,71 @@ sep_tokens = seq_tokens + ['|'] + redir_file_tokens
 
 def parse_line(line):
     """Tokenize a command line based on whitespace while observing quotes"""
-    tokens = []
-    current = ''
-    within_quotes = False
-    for char in line:
-        if char == '"':
-            within_quotes = not within_quotes
-            current += char
-        else:
-            if within_quotes:
-                current += char
-            else:
-                if char == ' ':
-                    tokens.append(current)
-                    current = ''
-                elif char == '|':
-                    if current == '|':
-                        tokens.append('||')
-                        current = ''
-                    else:
-                        tokens.append(current)
-                        current = char
-                elif char in sep_chars:
-                    if current in digit_chars or current in sep_tokens:
-                        if current + char in sep_tokens:
-                            current += char
-                        else:
-                            tokens.append(current)
-                            current = char
-                    else:
-                        tokens.append(current)
-                        current = char
-                else:
-                    if current in sep_tokens:
-                        tokens.append(current)
-                        current = char
-                    else:
-                        current += char
 
-    while '' in tokens:
-        tokens.remove('')
-    tokens.append(current)
-    if current in sep_tokens:
-        tokens.append('')
-    # print '\n\n', tokens, '\n\n'
-    return tokens
+    def accumulate(fsm):
+        """Action: add current symbol to last token in list."""
+        fsm.memory[-1] = fsm.memory[-1] + fsm.input_symbol
+
+    def start_empty_token(fsm):
+        """Action: start a new token."""
+        if fsm.memory[-1] != '':
+            fsm.memory.append('')
+
+    def start_token(fsm):
+        """Action: start a new token and accumulate."""
+        start_empty_token(fsm)
+        accumulate(fsm)
+
+    def accumulate_last(fsm):
+        """Action: accumulate and start new token."""
+        accumulate(fsm)
+        start_empty_token(fsm)
+
+    def error(fsm):
+        """Action: handle uncovered transition (should never happen)."""
+        print 'Unhandled transition:', (fsm.input_symbol, fsm.current_state)
+        accumulate(fsm)
+
+    f = fsm.FSM('init', [''])
+
+    f.set_default_transition(error, 'init')
+
+    f.add_transition_list(string.whitespace, 'init', start_empty_token, 'whitespace')
+    f.add_transition('"', 'init', accumulate, 'in_string')
+    f.add_transition('|', 'init', start_token, 'pipe')
+    f.add_transition('&', 'init', start_token, 'amp')
+    f.add_transition('>', 'init', start_token, 'gt')
+    f.add_transition('<', 'init', accumulate_last, 'init')
+    f.add_transition_any('init', accumulate, 'init')
+
+    f.add_transition_list(string.whitespace, 'whitespace', None, 'whitespace')
+    f.add_transition_list(string.digits, 'whitespace', accumulate, 'redir')
+    f.add_empty_transition('whitespace', 'init')
+
+    f.add_transition('"', 'in_string', accumulate, 'init')
+    f.add_transition_any('in_string', accumulate, 'in_string')
+
+    f.add_transition('|', 'pipe', accumulate_last, 'init')
+    f.add_empty_transition('pipe', 'init', start_empty_token)
+
+    f.add_transition('&', 'amp', accumulate_last, 'init')
+    f.add_empty_transition('amp', 'init', start_empty_token)
+
+    f.add_transition('>', 'gt', accumulate_last, 'init')
+    f.add_empty_transition('gt', 'init', start_empty_token)
+
+    f.add_transition('<', 'redir', accumulate_last, 'init')
+    f.add_transition('>', 'redir', accumulate, 'redir2')
+    f.add_empty_transition('redir', 'init')
+
+    f.add_transition('>', 'redir2', accumulate_last, 'init')
+    f.add_empty_transition('redir2', 'init', start_empty_token)
+
+    f.process_list(line)
+    if len(f.memory) > 0 and f.memory[-1] == '':
+        del f.memory[-1]
+
+    return f.memory
 
 
 def expand_env_vars(string):
@@ -112,7 +132,7 @@ def abbrev_path(path):
     current_dir = path[ : 3]
     path = path[3 : ]
     path_abbrev = current_dir[ : 2]
-    
+
     for elem in path.split('\\')[ : -1]:
         elem_abbrev = abbrev_string(elem)
         for other in os.listdir(current_dir):
