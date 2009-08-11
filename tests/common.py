@@ -2,8 +2,8 @@
 # Unit tests for common.py
 #
 
-import unittest
-from common import parse_line
+import unittest, imp
+common_orig = imp.load_source('common_orig', 'common.py')
 
 class TestParseLine(unittest.TestCase):
 
@@ -155,13 +155,13 @@ class TestParseLine(unittest.TestCase):
     def testParseLine(self):
         """Test that result of parse_line equals expected result."""
         for input, expected in self.testSet:
-            self.assertEqual(parse_line(input), expected)
+            self.assertEqual(common_orig.parse_line(input), expected)
 
     def testReparseLine(self):
         """Test that reparse of print of first parse is unchanged."""
         for input, expected in self.testSet:
-            first_parse = parse_line(input)
-            second_parse = parse_line(' '.join(first_parse))
+            first_parse = common_orig.parse_line(input)
+            second_parse = common_orig.parse_line(' '.join(first_parse))
             self.assertEqual(first_parse, second_parse)
 
 def suite():
