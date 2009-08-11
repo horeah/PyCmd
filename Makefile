@@ -1,5 +1,5 @@
 RM = rm -fr
-SRC = PyCmd.py InputState.py DirHistory.py common.py completion.py console.py
+SRC = PyCmd.py InputState.py DirHistory.py common.py completion.py console.py fsm.py
 
 dist: clean $(SRC)
 	python setup.py py2exe
@@ -10,5 +10,6 @@ dist: clean $(SRC)
 .PHONY: clean
 clean:
 	$(RM) $(SRC:%.py=%.pyc)
+	cd tests && $(RM) $(SRC:%.py=%.pyc) && $(RM) __init__.pyc
 	$(RM) -fr build PyCmd
 	$(RM) -f PyCmd.zip
