@@ -1,6 +1,6 @@
 import sys, os, msvcrt, tempfile, signal, time
 
-from common import parse_line, expand_env_vars, split_nocase, abbrev_path, sep_tokens
+from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
 from completion import complete_file, complete_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
@@ -10,7 +10,7 @@ from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, BACKGROUND_BRIGHT, FOREGROUND_RED, BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
 def main():
-    
+
     # Splash
     print
     print 'Welcome to PyCmd 0.4!'
@@ -62,10 +62,10 @@ def main():
             curdir = curdir[0].upper() + curdir[1:]
             set_console_title(curdir + ' - PyCmd')
             os.environ['CD'] = curdir
-            
+
             # Save default (original) text attributes
             orig_attr = get_text_attributes()
-            
+
             if state.changed() or not scrolling:
                 prev_total_len = len(state.prev_prompt + state.prev_before_cursor + state.prev_after_cursor)
                 cursor_backward(len(state.prev_prompt + state.prev_before_cursor))
@@ -257,7 +257,7 @@ def main():
             internal_exit()
         elif tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []:
             # This is a single CD command -- use our custom, more handy CD
-            internal_cd(tokens[1:])
+            internal_cd([unescape(t) for t in tokens[1:]])
         else:
             # Regular (external) command
             run_in_cmd(tokens)
@@ -267,7 +267,7 @@ def main():
 
         # Add to dir history
         dir_hist.visit_cwd()
-    
+
 def internal_cd(args):
     """The internal CD command"""
     try:
@@ -301,7 +301,7 @@ def internal_exit():
 
 def run_in_cmd(tokens):
     pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
-    
+
     line_sanitized = ''
     for token in tokens:
         token_sane = expand_env_vars(token)

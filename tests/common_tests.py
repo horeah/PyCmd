@@ -3,11 +3,11 @@
 #
 
 import unittest
-from common import parse_line
+from common import parse_line, unescape
 
 class TestParseLine(unittest.TestCase):
 
-    testSet = [
+    lines_to_parse = [
 
         ('dir >c:\\dir.txt',
          ['dir', '>', 'c:\\dir.txt']),
@@ -155,17 +155,43 @@ class TestParseLine(unittest.TestCase):
 
         ]
 
+    strings_to_unescape = [
+        ('Program^ Files', 'Program Files'),
+        ('Program"^ "Files', 'Program"^ "Files'),
+        ('Program^" Files^"', 'Program" Files"'),
+        ('Documents^ and^ Settings', 'Documents and Settings'),
+        ('HEAD^^', 'HEAD^'),
+        ('x^ ^ y', 'x  y'),
+        ('x^^y', 'x^y'),
+        ('x^^^y', 'x^y'),
+        ('x^^^^y', 'x^^y'),
+        ('^\\^"\\^ ^ ^&&', '\\"\\  &&'),
+        ('"^"', '"^"'),
+        ('"^^"', '"^^"'),
+        ('^"^"', '""'),
+        ('^"ab^"', '"ab"'),
+        ('^"ab"', '"ab"'),
+        ('a"b"c', 'a"b"c'),
+        ('a"^b"c', 'a"^b"c'),
+        ('a"b^"c', 'a"b^"c'),
+        ]
+
     def testParseLine(self):
         """Test that result of parse_line equals expected result."""
-        for input, expected in self.testSet:
+        for input, expected in self.lines_to_parse:
             self.assertEqual(parse_line(input), expected)
 
     def testReparseLine(self):
         """Test that reparse of print of first parse is unchanged."""
-        for input, expected in self.testSet:
+        for input, expected in self.lines_to_parse:
             first_parse = parse_line(input)
             second_parse = parse_line(' '.join(first_parse))
             self.assertEqual(first_parse, second_parse)
+
+    def testUnescape(self):
+        """Test that result of unescape equals expected result."""
+        for input, expected in self.strings_to_unescape:
+            self.assertEqual(unescape(input), expected)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TestParseLine)
