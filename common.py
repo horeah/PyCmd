@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os, string, fsm
+import os, string, re, fsm
 
 # Command splitting characters
 sep_chars = ['|', '&', '>', '<']
@@ -103,6 +103,30 @@ def parse_line(line):
 
     return f.memory
 
+def unescape(string):
+    """Unescape string from ^ escaping. ^ inside double quotes is ignored"""
+    if (string == None):
+        return None
+    result = ''
+    in_quotes = False
+    escape_next = False
+    for c in string:
+        if in_quotes:
+            result += c
+            if c == '"':
+                in_quotes = False
+        elif escape_next:
+            result += c
+            escape_next = False
+        else:
+            if c == '^':
+                escape_next = True
+            else:
+                result += c
+                if c == '"':
+                    in_quotes = True
+
+    return result
 
 def expand_env_vars(string):
     """Return a version of the string with the environment variables expanded"""
