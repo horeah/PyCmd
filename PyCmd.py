@@ -2,7 +2,7 @@ import sys, os, msvcrt, tempfile, signal, time
 
 from common import parse_line, expand_env_vars, split_nocase, abbrev_path, sep_tokens
 from completion import complete_file, complete_env_var
-from InputState import InputState
+from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, move_cursor, get_cursor, cursor_backward, set_cursor_visible, set_console_title
 from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed
@@ -115,9 +115,9 @@ def main():
                     if state.before_cursor + state.after_cursor == '':
                         internal_exit()
                     else:
-                        state.key_del()
+                        state.handle(ActionCode.ACTION_DELETE)
                 elif rec.virtualKeyCode == 75:          # Ctrl-K
-                    state.key_kill_line()
+                    state.handle(ActionCode.ACTION_KILL_EOL)
                 elif rec.virtualKeyCode == 32:          # Ctrl-Space
                     auto_select = True
                     state.reset_selection()
@@ -125,37 +125,37 @@ def main():
                     auto_select = False
                     state.reset_selection()
                 elif rec.virtualKeyCode == 65:          # Ctrl-A
-                    state.key_home(select)
+                    state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.virtualKeyCode == 69:          # Ctrl-E
-                    state.key_end(select)
+                    state.handle(ActionCode.ACTION_END, select)
                 elif rec.virtualKeyCode == 66:          # Ctrl-B
-                    state.key_left(select)
+                    state.handle(ActionCode.ACTION_LEFT, select)
                 elif rec.virtualKeyCode == 70:          # Ctrl-F
-                    state.key_right(select)
+                    state.handle(ActionCode.ACTION_RIGHT, select)
                 elif rec.virtualKeyCode == 80:          # Ctrl-P
-                    state.key_up()
+                    state.handle(ActionCode.ACTION_PREV)
                 elif rec.virtualKeyCode == 78:          # Ctrl-N
-                    state.key_down()
+                    state.handle(ActionCode.ACTION_NEXT)
                 elif rec.virtualKeyCode == 37:          # Ctrl-Left
-                    state.key_left_word(select)
+                    state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.virtualKeyCode == 39:          # Ctrl-Right
-                    state.key_right_word(select)
+                    state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 46:          # Ctrl-Delete
-                    state.key_del_word()
+                    state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.virtualKeyCode == 67:          # Ctrl-C
-                    state.key_copy()
+                    state.handle(ActionCode.ACTION_COPY)
                     auto_select = False
                 elif rec.virtualKeyCode == 88:          # Ctrl-X
-                    state.key_cut()
+                    state.handle(ActionCode.ACTION_CUT)
                     auto_select = False
                 elif rec.virtualKeyCode == 87:          # Ctrl-W
-                    state.key_cut()
+                    state.handle(ActionCode.ACTION_CUT)
                     auto_select = False
                 elif rec.virtualKeyCode == 86:          # Ctrl-V
-                    state.key_paste()
+                    state.handle(ActionCode.ACTION_PASTE)
                     auto_select = False
                 elif rec.virtualKeyCode == 89:          # Ctrl-Y
-                    state.key_paste()
+                    state.handle(ActionCode.ACTION_PASTE)
                     auto_select = False
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec): # Alt-Something
                 if rec.virtualKeyCode == 37:            # Alt-Left
@@ -165,7 +165,7 @@ def main():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
                     else:
-                        state.key_left_word(select)               
+                        state.handle(ActionCode.ACTION_LEFT_WORD, select)               
                 elif rec.virtualKeyCode == 39:          # Alt-right
                     if state.before_cursor + state.after_cursor == '':
                         state.reset_prev_line()
@@ -173,29 +173,29 @@ def main():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
                     else:
-                        state.key_right_word(select)
+                        state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 66:          # Alt-B
-                    state.key_left_word(select)
+                    state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.virtualKeyCode == 70:          # Alt-F
-                    state.key_right_word(select)
+                    state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 80:          # Alt-P
-                    state.key_up()
+                    state.handle(ActionCode.ACTION_PREV)
                 elif rec.virtualKeyCode == 78:          # Alt-N
-                    state.key_down()
+                    state.handle(ActionCode.ACTION_NEXT)
                 elif rec.virtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
                         dir_hist.display()
                         state.reset_prev_line()
                     else:
-                        state.key_del_word() 
+                        state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.virtualKeyCode == 87:          # Alt-W
-                    state.key_copy()
+                    state.handle(ActionCode.ACTION_COPY)
                     state.reset_selection()
                     auto_select = False
                 elif rec.virtualKeyCode == 46:          # Alt-Delete
-                    state.key_del_word()
+                    state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.virtualKeyCode == 8:           # Alt-Backspace
-                    state.key_backspace_word()
+                    state.handle(ActionCode.ACTION_BACKSPACE_WORD)
             elif is_shift_pressed(rec) and rec.virtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
@@ -207,19 +207,19 @@ def main():
             else:                                       # Clean key (no modifiers)
                 if rec.char == chr(0):                  # Special key (arrows and such)
                     if rec.virtualKeyCode == 37:        # Left arrow
-                        state.key_left(select)
+                        state.handle(ActionCode.ACTION_LEFT, select)
                     elif rec.virtualKeyCode == 39:      # Right arrow
-                        state.key_right(select)
+                        state.handle(ActionCode.ACTION_RIGHT, select)
                     elif rec.virtualKeyCode == 36:      # Home
-                        state.key_home(select)
+                        state.handle(ActionCode.ACTION_HOME, select)
                     elif rec.virtualKeyCode == 35:      # End
-                        state.key_end(select)
+                        state.handle(ActionCode.ACTION_END, select)
                     elif rec.virtualKeyCode == 38:      # Up arrow
-                        state.key_up()
+                        state.handle(ActionCode.ACTION_PREV)
                     elif rec.virtualKeyCode == 40:      # Down arrow
-                        state.key_down()
+                        state.handle(ActionCode.ACTION_NEXT)
                     elif rec.virtualKeyCode == 46:      # Delete
-                        state.key_del()
+                        state.handle(ActionCode.ACTION_DELETE)
                 elif rec.char == chr(13):               # Enter
                     state.reset_history()
                     break
@@ -227,27 +227,24 @@ def main():
                     if scrolling:
                         scrolling = False
                     else:
-                        state.key_esc()
+                        state.handle(ActionCode.ACTION_ESCAPE)
                 elif rec.char == '\t':                  # Tab
                     sys.stdout.write(state.after_cursor)        # Move cursor to the end
                     tokens = parse_line(state.before_cursor)
                     if tokens[-1].strip('"').count('%') % 2 == 1 or tokens[-1].strip('"').endswith('%'):
-                        (state.before_cursor, suggestions) = complete_env_var(state.before_cursor)
+                        (completed, suggestions) = complete_env_var(state.before_cursor)
                     else:
-                        (state.before_cursor, suggestions)  = complete_file(state.before_cursor)
+                        (completed, suggestions)  = complete_file(state.before_cursor)
                     if suggestions != []:
                         sys.stdout.write('\n')
                         for s in suggestions:
                             sys.stdout.write(s + '\n')
                         state.reset_prev_line()
-                    state.reset_selection()
+                    state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.char == chr(8):                # Backspace
-                    state.key_backspace()
+                    state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
-                    state.reset_history()
-                    state.delete_selection()
-                    state.before_cursor += rec.char
-                    state.reset_selection()
+                    state.handle(ActionCode.ACTION_INSERT, rec.char)
 
 
         # Done reading line, now execute
@@ -365,7 +362,7 @@ def signal_handler(signum, frame):
     keyboard combo
     """
     if signum == signal.SIGINT:
-        state.key_copy()
+        state.handle(ActionCode.ACTION_COPY)
 
 
 def save_history(lines, filename, length):

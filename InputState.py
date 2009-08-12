@@ -5,6 +5,32 @@ import win32clipboard as wclip
 # Stop points when navigating one word at a time
 word_sep = [' ', '\t', '\\', '-', '_', '.']
 
+class ActionCode:
+    """
+    Enum-like class that defines codes for input manipulation actions
+    """
+    ACTION_none = 0
+    ACTION_LEFT = 1
+    ACTION_RIGHT = 2
+    ACTION_LEFT_WORD = 3
+    ACTION_RIGHT_WORD = 4
+    ACTION_HOME = 5
+    ACTION_END = 6
+    ACTION_COPY = 7
+    ACTION_CUT = 8
+    ACTION_PASTE = 9
+    ACTION_PREV = 10
+    ACTION_NEXT = 11
+    ACTION_INSERT = 12
+    ACTION_COMPLETE = 13
+    ACTION_DELETE = 14
+    ACTION_DELETE_WORD = 15
+    ACTION_BACKSPACE = 16
+    ACTION_BACKSPACE_WORD = 17
+    ACTION_KILL_EOL = 18
+    ACTION_ESCAPE = 19
+
+
 class InputState:
     """
     Handles the current state of the input line:
@@ -15,7 +41,6 @@ class InputState:
     """
     
     def __init__(self):
-
         # Current state of the input line
         self.prompt = ''
         self.before_cursor = ''
@@ -33,6 +58,48 @@ class InputState:
 
         # Text selection
         self.selection_start = -0
+
+        # Action handlers
+        self.handlers = {
+            ActionCode.ACTION_none: None,
+            ActionCode.ACTION_LEFT: self.key_left,
+            ActionCode.ACTION_RIGHT: self.key_right,
+            ActionCode.ACTION_LEFT_WORD: self.key_left_word,
+            ActionCode.ACTION_RIGHT_WORD: self.key_right_word,
+            ActionCode.ACTION_HOME: self.key_home,
+            ActionCode.ACTION_END: self.key_end,
+            ActionCode.ACTION_COPY: self.key_copy,
+            ActionCode.ACTION_CUT: self.key_cut,
+            ActionCode.ACTION_PASTE: self.key_paste,
+            ActionCode.ACTION_PREV: self.key_up,
+            ActionCode.ACTION_NEXT: self.key_down,
+            ActionCode.ACTION_INSERT: self.key_insert,
+            ActionCode.ACTION_COMPLETE: self.key_complete,
+            ActionCode.ACTION_DELETE: self.key_del,
+            ActionCode.ACTION_DELETE_WORD: self.key_del_word,
+            ActionCode.ACTION_BACKSPACE: self.key_backspace,
+            ActionCode.ACTION_BACKSPACE_WORD: self.key_backspace_word,
+            ActionCode.ACTION_KILL_EOL: self.key_kill_line,
+            ActionCode.ACTION_ESCAPE: self.key_esc }
+            
+        # Action types
+        self.insert_actions = [ActionCode.ACTION_INSERT,
+                               ActionCode.ACTION_COMPLETE]
+        self.delete_actions = [ActionCode.ACTION_DELETE, 
+                               ActionCode.ACTION_DELETE_WORD, 
+                               ActionCode.ACTION_BACKSPACE, 
+                               ActionCode.ACTION_BACKSPACE_WORD,
+                               ActionCode.ACTION_KILL_EOL]
+        self.navigate_actions = [ActionCode.ACTION_LEFT,
+                                 ActionCode.ACTION_LEFT_WORD,
+                                 ActionCode.ACTION_RIGHT, 
+                                 ActionCode.ACTION_RIGHT_WORD,
+                                 ActionCode.ACTION_HOME, 
+                                 ActionCode.ACTION_END]
+        self.manip_actions = [ActionCode.ACTION_CUT, 
+                              ActionCode.ACTION_PASTE,
+                              ActionCode.ACTION_ESCAPE]
+
 
     def step_line(self):
         """Prepare for a new key event"""
@@ -58,6 +125,19 @@ class InputState:
         return self.prompt != self.prev_prompt \
                or self.before_cursor != self.prev_before_cursor \
                or self.after_cursor != self.prev_after_cursor
+
+    def handle(self, action, arg = None):
+        """Handle a keyboard action"""
+        handler = self.handlers[action]
+        if action in self.navigate_actions:
+            # Navigation actions have a "select" argument
+            handler(arg)
+        elif action in self.insert_actions:
+            # Insert actions have a "text" argument
+            handler(arg)
+        else:
+            # Other actions don't have arguments
+            handler()
 
     def key_left(self, select=False):
         """
@@ -257,6 +337,18 @@ class InputState:
             self.reset_selection()
             self.reset_history()
         wclip.CloseClipboard()
+
+    def key_insert(self, text):
+        """Insert text at the current cursor position"""
+        self.reset_history()
+        self.delete_selection()
+        self.before_cursor += text
+        self.reset_selection()
+
+    def key_complete(self, completed):
+        """Update the text before cursor to match some completion"""
+        self.before_cursor = completed
+        self.reset_selection()
 
     def add_to_history(self, line):
         """Add a new line to the history"""
