@@ -49,36 +49,53 @@ def parse_line(line):
 
     f.set_default_transition(error, 'init')
 
+    # default
     f.add_transition_list(string.whitespace, 'init', start_empty_token, 'whitespace')
     f.add_transition('"', 'init', accumulate, 'in_string')
     f.add_transition('|', 'init', start_token, 'pipe')
     f.add_transition('&', 'init', start_token, 'amp')
     f.add_transition('>', 'init', start_token, 'gt')
-    f.add_transition('<', 'init', accumulate_last, 'init')
+    f.add_transition('<', 'init', accumulate, 'awaiting_&')
+    f.add_transition('^', 'init', accumulate, 'escape')
     f.add_transition_any('init', accumulate, 'init')
 
+    # whitespace
     f.add_transition_list(string.whitespace, 'whitespace', None, 'whitespace')
     f.add_transition_list(string.digits, 'whitespace', accumulate, 'redir')
     f.add_empty_transition('whitespace', 'init')
 
+    # strings
     f.add_transition('"', 'in_string', accumulate, 'init')
     f.add_transition_any('in_string', accumulate, 'in_string')
 
+    # seen '|'
     f.add_transition('|', 'pipe', accumulate_last, 'init')
     f.add_empty_transition('pipe', 'init', start_empty_token)
 
+    # seen '&'
     f.add_transition('&', 'amp', accumulate_last, 'init')
     f.add_empty_transition('amp', 'init', start_empty_token)
 
-    f.add_transition('>', 'gt', accumulate_last, 'init')
+    # seen '>' or '1>' etc.
+    f.add_transition('>', 'gt', accumulate, 'awaiting_&')
+    f.add_transition('&', 'gt', accumulate, 'awaiting_nr')
     f.add_empty_transition('gt', 'init', start_empty_token)
 
-    f.add_transition('<', 'redir', accumulate_last, 'init')
-    f.add_transition('>', 'redir', accumulate, 'redir2')
+    # seen digit
+    f.add_transition('<', 'redir', accumulate, 'awaiting_&')
+    f.add_transition('>', 'redir', accumulate, 'gt')
     f.add_empty_transition('redir', 'init')
 
-    f.add_transition('>', 'redir2', accumulate_last, 'init')
-    f.add_empty_transition('redir2', 'init', start_empty_token)
+    # seen '<' or '>>', '0<', '2>>' etc.
+    f.add_transition('&', 'awaiting_&', accumulate, 'awaiting_nr')
+    f.add_empty_transition('awaiting_&', 'init', start_empty_token)
+
+    # seen '<&' or '>&', '>>&', '0<&', '1>&', '2>>&' etc.
+    f.add_transition_list(string.digits, 'awaiting_nr', accumulate_last, 'init')
+    f.add_empty_transition('awaiting_nr', 'init', start_empty_token)
+
+    # seen '^'
+    f.add_transition_any('escape', accumulate, 'init')
 
     f.process_list(line)
     if len(f.memory) > 0 and f.memory[-1] == '':

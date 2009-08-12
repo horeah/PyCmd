@@ -1,9 +1,9 @@
 import unittest
-from tests import common
+from tests import common_tests
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(common.suite())
+    suite.addTest(common_tests.suite())
     return suite
 
 if __name__ == '__main__':

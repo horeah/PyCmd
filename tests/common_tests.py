@@ -2,8 +2,8 @@
 # Unit tests for common.py
 #
 
-import unittest, imp
-common_orig = imp.load_source('common_orig', 'common.py')
+import unittest
+from common import parse_line
 
 class TestParseLine(unittest.TestCase):
 
@@ -27,8 +27,11 @@ class TestParseLine(unittest.TestCase):
         ('sort <c:\\dir.txt >c:\\sortdir.txt 2>c:\\error.txt',
          ['sort', '<', 'c:\\dir.txt', '>', 'c:\\sortdir.txt', '2>', 'c:\\error.txt']),
 
-#        ('dir >c:\\dir.txt 2>&1',
-#         ['dir', '>', 'c:\\dir.txt', '2>&1']),
+        ('dir >c:\\dir.txt 2>&1',
+         ['dir', '>', 'c:\\dir.txt', '2>&1']),
+
+        ('dir >&2 >>&2 1>&2 1>>&2 <&3 0<&3',
+         ['dir', '>&2', '>>&2', '1>&2', '1>>&2', '<&3', '0<&3']),
 
         ('dir | sort',
          ['dir', '|', 'sort']),
@@ -51,20 +54,20 @@ class TestParseLine(unittest.TestCase):
         ('dir *.exe >files.txt & dir *.com >>files.txt',
          ['dir', '*.exe', '>', 'files.txt', '&', 'dir', '*.com', '>>', 'files.txt']),
 
-#        ('(dir *.exe & dir *.com) >files.txt',
-#         ['(', 'dir', '*.exe', '&', 'dir', '*.com', ')', '>', 'files.txt']),
+        ('(dir *.exe & dir *.com) >files.txt',
+         ['(dir', '*.exe', '&', 'dir', '*.com)', '>', 'files.txt']),
 
-#        ('((echo command1) & (echo command2)) && (echo command 3)',
-#         ['(', '(', 'echo', 'command1', ')', '&', '(', 'echo', 'command2', ')', ')', '&&', '(', 'echo', 'command', '3', ')']),
+        ('((echo command1) & (echo command2)) && (echo command 3)',
+         ['((echo', 'command1)', '&', '(echo', 'command2))', '&&', '(echo', 'command', '3)']),
 
-#        ('echo ^<dir^>',
-#         ['echo', '<dir>']),
+        ('echo ^<dir^>',
+         ['echo', '^<dir^>']),
 
         ('set varname="new&name"',
          ['set', 'varname="new&name"']),
 
-#        ('set varname=new^&name',
-#         ['set', 'varname=new&name']),
+        ('set varname=new^&name',
+         ['set', 'varname=new^&name']),
 
         ('echo ""dd"dd" | grep dd',
          ['echo', '""dd"dd"', '|', 'grep', 'dd']),
@@ -114,8 +117,8 @@ class TestParseLine(unittest.TestCase):
         ('mkdir "x&y"',
          ['mkdir', '"x&y"']),
 
-#        ('mkdir x^&y',
-#         ['mkdir', 'x&y']),
+        ('mkdir x^&y',
+         ['mkdir', 'x^&y']),
 
         ('cd "x&y"\\',
          ['cd', '"x&y"\\']),
@@ -126,8 +129,8 @@ class TestParseLine(unittest.TestCase):
         ('echo "1&2&3" | cut "-d&" -f3 >NUL 2>NUL',
          ['echo', '"1&2&3"', '|', 'cut', '"-d&"', '-f3', '>', 'NUL', '2>', 'NUL']),
 
-#        ('echo "1&2&3" | cut -d^& -f3 >NUL 2>NUL',
-#         ['echo', '"1&2&3"', '|', 'cut', '-d&', '-f3', '>', 'NUL', '2>', 'NUL']),
+        ('echo "1&2&3" | cut -d^& -f3 >NUL 2>NUL',
+         ['echo', '"1&2&3"', '|', 'cut', '-d^&', '-f3', '>', 'NUL', '2>', 'NUL']),
 
         ('git push ssh://user@pycmd.git.sourceforge.net/gitroot/pycmd master',
          ['git', 'push', 'ssh://user@pycmd.git.sourceforge.net/gitroot/pycmd', 'master']),
@@ -155,13 +158,13 @@ class TestParseLine(unittest.TestCase):
     def testParseLine(self):
         """Test that result of parse_line equals expected result."""
         for input, expected in self.testSet:
-            self.assertEqual(common_orig.parse_line(input), expected)
+            self.assertEqual(parse_line(input), expected)
 
     def testReparseLine(self):
         """Test that reparse of print of first parse is unchanged."""
         for input, expected in self.testSet:
-            first_parse = common_orig.parse_line(input)
-            second_parse = common_orig.parse_line(' '.join(first_parse))
+            first_parse = parse_line(input)
+            second_parse = parse_line(' '.join(first_parse))
             self.assertEqual(first_parse, second_parse)
 
 def suite():
