@@ -1,12 +1,12 @@
 1. What is PyCmd?  
-
+-----------------
 PyCmd is a 'smart' command prompt extension for Windows' cmd.exe; its purpose is
 to emulate a few power features of UNIX shells (decent Tab-completion,
 persistent history, etc.)
 
 
 2. What are some important features?
-
+------------------------------------
  a. Tab completion 
     - when several completions are possible, list them instead of cycling
       through them
@@ -33,15 +33,14 @@ persistent history, etc.)
     - show the current working directory in the window title
 
 
-3. Any known problems?
-
+3. Known problems
+-----------------
     - pushd/popd are not supported
-    - escaping characters via ^ doesn't work
     - %ERRORLEVEL% is always 0
 
 
-4. Future plans?
-
+4. Future plans
+---------------
     - add some sort of a configuration mechanism (config file)
     - custom TAB-completion for the arguments of common commands
     - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
@@ -50,13 +49,33 @@ persistent history, etc.)
 
 
 4. How do I download/install/run it?
-   
+------------------------------------   
  a. Download the binary distribution (created with Py2Exe, see 
     http://www.py2exe.org/) from  
-          https://sourceforge.net/project/showfiles.php?group_id=261720
+          https://sourceforge.net/projects/pycmd/files/
     Then, unpack and start PyCmd.exe. No installation is necessary.
 
  b. Fetch the Python sources from the repository at
-          https://pycmd.svn.sourceforge.net/svnroot/pycmd
-    then start trunk/PyCmd.py in Python.
+          git://pycmd.git.sourceforge.net/gitroot/pycmd
+    then start trunk/PyCmd.py in Python or run 'make' to build the binary 
+    distribution.
+    You will need:
+        - Python 2.5 from
+                 http://www.python.org/download/releases/2.5/
+        - Python for Windows extensions from 
+                 https://sourceforge.net/projects/pywin32/
+        - py2exe from 
+                 http://www.py2exe.org/
 
+
+5. Credits
+----------
+   - The fish shell is a huge source of good ideas:
+            http://fishshell.org/index.php
+   - fsm.py is a nice package for implementing a Finite State Machine:
+            http://code.activestate.com/recipes/146262
+
+
+
+---------------------------------------------------
+Horea Haitonic (h o r e a h _at_ g m a i l . c o m)
