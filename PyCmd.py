@@ -231,6 +231,8 @@ def main():
                 elif rec.char == '\t':                  # Tab
                     sys.stdout.write(state.after_cursor)        # Move cursor to the end
                     tokens = parse_line(state.before_cursor)
+                    if tokens == []:
+                        tokens = ['']   # This saves some checks later on
                     if tokens[-1].strip('"').count('%') % 2 == 1 or tokens[-1].strip('"').endswith('%'):
                         (completed, suggestions) = complete_env_var(state.before_cursor)
                     else:

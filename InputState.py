@@ -1,4 +1,3 @@
-from common import parse_line
 from completion import complete_file, complete_env_var
 import win32clipboard as wclip
 

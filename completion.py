@@ -21,6 +21,8 @@ def complete_file(line):
     """
 
     tokens = parse_line(line)
+    if tokens == []:
+        tokens = ['']   # This saves us some checks later
     token = tokens[-1].replace('"', '')
     
     (path_to_complete, _, prefix) = token.rpartition('\\')
@@ -163,8 +165,10 @@ def complete_env_var(line):
         completions
       - the list of all possible completions
     """
-
-    token_orig = parse_line(line)[-1]
+    tokens = parse_line(line)
+    if tokens == []:
+        tokens = ['']   # This saves some checks later
+    token_orig = tokens[-1]
     if token_orig.count('%') % 2 == 0 and token_orig.strip('"').endswith('%'):
         [lead, prefix] = token_orig.strip('"').rstrip('%').rsplit('%', 2)
     else:
