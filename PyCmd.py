@@ -13,7 +13,7 @@ def main():
 
     # Splash
     print
-    print 'Welcome to PyCmd 0.4!'
+    print 'Welcome to PyCmd 0.5 (devel)!'
 
     # Create directory structure in %APPDATA% if not present
     if not os.path.isdir(expand_env_vars('%APPDATA%\\PyCmd')):
