@@ -1,3 +1,18 @@
+#
+# URL: http://code.activestate.com/recipes/146262/
+# Version: 22.08.2002
+# License: Public Domain
+#
+# Description:
+# Support for simple Finite State Machines.
+#
+# Local Modifications:
+# Added method add_empty_transition and supporting code. The bulk of the
+# documentation (notably the class documentation has not been updated to reflect
+# the changes, however the add_empty_transition method itself is documented to
+# explain what it is useful for.
+#
+
 """This module implements a Finite State Machine (FSM). In addition to state
 this FSM also maintains a user defined "memory". So this FSM can be used as a
 Push-down Automata (PDA) since a PDA is a FSM + memory.
@@ -167,15 +182,15 @@ class FSM:
 
                 (current_state) --> (action, next_state)
 
-        but without consuming the input symbol. This is identical with
+        but without consuming the input symbol. This is identical to
         add_transition_any, except that it does not consume the input symbol.
         add_transition_any takes precedence over add_empty_transition for any
-        given state, so if you wante add_empty_transition to have effect, you
+        given state, so if you want add_empty_transition to have effect, you
         should not call add_transition_any for the same state.
 
         Unlike add_transition_any, a next_state = None is not acceptable for
         this method, as it would lead to an infinite loop. Also beware of
-        circular references, as they will lead to infinite loops."""
+        circular references, as they will lead to infinite loops as well."""
 
         if next_state is not None:
             self.state_empty_transitions[state] = (action, next_state)
