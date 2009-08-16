@@ -1,0 +1,7 @@
+# leading `/' means at top level only
+/build/
+/PyCmd/
+
+# no leading `/' means anywhere
+*.pyc
+.ropeproject
