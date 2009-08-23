@@ -7,16 +7,18 @@ import os, string, re, fsm
 sep_chars = ['|', '&', '>', '<']
 
 # Comand sequencing tokens
-seq_tokens = ['||', '&', '&&']
+seq_tokens = ['|', '||', '&', '&&']
 
 # Redirection tokens
-digit_chars = [chr(ord('0') + i) for i in range(10)]
+digit_chars = list(string.digits)
 redir_file_simple = ['>', '>>', '<']
-redir_file_tokens = redir_file_simple + [d + c for d in digit_chars for c in redir_file_simple]
-# print redir_pipe_tokens + redir_file_tokens
+redir_file_ext = [c + d for d in digit_chars for c in ['<&', '>&']]
+redir_file_all = redir_file_simple + redir_file_ext
+redir_file_tokens = redir_file_all + [d + c for d in digit_chars for c in redir_file_all]
+# print redir_file_tokens
 
 # All command splitting tokens
-sep_tokens = seq_tokens + ['|'] + redir_file_tokens
+sep_tokens = seq_tokens + redir_file_tokens
 
 def parse_line(line):
     """Tokenize a command line based on whitespace while observing quotes"""
