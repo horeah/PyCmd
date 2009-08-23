@@ -24,6 +24,9 @@ class TestParseLine(unittest.TestCase):
         ('dir2>c:\\error.txt',
          ['dir2', '>', 'c:\\error.txt']),
 
+        ('2>&1 dir',
+         ['2>&1', 'dir']),
+
         ('sort <c:\\dir.txt >c:\\sortdir.txt 2>c:\\error.txt',
          ['sort', '<', 'c:\\dir.txt', '>', 'c:\\sortdir.txt', '2>', 'c:\\error.txt']),
 

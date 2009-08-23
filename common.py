@@ -59,11 +59,11 @@ def parse_line(line):
     f.add_transition('>', 'init', start_token, 'gt')
     f.add_transition('<', 'init', accumulate, 'awaiting_&')
     f.add_transition('^', 'init', accumulate, 'escape')
+    f.add_transition_list(string.digits, 'init', accumulate, 'redir')
     f.add_transition_any('init', accumulate, 'init')
 
     # whitespace
     f.add_transition_list(string.whitespace, 'whitespace', None, 'whitespace')
-    f.add_transition_list(string.digits, 'whitespace', accumulate, 'redir')
     f.add_empty_transition('whitespace', 'init')
 
     # strings
