@@ -4,9 +4,9 @@
 import os, string, re, fsm
 
 # Command splitting characters
-sep_chars = ['|', '&', '>', '<']
+sep_chars = [' ', '|', '&', '>', '<']
 
-# Comand sequencing tokens
+# Command sequencing tokens
 seq_tokens = ['|', '||', '&', '&&']
 
 # Redirection tokens

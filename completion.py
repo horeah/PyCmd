@@ -7,6 +7,7 @@
 import sys, os
 from common import parse_line, expand_env_vars, has_exec_extension, strip_extension
 from common import contains_special_char, starts_with_special_char
+from common import sep_chars, seq_tokens
 
 def complete_file(line):
     """
@@ -21,8 +22,8 @@ def complete_file(line):
     """
 
     tokens = parse_line(line)
-    if tokens == []:
-        tokens = ['']   # This saves us some checks later
+    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
+        tokens += ['']   # This saves us some checks later
     token = tokens[-1].replace('"', '')
     
     (path_to_complete, _, prefix) = token.rpartition('\\')
@@ -52,7 +53,7 @@ def complete_file(line):
     completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
     completions = completions_dirs + completions_files
 
-    if (len(tokens) == 1 or tokens[-2] in ['|', '||', '&', '&&']) and path_to_complete == '':
+    if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
         # We are at the beginning of a command ==> also complete from the path
         completions_path = []
         for elem_in_path in os.environ['PATH'].split(';'):
@@ -166,8 +167,8 @@ def complete_env_var(line):
       - the list of all possible completions
     """
     tokens = parse_line(line)
-    if tokens == []:
-        tokens = ['']   # This saves some checks later
+    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
+        tokens += ['']   # This saves some checks later
     token_orig = tokens[-1]
     if token_orig.count('%') % 2 == 0 and token_orig.strip('"').endswith('%'):
         [lead, prefix] = token_orig.strip('"').rstrip('%').rsplit('%', 2)
