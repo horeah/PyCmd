@@ -42,11 +42,6 @@ def parse_line(line):
         accumulate(fsm)
         start_empty_token(fsm)
 
-    def add_token(fsm):
-        """Action: add fsm.input_symbol as stand-alone token."""
-        start_empty_token(fsm)
-        accumulate_last(fsm)
-
     def error(fsm):
         """Action: handle uncovered transition (should never happen)."""
         print 'Unhandled transition:', (fsm.input_symbol, fsm.current_state)
@@ -65,7 +60,6 @@ def parse_line(line):
     f.add_transition('<', 'init', accumulate, 'awaiting_&')
     f.add_transition('^', 'init', accumulate, 'escape')
     f.add_transition_list(string.digits, 'init', accumulate, 'redir')
-    f.add_transition_list('()', 'init', add_token, 'init')
     f.add_transition_any('init', accumulate, 'init')
 
     # whitespace

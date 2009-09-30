@@ -58,10 +58,10 @@ class TestParseLine(unittest.TestCase):
          ['dir', '*.exe', '>', 'files.txt', '&', 'dir', '*.com', '>>', 'files.txt']),
 
         ('(dir *.exe & dir *.com) >files.txt',
-         ['(', 'dir', '*.exe', '&', 'dir', '*.com', ')', '>', 'files.txt']),
+         ['(dir', '*.exe', '&', 'dir', '*.com)', '>', 'files.txt']),
 
         ('((echo command1) & (echo command2)) && (echo command 3)',
-         ['(', '(', 'echo', 'command1', ')', '&', '(', 'echo', 'command2', ')', ')', '&&', '(', 'echo', 'command', '3', ')']),
+         ['((echo', 'command1)', '&', '(echo', 'command2))', '&&', '(echo', 'command', '3)']),
 
         ('echo ^<dir^>',
          ['echo', '^<dir^>']),
@@ -154,7 +154,7 @@ class TestParseLine(unittest.TestCase):
          ['CmBoxPgm.exe', '/QN1:F', '/F10', '/P0', '/CD', '/P0', '/CD']),
 
         ('FOR /R %I IN (.) DO IF "%~nI" equ "(2000) - Singles" ren "%~fI" "(0000) - Singles"',
-         ['FOR', '/R', '%I', 'IN', '(', '.', ')', 'DO', 'IF', '"%~nI"', 'equ', '"(2000) - Singles"', 'ren', '"%~fI"', '"(0000) - Singles"']),
+         ['FOR', '/R', '%I', 'IN', '(.)', 'DO', 'IF', '"%~nI"', 'equ', '"(2000) - Singles"', 'ren', '"%~fI"', '"(0000) - Singles"']),
 
         ]
 

@@ -1,6 +1,6 @@
-import sys, os, msvcrt, tempfile, signal, time, re
+import sys, os, msvcrt, tempfile, signal, time
 
-from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens, seq_tokens
+from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
 from completion import complete_file, complete_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
@@ -37,14 +37,9 @@ def main():
     dir_hist.index = len(dir_hist.locations) - 1
     dir_hist.visit_cwd()
 
-    # Create temporary file for saving/restoring environment variables
+    # Create temporary file
     global tmpfile
     (handle, tmpfile) = tempfile.mkstemp(dir = expand_env_vars('%APPDATA%\\PyCmd\\tmp'))
-    os.close(handle)
-
-    # Create temporary file for creating/running a batch script
-    global tmpbatch
-    (handle, tmpbatch) = tempfile.mkstemp(dir = expand_env_vars('%APPDATA%\\PyCmd\\tmp'), suffix = '.bat')
     os.close(handle)
 
     # Catch SIGINT to emulate Ctrl-C key combo
@@ -170,7 +165,7 @@ def main():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
                     else:
-                        state.handle(ActionCode.ACTION_LEFT_WORD, select)
+                        state.handle(ActionCode.ACTION_LEFT_WORD, select)               
                 elif rec.virtualKeyCode == 39:          # Alt-right
                     if state.before_cursor + state.after_cursor == '':
                         state.reset_prev_line()
@@ -192,7 +187,7 @@ def main():
                         dir_hist.display()
                         state.reset_prev_line()
                     else:
-                        state.handle(ActionCode.ACTION_DELETE_WORD)
+                        state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.virtualKeyCode == 87:          # Alt-W
                     state.handle(ActionCode.ACTION_COPY)
                     state.reset_selection()
@@ -297,7 +292,6 @@ def internal_exit():
     print
     print 'Bye!'
     os.remove(tmpfile)
-    os.remove(tmpbatch)
     save_history(state.history,
                  expand_env_vars('%APPDATA%\\PyCmd\\history'),
                  1000)
@@ -307,96 +301,16 @@ def internal_exit():
     sys.exit()
 
 
-def is_exe_file(base_path):
-    """Checks if base_path.exe exists"""
-    return os.path.isfile(base_path + '.exe')
-
-
-def is_batch_file(base_path):
-    """Checks if either base_path.bat or base_path.cmd exists"""
-    return os.path.isfile(base_path + '.cmd') or os.path.isfile(base_path + '.bat')
-
-
-def prefix_with_call(token):
-    """If necessary, transform token form `<name>.bat' to `call <name>.bat'"""
-    normalized_token = unescape(token).replace('"', '').lower()
-
-    # when entering the full file name, cmd accepts extra spaces even inside
-    # quotes. E.g., "test.bat     " will run test.bat
-    canon_token = normalized_token.rstrip()
-
-    path_dirs = None
-    if re.search('\\.(bat|cmd)\\Z', canon_token):
-
-        # check canon_token as absolute path or relative path to current directory
-        if os.path.isfile(canon_token) or os.path.isfile(os.getcwd() + '\\' + canon_token):
-            return 'call ' + token
-
-        # check canon_token as relative path to directories in the PATH
-        path_dirs = os.environ['PATH'].split(';')
-        for path_dir in path_dirs:
-            if os.path.isfile(path_dir + '\\' + canon_token):
-                return 'call ' + token
-
-    # when entering a partial file name, cmd does not accept extra spaces inside
-    # quotes. E.g., "test     " will not run test.bat
-    canon_token = normalized_token
-
-    # check canon_token as partial absolute path
-    if is_exe_file(canon_token):
-        return token
-    if is_batch_file(canon_token):
-        return 'call ' + token
-
-    # check canon_token as partial relative path to current directory
-    f = os.getcwd() + '\\' + canon_token
-    if is_exe_file(f):
-        return token
-    if is_batch_file(f):
-        return 'call ' + token
-
-    # check canon_token as partial relative path to directories in the PATH
-    if path_dirs == None:
-        path_dirs = os.environ['PATH'].split(';')
-    for path_dir in path_dirs:
-        f = path_dir + '\\' + canon_token
-        if is_exe_file(f):
-            return token
-        if is_batch_file(f):
-            return 'call ' + token
-
-    return token
-
-
 def run_in_cmd(tokens):
     pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
 
     line_sanitized = ''
-    cmd_start = True
-    redir = False
     for token in tokens:
         token_sane = expand_env_vars(token)
         if token_sane != '\\' and token_sane[1:] != ':\\':
             token_sane = token_sane.rstrip('\\')
-
-        # Skip parentheses
-        if token in ['(', ')']:
-            pass
-        # Expect command after '|', '||', '&', '&&'
-        elif token in seq_tokens:
-            cmd_start = True
-        elif cmd_start:
-            # Eat redirection file or '2>&1'-like redirection
-            if redir or re.match('[0-9]?[<>]&[0-9]', token):
-                redir = False
-            # Don't treat next token as command if current token is redirection
-            elif re.match('[0-9]?[<>]', token):
-                redir = True
-            # The current token is the command
-            else:
-                token_sane = prefix_with_call(token_sane)
-                cmd_start = False
-
+        if token_sane.count('"') % 2 == 1:
+            token_sane += '"'
         line_sanitized += token_sane + ' '
     line_sanitized = line_sanitized[:-1]
     print
@@ -406,30 +320,16 @@ def run_in_cmd(tokens):
         if var in os.environ.keys():
             del os.environ[var]
 
+    # Run command
     if line_sanitized != '':
-
-        # Prepare batch file contents
-        # (using "@ " instead of just "@" for, e.g., the command "2>&1 echo",
-        # which fails otherwise)
-        commands = '@ ' + line_sanitized + '\n'
-        commands += '@(set'
+        command = '"'
+        command += line_sanitized
+        command += '&set > "' + tmpfile + '"'
         for var in pseudo_vars:
-            commands += ' & echo ' + var + '="%' + var + '%"'
-        commands += ' & <nul (set /p xxx=CD=) & cd) > "' + tmpfile + '"\n'
-
-        # Write batch file
-        f = None
-        try:
-            f = open(tmpbatch, 'w')
-            f.write(commands)
-        except IOError, error:
-            sys.stdout.write('\n' + str(error))
-        finally:
-            if (f != None):
-                f.close()
-
-        # Run batch file
-        os.system('"' + tmpbatch + '"')
+            command += ' & echo ' + var + '="%' + var + '%" >> "' + tmpfile + '"'
+        command += '& <nul (set /p xxx=CD=) >>"' + tmpfile + '" & cd >>"' + tmpfile + '"'
+        command +=  '"'
+        os.system(command)
 
     # Update environment and state
     new_environ = {}
