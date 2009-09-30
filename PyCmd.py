@@ -157,6 +157,8 @@ def main():
                 elif rec.virtualKeyCode == 89:          # Ctrl-Y
                     state.handle(ActionCode.ACTION_PASTE)
                     auto_select = False
+                elif rec.virtualKeyCode == 8:           # Ctrl-Backspace
+                    state.handle(ActionCode.ACTION_BACKSPACE_WORD)
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec): # Alt-Something
                 if rec.virtualKeyCode == 37:            # Alt-Left
                     if state.before_cursor + state.after_cursor == '':
