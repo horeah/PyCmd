@@ -63,6 +63,7 @@ class InputState:
         # Line history for undo/redo - (before_cursor, after_cursor) pairs
         self.undo = []
         self.redo = []
+        self.last_action = ActionCode.ACTION_none
 
         # Action handlers
         self.handlers = {
@@ -89,7 +90,7 @@ class InputState:
             ActionCode.ACTION_UNDO: self.key_undo,
             ActionCode.ACTION_REDO: self.key_redo, }
             
-        # Action types
+        # Action categories
         self.insert_actions = [ActionCode.ACTION_INSERT,
                                ActionCode.ACTION_COMPLETE]
         self.delete_actions = [ActionCode.ACTION_DELETE, 
@@ -108,6 +109,7 @@ class InputState:
                               ActionCode.ACTION_ESCAPE]
         self.state_actions = [ActionCode.ACTION_UNDO,
                                 ActionCode.ACTION_REDO]
+
 
 
     def step_line(self):
@@ -137,10 +139,6 @@ class InputState:
 
     def handle(self, action, arg = None):
         """Handle a keyboard action"""
-        if action in self.delete_actions or action in self.insert_actions:
-            # Add to undo queue, clear redo queue
-            self.undo.append((self.before_cursor, self.after_cursor))
-            self.redo = []
 
         handler = self.handlers[action]
         if action in self.navigate_actions:
@@ -153,7 +151,18 @@ class InputState:
             # Other actions don't have arguments
             handler()
 
- 
+        if (action in self.delete_actions or action in self.insert_actions) \
+                and action != self.last_action \
+                and self.changed():
+            # Add the previous state as an undo state
+            self.undo.append((self.prev_before_cursor, self.prev_after_cursor))
+            self.redo = []
+
+        # print "\n", self.undo, "    ", self.redo, "\n"
+
+        self.last_action = action
+
+
     def key_left(self, select=False):
         """
         Move cursor one position to the left
