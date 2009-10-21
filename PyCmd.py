@@ -159,6 +159,9 @@ def main():
                     auto_select = False
                 elif rec.virtualKeyCode == 8:           # Ctrl-Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
+                elif rec.virtualKeyCode == 90:          # Ctrl-Z
+                    state.handle(ActionCode.ACTION_UNDO)
+                    auto_select = False
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec): # Alt-Something
                 if rec.virtualKeyCode == 37:            # Alt-Left
                     if state.before_cursor + state.after_cursor == '':
@@ -198,6 +201,10 @@ def main():
                     state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.virtualKeyCode == 8:           # Alt-Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
+            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):          # Ctrl-Alt-Something
+                if rec.virtualKeyCode == 90:            # Ctrl-Alt-Z
+                    state.handle(ActionCode.ACTION_REDO)
+                    auto_select = False
             elif is_shift_pressed(rec) and rec.virtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)

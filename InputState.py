@@ -28,6 +28,8 @@ class ActionCode:
     ACTION_BACKSPACE_WORD = 17
     ACTION_KILL_EOL = 18
     ACTION_ESCAPE = 19
+    ACTION_UNDO = 20
+    ACTION_REDO = 21
 
 
 class InputState:
@@ -56,7 +58,11 @@ class InputState:
         self.history_index = 0
 
         # Text selection
-        self.selection_start = -0
+        self.selection_start = 0
+
+        # Line history for undo/redo - (before_cursor, after_cursor) pairs
+        self.undo = []
+        self.redo = []
 
         # Action handlers
         self.handlers = {
@@ -79,7 +85,9 @@ class InputState:
             ActionCode.ACTION_BACKSPACE: self.key_backspace,
             ActionCode.ACTION_BACKSPACE_WORD: self.key_backspace_word,
             ActionCode.ACTION_KILL_EOL: self.key_kill_line,
-            ActionCode.ACTION_ESCAPE: self.key_esc }
+            ActionCode.ACTION_ESCAPE: self.key_esc,
+            ActionCode.ACTION_UNDO: self.key_undo,
+            ActionCode.ACTION_REDO: self.key_redo, }
             
         # Action types
         self.insert_actions = [ActionCode.ACTION_INSERT,
@@ -98,6 +106,8 @@ class InputState:
         self.manip_actions = [ActionCode.ACTION_CUT, 
                               ActionCode.ACTION_PASTE,
                               ActionCode.ACTION_ESCAPE]
+        self.state_actions = [ActionCode.ACTION_UNDO,
+                                ActionCode.ACTION_REDO]
 
 
     def step_line(self):
@@ -127,6 +137,11 @@ class InputState:
 
     def handle(self, action, arg = None):
         """Handle a keyboard action"""
+        if action in self.delete_actions or action in self.insert_actions:
+            # Add to undo queue, clear redo queue
+            self.undo.append((self.before_cursor, self.after_cursor))
+            self.redo = []
+
         handler = self.handlers[action]
         if action in self.navigate_actions:
             # Navigation actions have a "select" argument
@@ -138,6 +153,7 @@ class InputState:
             # Other actions don't have arguments
             handler()
 
+ 
     def key_left(self, select=False):
         """
         Move cursor one position to the left
@@ -254,6 +270,11 @@ class InputState:
 
     def key_up(self):
         """Arrow up (history previous)"""
+
+        # Clear undo/redo history
+        self.undo = []
+        self.redo = []
+
         # print '\n\n', history, history_index, '\n\n'
         if (self.before_cursor + self.after_cursor).strip() != '' and self.history_index == len(self.history) and self.history_filter == '':
             # Start history navigation; save current line
@@ -272,6 +293,11 @@ class InputState:
 
     def key_down(self):
         """Arrow down (history next)"""
+
+        # Clear undo/redo history
+        self.undo = []
+        self.redo = []
+
         # print '\n\n', history, history_index, '\n\n'
         if self.history_index < len(self.history) - 1:
             self.history_index += 1
@@ -348,6 +374,24 @@ class InputState:
         """Update the text before cursor to match some completion"""
         self.before_cursor = completed
         self.reset_selection()
+
+    def key_undo(self):
+        """Undo the last action or group of actions"""
+        if self.undo != []:
+            self.redo.append((self.before_cursor, self.after_cursor))
+            (before, after) = self.undo.pop()
+            self.before_cursor = before
+            self.after_cursor = after
+            self.selection_start = len(before)
+
+    def key_redo(self):
+        """Redo the last action or group of actions"""
+        if self.redo != []:
+            self.undo.append((self.before_cursor, self.after_cursor))
+            (before, after) = self.redo.pop()
+            self.before_cursor = before
+            self.after_cursor = after
+            self.selection_start = len(before)
 
     def add_to_history(self, line):
         """Add a new line to the history"""
