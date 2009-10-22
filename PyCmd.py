@@ -116,6 +116,9 @@ def main():
                         internal_exit()
                     else:
                         state.handle(ActionCode.ACTION_DELETE)
+                elif rec.char == chr(31):                   # Ctrl-_
+                    state.handle(ActionCode.ACTION_UNDO_EMACS)
+                    auto_select = False
                 elif rec.virtualKeyCode == 75:          # Ctrl-K
                     state.handle(ActionCode.ACTION_KILL_EOL)
                 elif rec.virtualKeyCode == 32:          # Ctrl-Space

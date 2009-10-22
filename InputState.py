@@ -30,6 +30,7 @@ class ActionCode:
     ACTION_ESCAPE = 19
     ACTION_UNDO = 20
     ACTION_REDO = 21
+    ACTION_UNDO_EMACS = 22
 
 
 class InputState:
@@ -63,6 +64,8 @@ class InputState:
         # Line history for undo/redo - (before_cursor, after_cursor) pairs
         self.undo = []
         self.redo = []
+        self.undo_emacs = []
+        self.undo_emacs_index = -1
         self.last_action = ActionCode.ACTION_none
 
         # Action handlers
@@ -88,7 +91,8 @@ class InputState:
             ActionCode.ACTION_KILL_EOL: self.key_kill_line,
             ActionCode.ACTION_ESCAPE: self.key_esc,
             ActionCode.ACTION_UNDO: self.key_undo,
-            ActionCode.ACTION_REDO: self.key_redo, }
+            ActionCode.ACTION_REDO: self.key_redo,
+            ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs, }
             
         # Action categories
         self.insert_actions = [ActionCode.ACTION_INSERT,
@@ -108,7 +112,8 @@ class InputState:
                               ActionCode.ACTION_PASTE,
                               ActionCode.ACTION_ESCAPE]
         self.state_actions = [ActionCode.ACTION_UNDO,
-                                ActionCode.ACTION_REDO]
+                              ActionCode.ACTION_REDO,
+                              ActionCode.ACTION_UNDO_EMACS]
 
 
 
@@ -151,12 +156,18 @@ class InputState:
             # Other actions don't have arguments
             handler()
 
-        if (action in self.delete_actions or action in self.insert_actions) \
-                and action != self.last_action \
-                and self.changed():
-            # Add the previous state as an undo state
-            self.undo.append((self.prev_before_cursor, self.prev_after_cursor))
-            self.redo = []
+        # Add the previous state as an undo state if needed
+        if action != self.last_action and self.changed():
+            if action in self.delete_actions \
+                    or action in self.insert_actions\
+                    or action == ActionCode.ACTION_UNDO_EMACS:
+                self.undo.append((self.prev_before_cursor, self.prev_after_cursor))
+                self.redo = []
+            if action in self.delete_actions \
+                    or action in self.insert_actions\
+                    or action == ActionCode.ACTION_UNDO:
+                self.undo_emacs.append((self.prev_before_cursor, self.prev_after_cursor))
+                self.undo_emacs_index = -1
 
         # print "\n", self.undo, "    ", self.redo, "\n"
 
@@ -392,6 +403,20 @@ class InputState:
             self.before_cursor = before
             self.after_cursor = after
             self.selection_start = len(before)
+
+    def key_undo_emacs(self):
+        """Emacs-style undo"""
+        if self.undo_emacs != []:
+            if self.last_action != ActionCode.ACTION_UNDO_EMACS:
+                self.undo_emacs.append((self.before_cursor, self.after_cursor))
+                self.undo_emacs_index -= 1
+
+            if len(self.undo_emacs) + self.undo_emacs_index >= 0:
+                (before, after) = self.undo_emacs[self.undo_emacs_index]
+                self.before_cursor = before
+                self.after_cursor = after
+                self.undo_emacs_index -= 1
+                self.selection_start = len(before)
 
     def key_redo(self):
         """Redo the last action or group of actions"""
