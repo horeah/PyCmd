@@ -109,12 +109,15 @@ class InputState:
                                  ActionCode.ACTION_HOME, 
                                  ActionCode.ACTION_END]
         self.manip_actions = [ActionCode.ACTION_CUT, 
+                              ActionCode.ACTION_COPY,
                               ActionCode.ACTION_PASTE,
                               ActionCode.ACTION_ESCAPE]
         self.state_actions = [ActionCode.ACTION_UNDO,
                               ActionCode.ACTION_REDO,
                               ActionCode.ACTION_UNDO_EMACS]
-
+        self.batch_actions = [ActionCode.ACTION_DELETE_WORD,
+                              ActionCode.ACTION_BACKSPACE_WORD,
+                              ActionCode.ACTION_KILL_EOL] + self.manip_actions
 
 
     def step_line(self):
@@ -144,7 +147,6 @@ class InputState:
 
     def handle(self, action, arg = None):
         """Handle a keyboard action"""
-
         handler = self.handlers[action]
         if action in self.navigate_actions:
             # Navigation actions have a "select" argument
@@ -157,15 +159,17 @@ class InputState:
             handler()
 
         # Add the previous state as an undo state if needed
-        if action != self.last_action and self.changed():
-            if action in self.delete_actions \
-                    or action in self.insert_actions\
-                    or action == ActionCode.ACTION_UNDO_EMACS:
+        if self.changed():
+            if action in self.batch_actions \
+                    or (action in self.insert_actions + self.delete_actions \
+                            and action != self.last_action) \
+                            or action == ActionCode.ACTION_UNDO_EMACS:
                 self.undo.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.redo = []
-            if action in self.delete_actions \
-                    or action in self.insert_actions\
-                    or action == ActionCode.ACTION_UNDO:
+            if action in self.batch_actions \
+                    or (action in self.insert_actions + self.delete_actions \
+                            and action != self.last_action) \
+                            or action == ActionCode.ACTION_UNDO:
                 self.undo_emacs.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.undo_emacs_index = -1
 
