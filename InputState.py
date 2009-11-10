@@ -336,13 +336,16 @@ class InputState:
     def key_esc(self):
         """Esc key"""
         if self.get_selection() != '':
+            # Reset selection, if any
             self.reset_selection()
         else:
-            if self.history_filter == '':
-                self.add_to_history(self.before_cursor + self.after_cursor)
+            if self.history_filter != '':
+                # Reset search filter, if any
+                self.reset_history()
+            else:
+                # Clear current line
                 self.before_cursor = ''
                 self.after_cursor = ''
-            self.reset_history()
 
     def key_backspace(self):
         """Backspace key"""

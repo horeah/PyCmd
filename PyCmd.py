@@ -125,8 +125,10 @@ def main():
                     auto_select = True
                     state.reset_selection()
                 elif rec.virtualKeyCode == 71:          # Ctrl-G
-                    auto_select = False
-                    state.reset_selection()
+                    if scrolling:
+                        scrolling = False
+                    else:
+                        state.handle(ActionCode.ACTION_ESCAPE)
                 elif rec.virtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.virtualKeyCode == 69:          # Ctrl-E
