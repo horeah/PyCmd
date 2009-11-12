@@ -343,7 +343,8 @@ class InputState:
                 # Reset search filter, if any
                 self.reset_history()
             else:
-                # Clear current line
+                # Clear current line (we keep it in the history though)
+                self.add_to_history(self.before_cursor + self.after_cursor)
                 self.before_cursor = ''
                 self.after_cursor = ''
 

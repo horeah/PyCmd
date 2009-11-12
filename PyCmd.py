@@ -129,6 +129,9 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
+                        save_history(state.history,
+                                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                                     1000)
                 elif rec.virtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.virtualKeyCode == 69:          # Ctrl-E
@@ -177,14 +180,22 @@ def main():
                         if dir_hist.go_left():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
+                        save_history(dir_hist.locations,
+                                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                                     16)
+
                     else:
-                        state.handle(ActionCode.ACTION_LEFT_WORD, select)               
+                        state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.virtualKeyCode == 39:          # Alt-right
                     if state.before_cursor + state.after_cursor == '':
                         state.reset_prev_line()
                         if dir_hist.go_right():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
+                        save_history(dir_hist.locations,
+                                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                                     16)
+
                     else:
                         state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 66:          # Alt-B
@@ -241,6 +252,9 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
+                        save_history(state.history,
+                                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                                     1000)
                 elif rec.char == '\t':                  # Tab
                     sys.stdout.write(state.after_cursor)        # Move cursor to the end
                     tokens = parse_line(state.before_cursor)
@@ -279,9 +293,18 @@ def main():
 
         # Add to history
         state.add_to_history(line)
+        save_history(state.history,
+                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                     1000)
+
 
         # Add to dir history
         dir_hist.visit_cwd()
+        dir_hist.display()
+        save_history(dir_hist.locations,
+                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                     16)
+
 
 def internal_cd(args):
     """The internal CD command"""
@@ -305,12 +328,6 @@ def internal_exit():
     print
     print 'Bye!'
     os.remove(tmpfile)
-    save_history(state.history,
-                 expand_env_vars('%APPDATA%\\PyCmd\\history'),
-                 1000)
-    save_history(dir_hist.locations,
-                 expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
-                 16)
     sys.exit()
 
 
