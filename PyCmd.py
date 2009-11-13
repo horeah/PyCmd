@@ -300,7 +300,6 @@ def main():
 
         # Add to dir history
         dir_hist.visit_cwd()
-        dir_hist.display()
         save_history(dir_hist.locations,
                      expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
                      16)
@@ -415,8 +414,8 @@ def save_history(lines, filename, length):
         # No previous history, save current
         history_to_save = lines
 
-    if len(history_to_save) > lines:
-        history_to_save = history_to_save[-lines :]    # Limit history file
+    if len(history_to_save) > length:
+        history_to_save = history_to_save[-length :]    # Limit history file
 
     # Write merged history to history file
     history_file = open(filename, 'w')
