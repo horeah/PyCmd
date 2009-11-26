@@ -5,7 +5,7 @@ from completion import complete_file, complete_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, move_cursor, get_cursor, cursor_backward, set_cursor_visible, set_console_title
-from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed
+from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, BACKGROUND_BRIGHT, FOREGROUND_RED, BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
@@ -54,6 +54,7 @@ def main():
         state.reset_line(prompt())
         scrolling = False
         auto_select = False
+        force_repaint = True
         print
 
         while True:
@@ -66,7 +67,7 @@ def main():
             # Save default (original) text attributes
             orig_attr = get_text_attributes()
 
-            if state.changed() or not scrolling:
+            if state.changed() or force_repaint:
                 prev_total_len = len(state.prev_prompt + state.prev_before_cursor + state.prev_after_cursor)
                 cursor_backward(len(state.prev_prompt + state.prev_before_cursor))
 
@@ -109,7 +110,11 @@ def main():
             # Read and process a keyboard event
             rec = read_input()
             select = auto_select or is_shift_pressed(rec)
-            # print '\n\n', rec.keyDown, rec.char, rec.virtualKeyCode, rec.controlKeyState, '\n\n'
+
+            # Will be overriden if Shift-PgUp/Dn is pressed
+            force_repaint = not is_control_only(rec)    
+
+            #print '\n\n', rec.keyDown, rec.char, rec.virtualKeyCode, rec.controlKeyState, '\n\n'
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.char == chr(4):                  # Ctrl-D
                     if state.before_cursor + state.after_cursor == '':
@@ -224,10 +229,12 @@ def main():
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
                 scrolling = True
+                force_repaint = False
             elif is_shift_pressed(rec) and rec.virtualKeyCode == 34:    # Shift-PgDn
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(b - t - 2)
                 scrolling = True
+                force_repaint = False
             else:                                       # Clean key (no modifiers)
                 if rec.char == chr(0):                  # Special key (arrows and such)
                     if rec.virtualKeyCode == 37:        # Left arrow

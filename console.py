@@ -143,7 +143,12 @@ def is_shift_pressed(record):
     """Check whether the Shift key is pressed"""
     return record.controlKeyState & 0x0010 != 0
 
-
+def is_control_only(record):
+    """
+    Check whether this is a control-key-only press, i.e. just a modifier
+    key w/out an "actual" key
+    """
+    return record.virtualKeyCode in [16, 17, 18]
 
 # Initialization
 FOREGROUND_BLUE = 0x01
