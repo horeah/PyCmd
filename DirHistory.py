@@ -39,6 +39,8 @@ class DirHistory:
             sys.stdout.write('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
             self.index -= 1
+            if self.index < 0:
+                self.index = len(self.locations) - 1
             changed = False
         return changed
 
@@ -73,5 +75,3 @@ class DirHistory:
         set_text_attributes(orig_attr)
         sys.stdout.write('\n')
         map(sys.stdout.write, ['  ' + d + '\n' for d in self.locations[self.index + 1 :]])
-
-
