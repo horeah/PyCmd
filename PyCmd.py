@@ -4,7 +4,8 @@ from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_p
 from completion import complete_file, complete_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
-from console import get_text_attributes, set_text_attributes, move_cursor, get_cursor, cursor_backward, set_cursor_visible, set_console_title
+from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
+from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
 from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, BACKGROUND_BRIGHT, FOREGROUND_RED, BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
@@ -55,6 +56,7 @@ def main():
         scrolling = False
         auto_select = False
         force_repaint = True
+        dir_hist_shown = False
         print
 
         while True:
@@ -70,7 +72,7 @@ def main():
             if state.changed() or force_repaint:
                 prev_total_len = len(state.prev_prompt + state.prev_before_cursor + state.prev_after_cursor)
                 cursor_backward(len(state.prev_prompt + state.prev_before_cursor))
-
+                
                 # Write current line
                 set_text_attributes(orig_attr ^ FOREGROUND_BRIGHT)       # Revert brightness bit for prompt
                 sys.stdout.write('\r' + state.prompt)
@@ -185,10 +187,15 @@ def main():
                         if dir_hist.go_left():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
+                        else:
+                            dir_hist_shown = False
                         save_history(dir_hist.locations,
                                      expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
                                      16)
-
+                        if dir_hist_shown and get_buffer_size()[0] == sx_old:
+                            move_cursor(cx_old, cy_old)
+                            dir_hist.display()
+                            sys.stdout.write(state.prev_prompt)
                     else:
                         state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.virtualKeyCode == 39:          # Alt-right
@@ -197,10 +204,15 @@ def main():
                         if dir_hist.go_right():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
+                        else:
+                            dir_hist_shown = False
                         save_history(dir_hist.locations,
                                      expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
                                      16)
-
+                        if dir_hist_shown and get_buffer_size()[0] == sx_old:
+                            move_cursor(cx_old, cy_old)
+                            dir_hist.display()
+                            sys.stdout.write(state.prev_prompt)
                     else:
                         state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 66:          # Alt-B
@@ -213,8 +225,14 @@ def main():
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.virtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
-                        dir_hist.display()
-                        state.reset_prev_line()
+                        sx_current = get_buffer_size()[0]
+                        if not dir_hist_shown or sx_old != sx_current:
+                            # We need to redisplay the directory history
+                            (cx_old, cy_old) = get_cursor()
+                            sx_old = sx_current
+                            dir_hist.display()
+                            dir_hist_shown = True
+                            state.reset_prev_line()
                     else:
                         state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.virtualKeyCode == 87:          # Alt-W
@@ -272,6 +290,7 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
                     if suggestions != []:
+                        dir_hist_shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
                         for s in suggestions:
                             sys.stdout.write(s + '\n')
