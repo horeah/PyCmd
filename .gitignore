@@ -1,7 +1,10 @@
 # leading `/' means at top level only
 /build/
 /PyCmd/
+/PyCmd.zip
+
 
 # no leading `/' means anywhere
 *.pyc
 .ropeproject
+semantic.cache
