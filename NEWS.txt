@@ -1,3 +1,13 @@
+What's new in PyCmd 0.5?
+
+ * Undo/Redo with Ctrl-Z/Ctrl-Shift-Z (regular style) and Ctrl-_ (Emacs-style)
+ * Save the command and directory history after each command
+ * Smarter directory history (repainted if Alt-Left/Right pressed after Alt-D)
+ * New line parser that supports escaping with ^ and tokens like '2>&1'
+ * New shortcut (Ctrl-Backspace)
+ * Bugfixes in buffer scrolling, repainting, unescaping
+
+
 What's new in PyCmd 0.4?
 
  * Copy-paste using the keyboard (both Ctrl-C/X/V and Emacs-style bindings)

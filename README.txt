@@ -21,14 +21,18 @@ persistent history, etc.)
       Up/Down)
     - reordering is more intuitive than cmd's default strategy
 
- c. Other
+ c. Command editing
+    - support emacs key bindings
+    - Copy-Paste using the keyboard (Ctrl-C/X/V or Emacs-style)
+    - Undo/Redo with Ctrl-(Shift-)Z (regular style) or Ctrl-_ (Emacs-style)
+    - smart word-by-word navigation
+
+ d. Other
     - show a highlighted prompt to make the buffer content more readable
     - smart prompt that abbreviates directory names to save screen space
     - Shift-PgUp/PgDn to scroll the buffer
-    - Copy-paste using the keyboard (Ctrl-C/X/V or Emacs-style)
-    - History of recently visited directories (Alt-Left/Right/D on empty line)
+    - history of recently visited directories (Alt-Left/Right/D on empty line)
     - expand ~ as %HOME% or %USERPROFILE%
-    - support emacs key bindings
     - Ctrl-D on an empty line closes PyCmd
     - show the current working directory in the window title
 
@@ -36,7 +40,8 @@ persistent history, etc.)
 3. Known problems
 -----------------
     - pushd/popd are not supported
-    - %ERRORLEVEL% is always 0
+    - %ERRORLEVEL% is always 0 when executing commands interactively
+    - DOSKEY macros are not supported
 
 
 4. Future plans
@@ -45,7 +50,6 @@ persistent history, etc.)
     - custom TAB-completion for the arguments of common commands
     - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
       of hacky)
-    - support ANSI colors (e.g. for MinGW utilities)
 
 
 4. How do I download/install/run it?
@@ -70,7 +74,7 @@ persistent history, etc.)
 
 5. Credits
 ----------
-   - The fish shell is a huge source of good ideas:
+   - The fish shell is an endless source of good ideas:
             http://fishshell.org/index.php
    - fsm.py is a nice package for implementing a Finite State Machine:
             http://code.activestate.com/recipes/146262
