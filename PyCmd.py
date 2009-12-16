@@ -1,14 +1,15 @@
 import sys, os, msvcrt, tempfile, signal, time
 
 from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
-from completion import complete_file, complete_env_var
+from completion import complete_file, complete_env_var, find_common_prefix
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
 from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
 from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
-from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, BACKGROUND_BRIGHT, FOREGROUND_RED, BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
+from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
+from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
 def main():
 
@@ -292,8 +293,13 @@ def main():
                     if suggestions != []:
                         dir_hist_shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
+                        common_len = len(find_common_prefix(state.before_cursor, suggestions))
                         for s in suggestions:
-                            sys.stdout.write(s + '\n')
+                            # Print the common part in a different color
+                            set_text_attributes(orig_attr ^ FOREGROUND_RED)
+                            sys.stdout.write(s[:common_len])
+                            set_text_attributes(orig_attr)
+                            sys.stdout.write(s[common_len : ] + '\n')
                         state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.char == chr(8):                # Backspace
