@@ -293,14 +293,34 @@ def main():
                     if suggestions != []:
                         dir_hist_shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
-                        common_len = len(find_common_prefix(state.before_cursor, suggestions))
-                        for s in suggestions:
-                            # Print the common part in a different color
-                            set_text_attributes(orig_attr ^ FOREGROUND_RED)
-                            sys.stdout.write(s[:common_len])
-                            set_text_attributes(orig_attr)
-                            sys.stdout.write(s[common_len : ] + '\n')
-                        state.reset_prev_line()
+                        common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
+                        column_width = max([len(s) for s in suggestions]) + 10
+                        if column_width > get_buffer_size()[0] - 1:
+                            column_width = get_buffer_size()[0] - 1
+                        if len(suggestions) > (get_viewport()[3] - get_viewport()[1]) / 4:
+                            # We print multiple columns to save space
+                            num_columns = (get_buffer_size()[0] - 1) / column_width
+                        else:
+                            # We print a single column for clarity
+                            num_columns = 1
+                        num_lines = len(suggestions) / num_columns
+                        if len(suggestions) % num_columns != 0:
+                            num_lines += 1
+                        for line in range(0, num_lines):
+                            # Print one more line
+                            sys.stdout.write('\r')
+                            for column in range(0, num_columns):
+                                if line + column * num_lines < len(suggestions):
+                                    s = suggestions[line + column * num_lines]
+                                    # Print the common part in a different color
+                                    set_text_attributes(orig_attr ^ FOREGROUND_RED)
+                                    sys.stdout.write(s[:common_prefix_len])
+                                    set_text_attributes(orig_attr)
+                                    sys.stdout.write(s[common_prefix_len : ])
+                                    sys.stdout.write(' ' * (column_width - len(s)))
+                            sys.stdout.write('\n')
+                            line += 1
+                    state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
