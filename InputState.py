@@ -328,6 +328,7 @@ class InputState:
             while self.history_index < len(self.history) and self.history[self.history_index].lower().find(self.history_filter.lower()) < 0:
                 self.history_index += 1
             self.before_cursor = self.history[self.history_index]
+            self.after_cursor = ''
         else:
             if self.history_filter != '':
                 self.reset_history()
