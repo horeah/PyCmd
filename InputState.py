@@ -400,6 +400,9 @@ class InputState:
 
     def key_complete(self, completed):
         """Update the text before cursor to match some completion"""
+        if completed.endswith(' ') and self.after_cursor.startswith(' '):
+            # Avoid multiple blanks after completing
+            self.after_cursor = self.after_cursor[1:]
         self.before_cursor = completed
         self.reset_selection()
 
