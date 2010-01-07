@@ -320,7 +320,7 @@ def main():
                                     sys.stdout.write(' ' * (column_width - len(s)))
                             sys.stdout.write('\n')
                             line += 1
-                    state.reset_prev_line()
+                        state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
