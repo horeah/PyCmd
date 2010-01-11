@@ -1,14 +1,15 @@
 import sys, os, msvcrt, tempfile, signal, time
 
 from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
-from completion import complete_file, complete_env_var
+from completion import complete_file, complete_env_var, find_common_prefix
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
 from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
 from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
-from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, BACKGROUND_BRIGHT, FOREGROUND_RED, BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
+from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
+from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
 def main():
 
@@ -292,8 +293,33 @@ def main():
                     if suggestions != []:
                         dir_hist_shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
-                        for s in suggestions:
-                            sys.stdout.write(s + '\n')
+                        common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
+                        column_width = max([len(s) for s in suggestions]) + 10
+                        if column_width > get_buffer_size()[0] - 1:
+                            column_width = get_buffer_size()[0] - 1
+                        if len(suggestions) > (get_viewport()[3] - get_viewport()[1]) / 4:
+                            # We print multiple columns to save space
+                            num_columns = (get_buffer_size()[0] - 1) / column_width
+                        else:
+                            # We print a single column for clarity
+                            num_columns = 1
+                        num_lines = len(suggestions) / num_columns
+                        if len(suggestions) % num_columns != 0:
+                            num_lines += 1
+                        for line in range(0, num_lines):
+                            # Print one more line
+                            sys.stdout.write('\r')
+                            for column in range(0, num_columns):
+                                if line + column * num_lines < len(suggestions):
+                                    s = suggestions[line + column * num_lines]
+                                    # Print the common part in a different color
+                                    set_text_attributes(orig_attr ^ FOREGROUND_RED)
+                                    sys.stdout.write(s[:common_prefix_len])
+                                    set_text_attributes(orig_attr)
+                                    sys.stdout.write(s[common_prefix_len : ])
+                                    sys.stdout.write(' ' * (column_width - len(s)))
+                            sys.stdout.write('\n')
+                            line += 1
                         state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.char == chr(8):                # Backspace
