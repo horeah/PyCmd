@@ -1,4 +1,4 @@
-import sys, os, msvcrt, tempfile, signal, time
+import sys, os, msvcrt, tempfile, signal, time, traceback
 
 from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
 from completion import complete_file, complete_env_var, find_common_prefix
@@ -488,6 +488,21 @@ def read_history(filename):
         history = []
     return history
 
+
 # Entry point
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception, e:        
+        report_file_name = expand_env_vars('%APPDATA%\\PyCmd\\crash-' 
+                                           + time.strftime('%Y%m%d_%H%M%S')
+                                           + '.log')
+        print '\n'
+        print '************************'
+        print 'Internal error in PyCmd!' 
+        report_file = open(report_file_name, 'w')
+        traceback.print_exc(file=report_file)
+        report_file.close()
+        print 'Crash report written to:\n  ' + report_file_name
+        print 'Exiting... sorry :('
+        print '************************'
