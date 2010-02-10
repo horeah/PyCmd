@@ -17,31 +17,38 @@ def main():
     print
     print 'Welcome to PyCmd 0.5!'
 
-    # Create directory structure in %APPDATA% if not present
-    if not os.path.isdir(expand_env_vars('%APPDATA%\\PyCmd')):
-        os.mkdir(expand_env_vars('%APPDATA%\\PyCmd'))
-    if not os.path.isdir(expand_env_vars('%APPDATA%\\PyCmd\\tmp')):
-        os.mkdir(expand_env_vars('%APPDATA%\\PyCmd\\tmp'))
+    # %APPDATA% is not always defined (e.g. when using runas.exe)
+    if 'APPDATA' in os.environ.keys():
+        APPDATA = '%APPDATA%'
+    else:
+        APPDATA = '%USERPROFILE%\\Application Data'
+    global pycmd_data_dir
+    pycmd_data_dir = expand_env_vars(APPDATA + '\\PyCmd')
 
+    # Create app data directory structure if not present
+    if not os.path.isdir(pycmd_data_dir):
+        os.mkdir(pycmd_data_dir)
+    if not os.path.isdir(pycmd_data_dir + '\\tmp'):
+        os.mkdir(pycmd_data_dir + '\\tmp')
 
     # Current state of the input (prompt, entered chars, history)
     global state
     state = InputState()
 
     # Read/initialize command history
-    state.history = read_history(expand_env_vars('%APPDATA%\\PyCmd\\history'))
+    state.history = read_history(pycmd_data_dir + '\\history')
     state.history_index = len(state.history)
 
     # Read/initialize directory history
     global dir_hist
     dir_hist = DirHistory()
-    dir_hist.locations = read_history(expand_env_vars('%APPDATA%\\PyCmd\\dir_history'))
+    dir_hist.locations = read_history(pycmd_data_dir + '\\dir_history')
     dir_hist.index = len(dir_hist.locations) - 1
     dir_hist.visit_cwd()
 
     # Create temporary file
     global tmpfile
-    (handle, tmpfile) = tempfile.mkstemp(dir = expand_env_vars('%APPDATA%\\PyCmd\\tmp'))
+    (handle, tmpfile) = tempfile.mkstemp(dir = pycmd_data_dir + '\\tmp')
     os.close(handle)
 
     # Catch SIGINT to emulate Ctrl-C key combo
@@ -138,7 +145,7 @@ def main():
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
                         save_history(state.history,
-                                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                                     pycmd_data_dir + '\\history',
                                      1000)
                 elif rec.virtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
@@ -191,7 +198,7 @@ def main():
                         else:
                             dir_hist_shown = False
                         save_history(dir_hist.locations,
-                                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                                     pycmd_data_dir + '\\dir_history',
                                      16)
                         if dir_hist_shown and get_buffer_size()[0] == sx_old:
                             move_cursor(cx_old, cy_old)
@@ -208,7 +215,7 @@ def main():
                         else:
                             dir_hist_shown = False
                         save_history(dir_hist.locations,
-                                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                                     pycmd_data_dir + '\\dir_history',
                                      16)
                         if dir_hist_shown and get_buffer_size()[0] == sx_old:
                             move_cursor(cx_old, cy_old)
@@ -278,8 +285,8 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        save_history(state.history,
-                                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                        save_history(state.history, 
+                                     pycmd_data_dir + '\\history',
                                      1000)
                 elif rec.char == '\t':                  # Tab
                     sys.stdout.write(state.after_cursor)        # Move cursor to the end
@@ -346,14 +353,14 @@ def main():
         # Add to history
         state.add_to_history(line)
         save_history(state.history,
-                     expand_env_vars('%APPDATA%\\PyCmd\\history'),
+                     pycmd_data_dir + '\\history',
                      1000)
 
 
         # Add to dir history
         dir_hist.visit_cwd()
         save_history(dir_hist.locations,
-                     expand_env_vars('%APPDATA%\\PyCmd\\dir_history'),
+                     pycmd_data_dir + '\\dir_history',
                      16)
 
 
@@ -494,9 +501,11 @@ if __name__ == '__main__':
     try:
         main()
     except Exception, e:        
-        report_file_name = expand_env_vars('%APPDATA%\\PyCmd\\crash-' 
-                                           + time.strftime('%Y%m%d_%H%M%S')
-                                           + '.log')
+        global pycmd_data_dir
+        report_file_name = (pycmd_data_dir
+                            + '\\crash-' 
+                            + time.strftime('%Y%m%d_%H%M%S') 
+                            + '.log')
         print '\n'
         print '************************'
         print 'Internal error in PyCmd!' 
