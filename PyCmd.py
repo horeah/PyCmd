@@ -1,6 +1,7 @@
 import sys, os, msvcrt, tempfile, signal, time
 
-from common import parse_line, unescape, expand_env_vars, split_nocase, abbrev_path, sep_tokens
+from common import parse_line, unescape, split_nocase, abbrev_path, sep_tokens
+from common import expand_tilde, expand_env_vars
 from completion import complete_file, complete_env_var, find_common_prefix
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
@@ -387,7 +388,7 @@ def run_in_cmd(tokens):
 
     line_sanitized = ''
     for token in tokens:
-        token_sane = expand_env_vars(token)
+        token_sane = expand_tilde(token)
         if token_sane != '\\' and token_sane[1:] != ':\\':
             token_sane = token_sane.rstrip('\\')
         if token_sane.count('"') % 2 == 1:

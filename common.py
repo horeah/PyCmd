@@ -130,16 +130,29 @@ def unescape(string):
 
     return result
 
-def expand_env_vars(string):
-    """Return a version of the string with the environment variables expanded"""
-    # Expand tilde to %HOME% or %USERPROFILE%
+
+def expand_tilde(string):
+    """
+    Return an expanded version of the string by replacing a leading tilde
+    with %HOME% (if defined) or %USERPROFILE%.
+    """
     if 'HOME' in os.environ.keys():
         home_var = 'HOME'
     else:
         home_var = 'USERPROFILE'
-
     if string.startswith('~') or string.startswith('"~'):
         string = string.replace('~', '%' + home_var + '%', 1)
+    return string
+
+
+def expand_env_vars(string):
+    """
+    Return an expanded version of the string by inlining the values of the
+    environment variables. Also replaces ~ with %HOME% or %USERPROFILE%.
+    The provided string is expected to be a single token of a command.
+    """
+    # Expand tilde 
+    string = expand_tilde(string)
 
     # Expand all %variable%s
     begin = string.find('%')
