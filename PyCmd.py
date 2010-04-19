@@ -395,6 +395,19 @@ def run_in_cmd(tokens):
             token_sane += '"'
         line_sanitized += token_sane + ' '
     line_sanitized = line_sanitized[:-1]
+    if line_sanitized.endswith('&') and not line_sanitized.endswith('^&'):
+        # We remove a redundant & to avoid getting an 'Unexpected &' error when
+        # we append a new one below; the ending & it would be ignored by cmd.exe
+        # anyway...
+        line_sanitized = line_sanitized[:-1]
+    elif line_sanitized.endswith('|') and not line_sanitized.endswith('^|') \
+            or line_sanitized.endswith('&&') and not line_sanitized.endswith('^&&'):
+        # The syntax of the command is incorrect, cmd would refuse to execute it
+        # altogether; in order to we replicate the error message, we run a simple
+        # invalid command and return
+        print
+        os.system('echo |')
+        return
     print
 
     # Cleanup environment
@@ -406,7 +419,7 @@ def run_in_cmd(tokens):
     if line_sanitized != '':
         command = '"'
         command += line_sanitized
-        command += '&set > "' + tmpfile + '"'
+        command += ' &set > "' + tmpfile + '"'
         for var in pseudo_vars:
             command += ' & echo ' + var + '="%' + var + '%" >> "' + tmpfile + '"'
         command += '& <nul (set /p xxx=CD=) >>"' + tmpfile + '" & cd >>"' + tmpfile + '"'
