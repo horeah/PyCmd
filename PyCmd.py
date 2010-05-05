@@ -1,6 +1,7 @@
 import sys, os, msvcrt, tempfile, signal, time, traceback
 
-from common import parse_line, unescape, split_nocase, abbrev_path, sep_tokens
+from common import parse_line, unescape, contains_special_char, sep_tokens
+from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
 from completion import complete_file, complete_env_var, find_common_prefix
 from InputState import ActionCode, InputState
@@ -13,11 +14,6 @@ from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
 from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
 def main():
-
-    # Splash
-    print
-    print 'Welcome to PyCmd 0.5!'
-
     # %APPDATA% is not always defined (e.g. when using runas.exe)
     if 'APPDATA' in os.environ.keys():
         APPDATA = '%APPDATA%'
@@ -55,8 +51,38 @@ def main():
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Run an empty command to initialize environment
-    run_in_cmd(['echo', '>', 'NUL'])
+    # Look for an initial command line (if provided)
+    if len(sys.argv) > 1:
+        # Quote args as needed
+        tokens = ['"' + token + '"' if contains_special_char(token) else token
+                  for token in sys.argv[2:]]
+
+        if sys.argv[1].upper() in ['/K', '-K']:
+            # Run the specified command and continue
+            if tokens != []:
+                run_command(tokens)
+                dir_hist.visit_cwd()
+        elif sys.argv[1].upper() in ['/C', '-C']:
+            # Run the specified command, then exit
+            if tokens != []:
+                run_command(tokens)
+            internal_exit()
+        elif sys.argv[1].upper() in ['/H', '/?', '-H']:
+            # Show usage information and exit
+            print_usage()
+            internal_exit()
+        else:
+            # Invalid command line switch
+            sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[1] + '\'\n')
+            print_usage()
+            internal_exit()
+    else:
+        # Print some splash text
+        print
+        print 'Welcome to PyCmd 0.5!'
+        print
+        # Run an empty command to initialize environment
+        run_command(['echo', '>', 'NUL'])
 
     # Main loop
     while True:
@@ -129,7 +155,7 @@ def main():
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.char == chr(4):                  # Ctrl-D
                     if state.before_cursor + state.after_cursor == '':
-                        internal_exit()
+                        internal_exit('Bye!')
                     else:
                         state.handle(ActionCode.ACTION_DELETE)
                 elif rec.char == chr(31):                   # Ctrl-_
@@ -342,14 +368,9 @@ def main():
         tokens = parse_line(line)
         if tokens == [] or tokens[0] == '':
             continue
-        elif tokens[0] == 'exit':
-            internal_exit()
-        elif tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []:
-            # This is a single CD command -- use our custom, more handy CD
-            internal_cd([unescape(t) for t in tokens[1:]])
         else:
-            # Regular (external) command
-            run_in_cmd(tokens)
+            print
+            run_command(tokens)
 
         # Add to history
         state.add_to_history(line)
@@ -378,16 +399,27 @@ def internal_cd(args):
             os.chdir(target)
     except OSError, error:
         sys.stdout.write('\n' + str(error))
-    sys.stdout.write('\n')
     os.environ['CD'] = os.getcwd()
 
 
-def internal_exit():
-    """The EXIT command"""
-    print
-    print 'Bye!'
+def internal_exit(message = ''):
+    """The EXIT command, with an optional goodbye message"""
+    if (message != ''):
+        print message
     os.remove(tmpfile)
     sys.exit()
+
+
+def run_command(tokens):
+    """Execute a command line (treat internal and external appropriately"""
+    if tokens[0] == 'exit':
+        internal_exit('Bye!')
+    elif tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []:
+        # This is a single CD command -- use our custom, more handy CD
+        internal_cd([unescape(t) for t in tokens[1:]])
+    else:
+        # Regular (external) command
+        run_in_cmd(tokens)
 
 
 def run_in_cmd(tokens):
@@ -415,7 +447,6 @@ def run_in_cmd(tokens):
         print
         os.system('echo |')
         return
-    print
 
     # Cleanup environment
     for var in pseudo_vars:
@@ -508,6 +539,19 @@ def read_history(filename):
         print 'Warning: Can\'t open ' + os.path.basename(filename) + '!'
         history = []
     return history
+
+
+def print_usage():
+    """Print usage information"""
+    print 'Usage:'
+    print '\t PyCmd [-c command] | [-k command] | [-h]'
+    print
+    print '\t\t-c command \tRun command, then exit'
+    print '\t\t-k command \tRun command, then continue to the prompt'
+    print '\t\t-h \t\tShow this help'
+    print
+    print 'Note that you can use \'/\' instead of \'-\', uppercase instead of '
+    print 'lowercase and \'/?\' instead of \'-h\''
 
 
 # Entry point
