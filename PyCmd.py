@@ -260,10 +260,14 @@ def main():
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.virtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
-                        sx_current = get_buffer_size()[0]
+                        (sx_current, sy_current) = get_buffer_size()
                         if not dir_hist_shown or sx_old != sx_current:
                             # We need to redisplay the directory history
                             (cx_old, cy_old) = get_cursor()
+                            if cy_old + len(dir_hist.locations) > sy_current:
+                                # We are overflowing the buffer and need to adjust
+                                # cy_old accordingly
+                                cy_old = sy_current - len(dir_hist.locations) - 3
                             sx_old = sx_current
                             dir_hist.display()
                             dir_hist_shown = True
