@@ -1,5 +1,6 @@
 import sys, os
 from console import set_text_attributes, get_text_attributes
+from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
 from console import BACKGROUND_BRIGHT, FOREGROUND_BRIGHT
 
 class DirHistory:
@@ -7,6 +8,14 @@ class DirHistory:
     Handle a history of visited directories, somewhat similar to a browser
     history.
     """
+
+    # Location and buffer size of the last displayed history
+    offset_from_bottom = 0
+    disp_size = (0, 0)
+
+    # True if a clean display of the history has been shown (i.e. the following
+    # call to display() would actually be an update, not a fresh paint)
+    shown = False
 
     def __init__(self):
         """Create an empty directory history"""
@@ -25,6 +34,7 @@ class DirHistory:
             sys.stdout.write('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
             changed = False
+            self.shown = False
         return changed
 
     def go_right(self):
@@ -42,6 +52,7 @@ class DirHistory:
             if self.index < 0:
                 self.index = len(self.locations) - 1
             changed = False
+            self.shown = False
         return changed
 
     def visit_cwd(self):
@@ -62,16 +73,63 @@ class DirHistory:
 
     def display(self):
         """
-        Nicely formatted display of the location history.
-        The current location is highlighted.
+        Nicely formatted display of the location history, with current location
+        highlighted. If a clean display is present on the screen, this
+        overwrites it to perform an 'update'.
         """
+        set_cursor_visible(False)
+        buffer_size = get_buffer_size()
+
+        if self.shown and self.disp_size == buffer_size:
+            # We just need to update the previous display, so we
+            # go back to the original display start point
+            move_cursor(0, buffer_size[1] - self.offset_from_bottom)
+        else:
+            # We need to redisplay, so remember the start point for
+            # future updates
+            self.disp_size = buffer_size
+            self.offset_from_bottom = buffer_size[1] - get_cursor()[1]
+
         orig_attr = get_text_attributes()
         set_text_attributes(orig_attr)
         sys.stdout.write('\n')
-        map(sys.stdout.write, ['  ' + d + '\n' for d in self.locations[: self.index]])
+        lines_written = 2
+
+        # From 0 to index - 1
+        for location in self.locations[: self.index]:
+            lines_written += (len('  ' + location) / buffer_size[0] + 1)
+            sys.stdout.write('  ' + location + '\n')
+
+        # Entry at index
         sys.stdout.write('  ')
+        location = self.locations[self.index]
         set_text_attributes(orig_attr ^ BACKGROUND_BRIGHT ^ FOREGROUND_BRIGHT)
-        sys.stdout.write(self.locations[self.index])
+        sys.stdout.write(location)
+        lines_written += (len('  ' + location) / buffer_size[0] + 1)
         set_text_attributes(orig_attr)
-        sys.stdout.write('\n')
-        map(sys.stdout.write, ['  ' + d + '\n' for d in self.locations[self.index + 1 :]])
+        sys.stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
+
+        # From index + 1 to end
+        for location in self.locations[self.index + 1 :]:
+            sys.stdout.write('  ' + location + '\n')
+            lines_written += (len('  ' + location) / buffer_size[0] + 1)
+
+        # Check whether we have overflown the buffer
+        if lines_written > self.offset_from_bottom:
+            self.offset_from_bottom = lines_written
+
+        # Mark a clean display of the history
+        self.shown = True
+        set_cursor_visible(True)
+
+    def check_overflow(self, line):
+        """
+        Update the known location of a shown history to account for the
+        possibility of overflowing the display buffer.
+        """
+        (buf_width, buf_height) = get_buffer_size()
+        (cur_x, cur_y) = get_cursor()
+        lines_written = len(line) / buf_width + 1
+        if cur_y + lines_written > buf_height:
+            self.offset_from_bottom += cur_y + lines_written - buf_height
+

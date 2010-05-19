@@ -7,7 +7,7 @@ from completion import complete_file, complete_env_var, find_common_prefix
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
-from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
+from console import move_cursor, get_cursor, cursor_backward
 from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
@@ -91,7 +91,7 @@ def main():
         scrolling = False
         auto_select = False
         force_repaint = True
-        dir_hist_shown = False
+        dir_hist.shown = False
         print
 
         while True:
@@ -107,7 +107,14 @@ def main():
             if state.changed() or force_repaint:
                 prev_total_len = len(state.prev_prompt + state.prev_before_cursor + state.prev_after_cursor)
                 cursor_backward(len(state.prev_prompt + state.prev_before_cursor))
-                
+                sys.stdout.write('\r')
+
+                # Update the offset of the directory history in case of overflow
+                # Note that if the history display is marked as 'dirty'
+                # (dir_hist.shown == False) the result of this action can be
+                # ignored
+                dir_hist.check_overflow(state.prompt)
+
                 # Write current line
                 set_text_attributes(orig_attr ^ FOREGROUND_BRIGHT)       # Revert brightness bit for prompt
                 sys.stdout.write('\r' + state.prompt)
@@ -222,13 +229,10 @@ def main():
                         if dir_hist.go_left():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
-                        else:
-                            dir_hist_shown = False
                         save_history(dir_hist.locations,
                                      pycmd_data_dir + '\\dir_history',
                                      16)
-                        if dir_hist_shown and get_buffer_size()[0] == sx_old:
-                            move_cursor(cx_old, cy_old)
+                        if dir_hist.shown:
                             dir_hist.display()
                             sys.stdout.write(state.prev_prompt)
                     else:
@@ -239,13 +243,10 @@ def main():
                         if dir_hist.go_right():
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
-                        else:
-                            dir_hist_shown = False
                         save_history(dir_hist.locations,
                                      pycmd_data_dir + '\\dir_history',
                                      16)
-                        if dir_hist_shown and get_buffer_size()[0] == sx_old:
-                            move_cursor(cx_old, cy_old)
+                        if dir_hist.shown:
                             dir_hist.display()
                             sys.stdout.write(state.prev_prompt)
                     else:
@@ -260,18 +261,9 @@ def main():
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.virtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
-                        (sx_current, sy_current) = get_buffer_size()
-                        if not dir_hist_shown or sx_old != sx_current:
-                            # We need to redisplay the directory history
-                            (cx_old, cy_old) = get_cursor()
-                            if cy_old + len(dir_hist.locations) > sy_current:
-                                # We are overflowing the buffer and need to adjust
-                                # cy_old accordingly
-                                cy_old = sy_current - len(dir_hist.locations) - 3
-                            sx_old = sx_current
-                            dir_hist.display()
-                            dir_hist_shown = True
-                            state.reset_prev_line()
+                        dir_hist.display()
+                        dir_hist.check_overflow(state.prev_prompt)
+                        sys.stdout.write(state.prev_prompt)
                     else:
                         state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.virtualKeyCode == 87:          # Alt-W
@@ -329,7 +321,7 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
                     if suggestions != []:
-                        dir_hist_shown = False  # The displayed dirhist is no longer valid
+                        dir_hist.shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
                         common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
                         column_width = max([len(s) for s in suggestions]) + 10
