@@ -162,7 +162,7 @@ def main():
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.char == chr(4):                  # Ctrl-D
                     if state.before_cursor + state.after_cursor == '':
-                        internal_exit('Bye!')
+                        internal_exit('\r\nBye!')
                     else:
                         state.handle(ActionCode.ACTION_DELETE)
                 elif rec.char == chr(31):                   # Ctrl-_
