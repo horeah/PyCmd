@@ -2,7 +2,7 @@ from completion import complete_file, complete_env_var
 import win32clipboard as wclip
 
 # Stop points when navigating one word at a time
-word_sep = [' ', '\t', '\\', '-', '_', '.']
+word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';']
 
 class ActionCode:
     """
