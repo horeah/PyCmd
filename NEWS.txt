@@ -1,3 +1,14 @@
+What's new in PyCmd 0.6?
+
+ * Basic command line arguments (/c and /k -- similar to cmd.exe)
+ * Display completions on multiple columns
+ * Highlight common prefix when displaying completions
+ * Log crash reports under %APPDATA%\PyCmd
+ * More accurate handling of syntactically incorrect commands
+ * Improved word-by-word navigation and editing (more separators)
+ * Bugfixes in history search, directory history
+
+
 What's new in PyCmd 0.5?
 
  * Undo/Redo with Ctrl-Z/Ctrl-Shift-Z (regular style) and Ctrl-_ (Emacs-style)

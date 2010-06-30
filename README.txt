@@ -50,6 +50,7 @@ persistent history, etc.)
     - custom TAB-completion for the arguments of common commands
     - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
       of hacky)
+    - tab-complete through wildcards
 
 
 4. How do I download/install/run it?
@@ -61,7 +62,7 @@ persistent history, etc.)
 
  b. Fetch the Python sources from the repository at
           git://pycmd.git.sourceforge.net/gitroot/pycmd
-    then start trunk/PyCmd.py in Python or run 'make' to build the binary 
+    then start PyCmd.py in Python or run 'make' to build the binary 
     distribution.
     You will need:
         - Python 2.5 from
