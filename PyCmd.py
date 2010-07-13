@@ -51,38 +51,42 @@ def main():
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Look for an initial command line (if provided)
-    if len(sys.argv) > 1:
-        # Quote args as needed
-        tokens = ['"' + token + '"' if contains_special_char(token) else token
-                  for token in sys.argv[2:]]
-
-        if sys.argv[1].upper() in ['/K', '-K']:
+    # Parse arguments
+    arg = 1
+    while arg < len(sys.argv):
+        switch = sys.argv[arg].upper()
+        if switch in ['/K', '-K']:
+            tokens = ['"' + token + '"' if contains_special_char(token) else token
+                      for token in sys.argv[arg+1:]]
             # Run the specified command and continue
             if tokens != []:
                 run_command(tokens)
                 dir_hist.visit_cwd()
-        elif sys.argv[1].upper() in ['/C', '-C']:
+                break
+        elif switch in ['/C', '-C']:
+            tokens = ['"' + token + '"' if contains_special_char(token) else token
+                      for token in sys.argv[arg+1:]]
             # Run the specified command, then exit
             if tokens != []:
                 run_command(tokens)
             internal_exit()
-        elif sys.argv[1].upper() in ['/H', '/?', '-H']:
+        elif switch in ['/H', '/?', '-H']:
             # Show usage information and exit
             print_usage()
             internal_exit()
         else:
             # Invalid command line switch
-            sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[1] + '\'\n')
+            sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
             print_usage()
             internal_exit()
-    else:
-        # Print some splash text
-        print
-        print 'Welcome to PyCmd 0.6!'
-        print
-        # Run an empty command to initialize environment
-        run_command(['echo', '>', 'NUL'])
+        arg += 1
+
+    # Print some splash text
+    print
+    print 'Welcome to PyCmd 0.6!'
+    print
+    # Run an empty command to initialize environment
+    run_command(['echo', '>', 'NUL'])
 
     # Main loop
     while True:
