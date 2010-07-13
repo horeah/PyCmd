@@ -51,6 +51,8 @@ def main():
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
+    title_prefix = ""
+
     # Parse arguments
     arg = 1
     while arg < len(sys.argv):
@@ -74,6 +76,13 @@ def main():
             # Show usage information and exit
             print_usage()
             internal_exit()
+        elif switch in ['/T', '-T']:
+            if arg == len(sys.argv) - 1:
+                sys.stderr.write('PyCmd: no title specified to /T switch\n')
+                print_usage()
+                internal_exit()
+            title_prefix = sys.argv[arg+1] + ' - '
+            arg += 1
         else:
             # Invalid command line switch
             sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
@@ -102,7 +111,7 @@ def main():
             # Update console title and environment
             curdir = os.getcwd()
             curdir = curdir[0].upper() + curdir[1:]
-            set_console_title(curdir + ' - PyCmd')
+            set_console_title(title_prefix + curdir + ' - PyCmd')
             os.environ['CD'] = curdir
 
             # Save default (original) text attributes
@@ -544,10 +553,11 @@ def read_history(filename):
 def print_usage():
     """Print usage information"""
     print 'Usage:'
-    print '\t PyCmd [-c command] | [-k command] | [-h]'
+    print '\t PyCmd [-t title] ( [-c command] | [-k command] | [-h] )'
     print
     print '\t\t-c command \tRun command, then exit'
     print '\t\t-k command \tRun command, then continue to the prompt'
+    print '\t\t-t title \tShow title in window caption'
     print '\t\t-h \t\tShow this help'
     print
     print 'Note that you can use \'/\' instead of \'-\', uppercase instead of '
