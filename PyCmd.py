@@ -1,6 +1,6 @@
 import sys, os, msvcrt, tempfile, signal, time, traceback
 
-from common import parse_line, unescape, contains_special_char, sep_tokens
+from common import parse_line, unescape, sep_tokens
 from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
 from completion import complete_file, complete_env_var, find_common_prefix
@@ -57,20 +57,18 @@ def main():
     arg = 1
     while arg < len(sys.argv):
         switch = sys.argv[arg].upper()
+        rest = ['"' + t + '"' if os.path.exists(t) else t
+                for t in sys.argv[arg+1:]]
         if switch in ['/K', '-K']:
-            tokens = ['"' + token + '"' if contains_special_char(token) else token
-                      for token in sys.argv[arg+1:]]
             # Run the specified command and continue
-            if tokens != []:
-                run_command(tokens)
+            if rest != []:
+                run_command(rest)
                 dir_hist.visit_cwd()
                 break
         elif switch in ['/C', '-C']:
-            tokens = ['"' + token + '"' if contains_special_char(token) else token
-                      for token in sys.argv[arg+1:]]
-            # Run the specified command, then exit
-            if tokens != []:
-                run_command(tokens)
+            # Run the specified command end exit
+            if rest != []:
+                run_command(rest)
             internal_exit()
         elif switch in ['/H', '/?', '-H']:
             # Show usage information and exit
