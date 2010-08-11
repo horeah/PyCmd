@@ -8,7 +8,8 @@ from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
 from console import move_cursor, get_cursor, cursor_backward
-from console import read_input, is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+from console import read_input, write_input
+from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
 from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
@@ -211,7 +212,13 @@ def main():
                 elif rec.virtualKeyCode == 46:          # Ctrl-Delete
                     state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.virtualKeyCode == 67:          # Ctrl-C
-                    state.handle(ActionCode.ACTION_COPY)
+                    # The Ctrl-C signal is caught by our custom handler, and a
+                    # synthetic keyboard event is created so that we can catch
+                    # it here
+                    if state.get_selection() != '':
+                        state.handle(ActionCode.ACTION_COPY)
+                    else:
+                        state.handle(ActionCode.ACTION_ESCAPE)
                     auto_select = False
                 elif rec.virtualKeyCode == 88:          # Ctrl-X
                     state.handle(ActionCode.ACTION_CUT)
@@ -504,7 +511,8 @@ def signal_handler(signum, frame):
     keyboard combo
     """
     if signum == signal.SIGINT:
-        state.handle(ActionCode.ACTION_COPY)
+        # Emulate a Ctrl-C press
+        write_input(67, 0x0008)
 
 
 def save_history(lines, filename, length):

@@ -131,6 +131,16 @@ def read_input():
         if record.EventType == 0x001 and record.Event.keyDown == True:
             return record.Event
 
+def write_input(key_code, control_state):
+    """Emulate a key press with the given key code and control key mask"""
+    record = INPUT_RECORD()
+    record.EventType = 0x001
+    record.Event.keyDown = True
+    record.Event.virtualKeyCode = key_code
+    record.Event.controlKeyState = control_state
+    records_read = c_long(0)
+    ctypes.windll.kernel32.WriteConsoleInputA(stdin_handle, byref(record), 1, byref(records_read))
+
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""
     return record.controlKeyState & (0x0008 | 0x0004) != 0
