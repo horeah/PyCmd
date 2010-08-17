@@ -3,7 +3,7 @@ import sys, os, msvcrt, tempfile, signal, time, traceback
 from common import parse_line, unescape, sep_tokens
 from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
-from completion import complete_file, complete_env_var, find_common_prefix
+from completion import complete_file, complete_env_var, find_common_prefix, has_wildcards, fnmatch
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
@@ -338,10 +338,9 @@ def main():
                         (completed, suggestions) = complete_env_var(state.before_cursor)
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
-                    if suggestions != []:
+                    if len(suggestions) > 1 or (len(suggestions) == 1 and has_wildcards(state.before_cursor)):
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
-                        common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
                         column_width = max([len(s) for s in suggestions]) + 10
                         if column_width > get_buffer_size()[0] - 1:
                             column_width = get_buffer_size()[0] - 1
@@ -355,17 +354,33 @@ def main():
                         if len(suggestions) % num_columns != 0:
                             num_lines += 1
                         for line in range(0, num_lines):
-                            # Print one more line
+                            # Print one line
                             sys.stdout.write('\r')
                             for column in range(0, num_columns):
                                 if line + column * num_lines < len(suggestions):
                                     s = suggestions[line + column * num_lines]
-                                    # Print the common part in a different color
-                                    set_text_attributes(orig_attr ^ FOREGROUND_RED)
-                                    sys.stdout.write(s[:common_prefix_len])
-                                    set_text_attributes(orig_attr)
-                                    sys.stdout.write(s[common_prefix_len : ])
-                                    sys.stdout.write(' ' * (column_width - len(s)))
+                                    if has_wildcards(state.before_cursor):
+                                        # Print wildcard matches in a different color
+                                        tokens = parse_line(state.before_cursor)
+                                        token = tokens[-1].replace('"', '')
+                                        (_, _, prefix) = token.rpartition('\\')
+                                        match = fnmatch(s.lower(), prefix.lower() + '*')
+                                        current_index = 0
+                                        for i in range(1, match.lastindex + 1):
+                                            set_text_attributes(orig_attr ^ FOREGROUND_RED)
+                                            sys.stdout.write(s[current_index : match.start(i)])
+                                            set_text_attributes(orig_attr)
+                                            sys.stdout.write(s[match.start(i) : match.end(i)])
+                                            current_index = match.end(i)
+                                        sys.stdout.write(' ' * (column_width - len(s)))
+                                    else:
+                                        # Print the common part in a different color
+                                        common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
+                                        set_text_attributes(orig_attr ^ FOREGROUND_RED)
+                                        sys.stdout.write(s[:common_prefix_len])
+                                        set_text_attributes(orig_attr)
+                                        sys.stdout.write(s[common_prefix_len : ])
+                                        sys.stdout.write(' ' * (column_width - len(s)))
                             sys.stdout.write('\n')
                             line += 1
                         state.reset_prev_line()
@@ -586,6 +601,8 @@ if __name__ == '__main__':
         report_file = open(report_file_name, 'w')
         traceback.print_exc(file=report_file)
         report_file.close()
+        traceback.print_exc()
+        print 
         print 'Crash report written to:\n  ' + report_file_name
         print 'Exiting... sorry :('
         print '************************'

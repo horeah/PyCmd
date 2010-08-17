@@ -4,7 +4,7 @@
 #    2) names of environment variables
 #
 
-import sys, os
+import sys, os, re
 from common import parse_line, expand_env_vars, has_exec_extension, strip_extension
 from common import contains_special_char, starts_with_special_char
 from common import sep_chars, seq_tokens
@@ -42,7 +42,7 @@ def complete_file(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if elem.lower().startswith(prefix.lower())]
+            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem.lower(), prefix.lower() + '*')]
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -53,14 +53,14 @@ def complete_file(line):
     completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
     completions = completions_dirs + completions_files
 
-    if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
+    if not has_wildcards(prefix) and ((len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == ''):
         # We are at the beginning of a command ==> also complete from the path
         completions_path = []
         for elem_in_path in os.environ['PATH'].split(';'):
             dir_to_complete = expand_env_vars(elem_in_path) + '\\'
             try:                
                 completions_path += [elem for elem in os.listdir(dir_to_complete) 
-                                     if elem.lower().startswith(prefix.lower())
+                                     if fnmatch(elem.lower(), prefix.lower() + '*')
                                      and os.path.isfile(dir_to_complete + '\\' + elem)
                                      and has_exec_extension(elem)
                                      and not elem in completions
@@ -84,7 +84,7 @@ def complete_file(line):
                              'time', 'title', 'type',
                              'ver', 'verify', 'vol']
         completions_path += [elem for elem in internal_commands
-                             if elem.lower().startswith(prefix.lower())
+                             if fnmatch(elem.lower(), prefix.lower() + '*')
                              and not elem in completions
                              and not elem in completions_path]
 
@@ -108,7 +108,10 @@ def complete_file(line):
 
     if completions != []:
         # Find the longest common sequence
-        common_string = find_common_prefix(prefix, completions)
+        if has_wildcards(prefix):
+            common_string = prefix
+        else:
+            common_string = find_common_prefix(prefix, completions)
             
         if path_to_complete == '':
             completed_file = common_string
@@ -118,8 +121,8 @@ def complete_file(line):
             completed_file = path_to_complete + '\\' + common_string
 
         if expand_env_vars(completed_file).find(' ') >= 0 or \
-               (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
-               (prefix == '' and [elem for elem in completions if starts_with_special_char(elem)] != []):
+                (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
+                (prefix == '' and [elem for elem in completions if starts_with_special_char(elem)] != []):
             # We add quotes if one of the following holds:
             #   * the (env-expanded) completed string contains whitespace
             #   * there is a prefix and at least one of the valid completions contains whitespace
@@ -131,7 +134,7 @@ def complete_file(line):
         # Build the result
         result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
 
-        if len(completions) == 1:
+        if len(completions) == 1 and not has_wildcards(prefix):
             # We can close the quotes if we have completed to a unique filename
             if start_quote == '"':
                 end_quote = '"'
@@ -146,10 +149,7 @@ def complete_file(line):
                 result += end_quote
                 result += ' '
 
-        if len(completions) == 1:
-            return (result, [])
-        else:
-            return (result, completions)
+        return (result, completions)
     else:
         # No expansion was made, return original line
         return (line, [])
@@ -239,3 +239,23 @@ def find_common_prefix(original, completions):
     return common_string
 
 
+def fnmatch(name, pattern):
+    """Match the given file path/name against the given pattern"""
+    # Transform pattern into regexp
+    translations = [('(', '\\('), 
+                    ('\\', '\\\\'),
+                    (')', '\\)'),
+                    ('.', '\\.'),
+                    ('?', '(.)'), 
+                    ('*', '(.*)')]
+                    
+    re_pattern = pattern
+    for src, dest in translations:
+        re_pattern = re_pattern.replace(src, dest)
+    re_pattern += '$'
+    return re.match(re_pattern, name)
+
+
+def has_wildcards(pattern):
+    """Check if the given pattern contains wildcards"""
+    return pattern.find('*') >= 0 or pattern.find('?') >= 0
