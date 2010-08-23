@@ -109,8 +109,14 @@ def complete_file(line):
     if completions != []:
         # Find the longest common sequence
         if has_wildcards(prefix):
-            common_string = prefix
+            # For a wildcard completion, we check the length of the last matched groups
+            completed_suffixes = []
+            for c in completions:
+                match = fnmatch(c.lower(), prefix.lower() + '*')
+                completed_suffixes.append(match.group(match.lastindex))
+            common_string = prefix + find_common_prefix(prefix, completed_suffixes)
         else:
+            # For a non-wildcard completion, we find the longest common sequence
             common_string = find_common_prefix(prefix, completions)
             
         if path_to_complete == '':
@@ -212,7 +218,7 @@ def find_common_prefix(original, completions):
     """
     
     common_len = 0
-    common_string = None
+    common_string = ''
     mismatch = False
     perfect = True
     while common_len < len(completions[0]) and not mismatch:

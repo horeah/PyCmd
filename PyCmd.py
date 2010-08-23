@@ -361,7 +361,7 @@ def main():
                                     s = suggestions[line + column * num_lines]
                                     if has_wildcards(state.before_cursor):
                                         # Print wildcard matches in a different color
-                                        tokens = parse_line(state.before_cursor)
+                                        tokens = parse_line(completed.rstrip('\\'))
                                         token = tokens[-1].replace('"', '')
                                         (_, _, prefix) = token.rpartition('\\')
                                         match = fnmatch(s.lower(), prefix.lower() + '*')
