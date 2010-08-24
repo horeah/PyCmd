@@ -1,9 +1,9 @@
 import sys, os, msvcrt, tempfile, signal, time, traceback
 
-from common import parse_line, unescape, sep_tokens
+from common import parse_line, unescape, sep_tokens, sep_chars
 from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
-from completion import complete_file, complete_env_var, find_common_prefix, has_wildcards, fnmatch
+from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, fnmatch
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
@@ -332,10 +332,12 @@ def main():
                 elif rec.char == '\t':                  # Tab
                     sys.stdout.write(state.after_cursor)        # Move cursor to the end
                     tokens = parse_line(state.before_cursor)
-                    if tokens == []:
-                        tokens = ['']   # This saves some checks later on
+                    if tokens == [] or state.before_cursor[-1] in sep_chars:
+                        tokens.append('')   # This saves some checks later on
                     if tokens[-1].strip('"').count('%') % 2 == 1 or tokens[-1].strip('"').endswith('%'):
                         (completed, suggestions) = complete_env_var(state.before_cursor)
+                    elif has_wildcards(tokens[-1]):
+                        (completed, suggestions)  = complete_wildcard(state.before_cursor)
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
                     if len(suggestions) > 1 or (len(suggestions) == 1 and has_wildcards(state.before_cursor)):
@@ -359,7 +361,7 @@ def main():
                             for column in range(0, num_columns):
                                 if line + column * num_lines < len(suggestions):
                                     s = suggestions[line + column * num_lines]
-                                    if has_wildcards(state.before_cursor):
+                                    if has_wildcards(tokens[-1]):
                                         # Print wildcard matches in a different color
                                         tokens = parse_line(completed.rstrip('\\'))
                                         token = tokens[-1].replace('"', '')

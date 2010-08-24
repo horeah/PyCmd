@@ -53,7 +53,7 @@ def complete_file(line):
     completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
     completions = completions_dirs + completions_files
 
-    if not has_wildcards(prefix) and ((len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == ''):
+    if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
         # We are at the beginning of a command ==> also complete from the path
         completions_path = []
         for elem_in_path in os.environ['PATH'].split(';'):
@@ -108,16 +108,7 @@ def complete_file(line):
 
     if completions != []:
         # Find the longest common sequence
-        if has_wildcards(prefix):
-            # For a wildcard completion, we check the length of the last matched groups
-            completed_suffixes = []
-            for c in completions:
-                match = fnmatch(c.lower(), prefix.lower() + '*')
-                completed_suffixes.append(match.group(match.lastindex))
-            common_string = prefix + find_common_prefix(prefix, completed_suffixes)
-        else:
-            # For a non-wildcard completion, we find the longest common sequence
-            common_string = find_common_prefix(prefix, completions)
+        common_string = find_common_prefix(prefix, completions)
             
         if path_to_complete == '':
             completed_file = common_string
@@ -140,8 +131,100 @@ def complete_file(line):
         # Build the result
         result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
 
-        if len(completions) == 1 and not has_wildcards(prefix):
+        if len(completions) == 1:
             # We can close the quotes if we have completed to a unique filename
+            if start_quote == '"':
+                end_quote = '"'
+            else:
+                end_quote = ''
+                
+            if result[-1] == '\\':
+                # Directory -- we want the backslash (if any) AFTER the closing quote
+                result = result[ : -1] + end_quote + '\\'
+            else:
+                # File -- add space if the completion is unique
+                result += end_quote
+                result += ' '
+
+        return (result, completions)
+    else:
+        # No expansion was made, return original line
+        return (line, [])
+
+
+def complete_wildcard(line):
+    """
+    Complete file/dir wildcards
+    This function tokenizes the line and computes file and directory
+    completions starting with the last token which is a wildcard
+    
+    It returns a pair:
+      - the line expanded up to the longest common sequence among the
+        completions
+      - the list of all possible completions (first dirs, then files)
+    """
+    tokens = parse_line(line)
+    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
+        tokens += ['']   # This saves us some checks later
+    token = tokens[-1].replace('"', '')
+    
+    (path_to_complete, _, prefix) = token.rpartition('\\')
+    if path_to_complete == '' and token != '' and token[0] == '\\':
+        path_to_complete = '\\'
+
+    # print '\n\n', path_to_complete, '---', prefix, '\n\n'
+
+    if path_to_complete == '':
+        dir_to_complete = os.getcwd()
+    elif path_to_complete == '\\':
+        dir_to_complete = os.getcwd()[0:3]
+    else:
+        dir_to_complete = expand_env_vars(path_to_complete) + '\\'
+
+    completions = []
+    if os.path.isdir(dir_to_complete):
+        try:
+            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem.lower(), prefix.lower() + '*')]
+        except OSError:
+            # Cannot complete, probably access denied
+            pass
+        
+
+    # Sort directories first, also append '\'; then, files
+    completions_dirs = [elem + '\\' for elem in completions if os.path.isdir(dir_to_complete + '\\' + elem)]
+    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
+    completions = completions_dirs + completions_files
+
+    if completions != []:
+        # Find the longest common sequence
+        completed_suffixes = []
+        for c in completions:
+            match = fnmatch(c.lower(), prefix.lower() + '*')
+            completed_suffixes.append(match.group(match.lastindex))
+        common_string = prefix + find_common_prefix(prefix, completed_suffixes)
+            
+        if path_to_complete == '':
+            completed_file = common_string
+        elif path_to_complete == '\\':
+            completed_file = '\\' + common_string
+        else:
+            completed_file = path_to_complete + '\\' + common_string
+
+        if expand_env_vars(completed_file).find(' ') >= 0 or \
+                (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
+                (prefix == '' and [elem for elem in completions if starts_with_special_char(elem)] != []):
+            # We add quotes if one of the following holds:
+            #   * the (env-expanded) completed string contains whitespace
+            #   * there is a prefix and at least one of the valid completions contains whitespace
+            #   * there is no prefix and at least one completion _starts_ with whitespace
+            start_quote = '"'
+        else:
+            start_quote = ''
+
+        # Build the result
+        result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
+        if not common_string.endswith('*') and max([len(c) for c in completed_suffixes]) == len(common_string) - len(prefix):
+            # We can close the quotes if all the completions have the same suffix
             if start_quote == '"':
                 end_quote = '"'
             else:
