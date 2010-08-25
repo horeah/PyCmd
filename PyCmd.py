@@ -366,7 +366,7 @@ def main():
                                         tokens = parse_line(completed.rstrip('\\'))
                                         token = tokens[-1].replace('"', '')
                                         (_, _, prefix) = token.rpartition('\\')
-                                        match = fnmatch(s.lower(), prefix.lower() + '*')
+                                        match = fnmatch(s, prefix + '*')
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
                                             set_text_attributes(orig_attr ^ FOREGROUND_RED)

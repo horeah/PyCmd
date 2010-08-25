@@ -42,7 +42,7 @@ def complete_file(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem.lower(), prefix.lower() + '*')]
+            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem, prefix + '*')]
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -60,7 +60,7 @@ def complete_file(line):
             dir_to_complete = expand_env_vars(elem_in_path) + '\\'
             try:                
                 completions_path += [elem for elem in os.listdir(dir_to_complete) 
-                                     if fnmatch(elem.lower(), prefix.lower() + '*')
+                                     if fnmatch(elem, prefix + '*')
                                      and os.path.isfile(dir_to_complete + '\\' + elem)
                                      and has_exec_extension(elem)
                                      and not elem in completions
@@ -84,7 +84,7 @@ def complete_file(line):
                              'time', 'title', 'type',
                              'ver', 'verify', 'vol']
         completions_path += [elem for elem in internal_commands
-                             if fnmatch(elem.lower(), prefix.lower() + '*')
+                             if fnmatch(elem, prefix + '*')
                              and not elem in completions
                              and not elem in completions_path]
 
@@ -184,7 +184,7 @@ def complete_wildcard(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem.lower(), prefix.lower() + '*')]
+            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem, prefix + '*')]
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -199,7 +199,7 @@ def complete_wildcard(line):
         # Find the longest common sequence
         completed_suffixes = []
         for c in completions:
-            match = fnmatch(c.lower(), prefix.lower() + '*')
+            match = fnmatch(c, prefix + '*')
             completed_suffixes.append(match.group(match.lastindex))
         common_string = prefix + find_common_prefix(prefix, completed_suffixes)
             
@@ -342,7 +342,7 @@ def fnmatch(name, pattern):
     for src, dest in translations:
         re_pattern = re_pattern.replace(src, dest)
     re_pattern += '$'
-    return re.match(re_pattern, name)
+    return re.match(re_pattern, name, re.IGNORECASE)
 
 
 def has_wildcards(pattern):
