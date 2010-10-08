@@ -20,7 +20,7 @@ class TestFnmatch(unittest.TestCase):
         ]
 
     def test_fnmatch(self):
-        """Test the matching and grouping of a shell patterns"""
+        """Test the matching and grouping of shell patterns"""
         for name, pattern, groups in self.matches_true:
             result = fnmatch(name, pattern)
             if result != None:

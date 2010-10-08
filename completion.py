@@ -196,12 +196,17 @@ def complete_wildcard(line):
     completions = completions_dirs + completions_files
 
     if completions != []:
-        # Find the longest common sequence
         completed_suffixes = []
         for c in completions:
             match = fnmatch(c, prefix + '*')
             completed_suffixes.append(match.group(match.lastindex))
-        common_string = prefix + find_common_prefix(prefix, completed_suffixes)
+
+        if len(completions) == 1:
+            # Only one match, we can inline it and replace the wildcards
+            common_string = completions[0]
+        else:
+            # Multiple matches, find the longest common sequence
+            common_string = prefix + find_common_prefix(prefix, completed_suffixes)
             
         if path_to_complete == '':
             completed_file = common_string
@@ -209,6 +214,7 @@ def complete_wildcard(line):
             completed_file = '\\' + common_string
         else:
             completed_file = path_to_complete + '\\' + common_string
+
 
         if expand_env_vars(completed_file).find(' ') >= 0 or \
                 (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
@@ -223,8 +229,11 @@ def complete_wildcard(line):
 
         # Build the result
         result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
-        if not common_string.endswith('*') and max([len(c) for c in completed_suffixes]) == len(common_string) - len(prefix):
-            # We can close the quotes if all the completions have the same suffix
+        if len(completions) == 1 or \
+                not common_string.endswith('*') and \
+                max([len(c) for c in completed_suffixes]) == len(common_string) - len(prefix):
+            # We can close the quotes if all the completions have the same suffix or 
+            # there exists only one matching file
             if start_quote == '"':
                 end_quote = '"'
             else:
@@ -247,7 +256,7 @@ def complete_wildcard(line):
 def complete_env_var(line):
     """
     Complete names of environment variables
-    This function tokenizez the line and computes completions
+    This function tokenizes the line and computes completions
     based on environment variables starting with the last token
     
     It returns a pair:

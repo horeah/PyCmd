@@ -340,7 +340,7 @@ def main():
                         (completed, suggestions)  = complete_wildcard(state.before_cursor)
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
-                    if len(suggestions) > 1 or (len(suggestions) == 1 and has_wildcards(state.before_cursor)):
+                    if len(suggestions) > 1:
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         sys.stdout.write('\n')
                         column_width = max([len(s) for s in suggestions]) + 10
