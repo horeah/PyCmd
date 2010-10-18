@@ -31,6 +31,7 @@ class ActionCode:
     ACTION_UNDO = 20
     ACTION_REDO = 21
     ACTION_UNDO_EMACS = 22
+    ACTION_EXPAND = 23
 
 
 class InputState:
@@ -40,6 +41,7 @@ class InputState:
         * displaying the prompt and command line
         * handling text selection and Cut/Copy/Paste
         * the command history
+        * dynamic expansion based on the input history
     """
     
     def __init__(self):
@@ -60,6 +62,11 @@ class InputState:
 
         # Text selection
         self.selection_start = 0
+
+        # Previous line, stub and list of matches for the dynamic expansion
+        self.expand_line = ''
+        self.expand_stub = ''
+        self.expand_matches = []
 
         # Line history for undo/redo - (before_cursor, after_cursor) pairs
         self.undo = []
@@ -92,11 +99,13 @@ class InputState:
             ActionCode.ACTION_ESCAPE: self.key_esc,
             ActionCode.ACTION_UNDO: self.key_undo,
             ActionCode.ACTION_REDO: self.key_redo,
-            ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs, }
+            ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs, 
+            ActionCode.ACTION_EXPAND: self.key_expand, }
             
         # Action categories
         self.insert_actions = [ActionCode.ACTION_INSERT,
-                               ActionCode.ACTION_COMPLETE]
+                               ActionCode.ACTION_COMPLETE,
+                               ActionCode.ACTION_EXPAND]
         self.delete_actions = [ActionCode.ACTION_DELETE, 
                                ActionCode.ACTION_DELETE_WORD, 
                                ActionCode.ACTION_BACKSPACE, 
@@ -438,6 +447,33 @@ class InputState:
             self.before_cursor = before
             self.after_cursor = after
             self.selection_start = len(before)
+
+    def key_expand(self, text):
+        """
+        Dynamically expand the word at the cursor.
+
+        This expands the current token based by looking at the input
+        history, similar to Emacs' Alt-/
+        """
+        if self.expand_matches == [] or self.last_action != ActionCode.ACTION_EXPAND:
+            # Re-initialize the list of matches
+            self.expand_line = self.before_cursor
+            index = len(self.expand_line) - 1
+            while index >= 0 and self.expand_line[index] != ' ':
+                index -= 1
+            self.expand_stub = self.expand_line[index + 1:]
+            matches_set = {}
+            self.expand_matches = [matches_set.setdefault(e, e) 
+                                   for e in reversed([w for w in ' '.join(self.history).split() 
+                                                      if w.lower().startswith(self.expand_stub)])
+                                   if e not in matches_set] + [self.expand_stub]
+            self.expand_matches.reverse()
+
+        match = self.expand_matches[-1]
+        self.before_cursor = self.expand_line[:len(self.expand_line) 
+                                               - len(self.expand_stub)] + match
+        self.reset_selection()
+        del self.expand_matches[-1]
 
     def add_to_history(self, line):
         """Add a new line to the history"""

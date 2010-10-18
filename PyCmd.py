@@ -292,6 +292,8 @@ def main():
                     state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.virtualKeyCode == 8:           # Alt-Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
+                elif rec.virtualKeyCode == 191:
+                    state.handle(ActionCode.ACTION_EXPAND)
             elif is_shift_pressed(rec) and rec.virtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
