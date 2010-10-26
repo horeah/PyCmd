@@ -458,16 +458,33 @@ class InputState:
         if self.expand_matches == [] or self.last_action != ActionCode.ACTION_EXPAND:
             # Re-initialize the list of matches
             self.expand_line = self.before_cursor
-            index = len(self.expand_line) - 1
-            while index >= 0 and self.expand_line[index] != ' ':
-                index -= 1
-            self.expand_stub = self.expand_line[index + 1:]
+            line_words = [''] + self.expand_line.split(' ')
+            expand_stub = line_words[-1]
+            expand_context = line_words[-2]
+
+            context_matches = []
+            no_context_matches = []
+            for line in reversed(self.history):
+                line_words = [''] + line.split(' ')
+                for i in range(len(line_words) - 1, 0, -1):
+                    word = line_words[i]
+                    context = line_words[i - 1]
+                    if (word.lower().startswith(expand_stub.lower())
+                        and word.lower() != expand_stub.lower()): 
+                        if context.lower() == expand_context.lower():
+                            context_matches.append(word)
+                        else:
+                            no_context_matches.append(word)
+
+            # print '\n\n', no_context_matches, context_matches, '\n\n'
+
+            self.expand_stub = expand_stub
             matches_set = {}
             self.expand_matches = [matches_set.setdefault(e, e) 
-                                   for e in reversed([w for w in ' '.join(self.history).split() 
-                                                      if w.lower().startswith(self.expand_stub)])
+                                   for e in context_matches + no_context_matches
                                    if e not in matches_set] + [self.expand_stub]
             self.expand_matches.reverse()
+            # print '\n\n', self.expand_matches, '\n\n'
 
         match = self.expand_matches[-1]
         self.before_cursor = self.expand_line[:len(self.expand_line) 
