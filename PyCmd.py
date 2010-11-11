@@ -442,8 +442,9 @@ def internal_exit(message = ''):
     os.remove(tmpfile)
     sys.exit()
 
+
 def full_executable_path(path):
-    dir, name = os.path.split(path)
+    dir, name = os.path.split(path.strip('"'))
     ext = os.path.splitext(name)[1]
     if ext == '':
         name += ".exe"
@@ -462,6 +463,7 @@ def full_executable_path(path):
 
     return None
 
+
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if tokens[0] == 'exit':
@@ -470,19 +472,21 @@ def run_command(tokens):
         # This is a single CD command -- use our custom, more handy CD
         internal_cd([unescape(t) for t in tokens[1:]])
     else:
-        # Crude hack so that we return to the prompt when starting GUI
-        # applications: if we think that the first token on the given command
-        # line is an executable, check its PE header to decide whether it's
-        # GUI application. If it is, spawn the process and then get on with
-        # life.
-        executable = full_executable_path(tokens[0])
-        if executable:
-            import pefile.pefile
-            pe = pefile.pefile.PE(executable, fast_load=True)
-            if pefile.pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
-                import subprocess
-                subprocess.Popen(tokens, shell=True)
-                return
+        if set(sep_tokens).intersection(tokens) == set([]):
+            # This is a simple (non-compound) command
+            # Crude hack so that we return to the prompt when starting GUI
+            # applications: if we think that the first token on the given command
+            # line is an executable, check its PE header to decide whether it's
+            # GUI application. If it is, spawn the process and then get on with
+            # life.
+            executable = full_executable_path(tokens[0])
+            if executable:
+                import pefile
+                pe = pefile.PE(executable, fast_load=True)
+                if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
+                    import subprocess
+                    subprocess.Popen(' '.join(tokens), shell=True)
+                    return
 
         # Regular (external) command
         run_in_cmd(tokens)

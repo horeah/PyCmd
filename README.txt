@@ -71,6 +71,10 @@ persistent history, etc.)
                  https://sourceforge.net/projects/pywin32/
         - py2exe from 
                  http://www.py2exe.org/
+        - pefile from   
+                 http://code.google.com/p/pefile/
+                 NOTE: install with `python setup.py install_lib` 
+                       as py2exe won't handle .egg files
 
 
 5. Credits
