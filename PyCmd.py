@@ -3,6 +3,7 @@ import sys, os, msvcrt, tempfile, signal, time, traceback
 from common import parse_line, unescape, sep_tokens, sep_chars
 from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
+from common import associated_application, full_executable_path
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, fnmatch
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
@@ -443,27 +444,6 @@ def internal_exit(message = ''):
     sys.exit()
 
 
-def full_executable_path(path):
-    dir, name = os.path.split(path.strip('"'))
-    ext = os.path.splitext(name)[1]
-    if ext == '':
-        name += ".exe"
-    elif ext != '.exe':
-        return None
-
-    if dir:
-        pathsToScan = [ os.path.join(os.getcwd(), dir) ]
-    else:
-        pathsToScan = os.environ["PATH"].split(os.pathsep)
-
-    for p in pathsToScan:
-        fullPath = os.path.join(p, name)
-        if os.path.exists(fullPath):
-            return fullPath
-
-    return None
-
-
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if tokens[0] == 'exit':
@@ -479,14 +459,27 @@ def run_command(tokens):
             # line is an executable, check its PE header to decide whether it's
             # GUI application. If it is, spawn the process and then get on with
             # life.
-            executable = full_executable_path(tokens[0])
-            if executable:
-                import pefile
-                pe = pefile.PE(executable, fast_load=True)
-                if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
-                    import subprocess
-                    subprocess.Popen(' '.join(tokens), shell=True)
-                    return
+            cmd = tokens[0].strip('"')
+            dir, name = os.path.split(cmd)
+            ext = os.path.splitext(name)[1]
+
+            if ext in ['', '.exe', '.com', '.bat', '.cmd']:
+                # Executable given
+                app = cmd
+            else:
+                app = associated_application(ext)
+
+            if app:
+                executable = full_executable_path(app)
+                if executable and os.path.splitext(executable)[1].lower() == '.exe':
+                    # This is an exe file, try to figure out whether it's a GUI
+                    # or console application
+                    import pefile
+                    pe = pefile.PE(executable, fast_load=True)
+                    if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
+                        import subprocess
+                        subprocess.Popen('"' + ' '.join([expand_tilde(t) for t in tokens]) + '"', shell=True)
+                        return
 
         # Regular (external) command
         run_in_cmd(tokens)

@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os, string, re, fsm
+import os, string, re, fsm, _winreg
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
@@ -161,7 +161,7 @@ def expand_env_vars(string):
         if end >= 0:
             # Found a %variable%
             var = string[begin:end].strip('%')
-            if var in os.environ.keys():
+            if var.upper() in os.environ.keys():
                 string = string.replace('%' + var + '%', os.environ[var], 1)
         begin = string.find('%', begin + 1)
 
@@ -226,9 +226,11 @@ def abbrev_string(string):
 
     return string_abbrev
 
+
 def has_exec_extension(file_name):
     """Check whether the specified file is executable, i.e. its extension is .exe, .com or .bat"""
     return file_name.endswith('.com') or file_name.endswith('.exe') or file_name.endswith('.bat')
+
 
 def strip_extension(file_name):
     """Remove extension, if present"""
@@ -238,10 +240,65 @@ def strip_extension(file_name):
     else:
         return file_name
 
+
 def contains_special_char(string):
     """Check whether the string contains a character that requires quoting"""
     return string.find(' ') >= 0 or string.find('&') >= 0
 
+
 def starts_with_special_char(string):
     """Check whether the string STARTS with a character that requires quoting"""
     return string.find(' ') == 0 or string.find('&') == 0
+
+
+def associated_application(ext):
+    """
+    Scan the registry to find the application associated to a given file 
+    extension.
+    """
+    try:
+        file_class = _winreg.QueryValue(_winreg.HKEY_CLASSES_ROOT, ext)
+        assoc_key = _winreg.OpenKey(_winreg.HKEY_CLASSES_ROOT, 
+                                    file_class + '\\shell\\open\\command')
+        open_command = _winreg.QueryValueEx(assoc_key, None)[0]
+        
+        # We assume a value `similar to '<command> %1 %2'
+        return expand_env_vars(parse_line(open_command)[0])
+    except WindowsError, e:
+        return None
+
+
+def full_executable_path(app):
+    """
+    Compute the full path of the executable that will be spawned 
+    for the given command
+    """
+    # Split the app into a dir, a name and an extension; we
+    # will configure our search for the actual executable based
+    # on these
+    dir, file = os.path.split(app.strip('"'))
+    name, ext = os.path.splitext(file)
+
+    # Determine possible executable extension
+    if ext != '':
+        extensions_to_search = [ext]
+    else:
+        extensions_to_search = ['.exe', '.com', '.bat', '.cmd']
+
+    # Determine the possible locations
+    if dir:
+        paths_to_search = [dir]
+    else:
+        paths_to_search = [os.getcwd()] + os.environ['PATH'].split(os.pathsep)
+
+    # Search for an app
+    # print 'D:', paths_to_search, 'N:', name, 'E:', extensions_to_search
+    for p in paths_to_search:
+        for e in extensions_to_search:
+            full_path = os.path.join(p, name) + e
+            if os.path.exists(full_path):
+                return full_path
+
+    # We could not find the executable; this might be an internal command,
+    # or a file that doesn't have a registered application
+    return None
