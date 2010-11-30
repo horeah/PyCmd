@@ -92,7 +92,7 @@ def main():
 
     # Print some splash text
     print
-    print 'Welcome to PyCmd 0.6!'
+    print 'Welcome to PyCmd 0.7!'
     print
     # Run an empty command to initialize environment
     run_command(['echo', '>', 'NUL'])

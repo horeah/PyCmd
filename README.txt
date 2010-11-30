@@ -13,6 +13,7 @@ persistent history, etc.)
     - insert/remove quotes as needed
     - complete executables from the PATH and internal CMD.exe commands
     - complete names of environment variables, including pseudo-variables
+    - complete wildcards
     - expand values of environment variables when completing
 
  b. Command history
@@ -32,6 +33,7 @@ persistent history, etc.)
     - smart prompt that abbreviates directory names to save screen space
     - Shift-PgUp/PgDn to scroll the buffer
     - history of recently visited directories (Alt-Left/Right/D on empty line)
+    - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
     - expand ~ as %HOME% or %USERPROFILE%
     - Ctrl-D on an empty line closes PyCmd
     - show the current working directory in the window title
@@ -50,7 +52,6 @@ persistent history, etc.)
     - custom TAB-completion for the arguments of common commands
     - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
       of hacky)
-    - tab-complete through wildcards
 
 
 4. How do I download/install/run it?

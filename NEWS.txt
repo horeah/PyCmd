@@ -1,3 +1,12 @@
+What's new in PyCmd 0.7?
+
+ * Tab-completion now works with wildcards (*, ?)
+ * Detach GUI applications from the console (Frerich Raabe)
+ * Dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
+ * Ctrl-C "aborts" a line if no text is selected
+ * new switch (-T) to set a prefix for the window title (Frerich Raabe)
+
+
 What's new in PyCmd 0.6?
 
  * Basic command line arguments (/c and /k -- similar to cmd.exe)
