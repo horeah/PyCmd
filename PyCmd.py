@@ -467,7 +467,12 @@ def run_command(tokens):
                 # Executable given
                 app = cmd
             else:
-                app = associated_application(ext)
+                # Not an executable -- search for the associated application
+                if os.path.isfile(cmd):
+                    app = associated_application(ext)
+                else:
+                    # No application will be spawned if the file doesn't exist
+                    app = None
 
             if app:
                 executable = full_executable_path(app)
