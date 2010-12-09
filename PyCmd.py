@@ -3,7 +3,7 @@ import sys, os, msvcrt, tempfile, signal, time, traceback
 from common import parse_line, unescape, sep_tokens, sep_chars
 from common import split_nocase, abbrev_path
 from common import expand_tilde, expand_env_vars
-from common import associated_application, full_executable_path
+from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, fnmatch
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
@@ -474,9 +474,7 @@ def run_command(tokens):
                 if executable and os.path.splitext(executable)[1].lower() == '.exe':
                     # This is an exe file, try to figure out whether it's a GUI
                     # or console application
-                    import pefile
-                    pe = pefile.PE(executable, fast_load=True)
-                    if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
+                    if is_gui_application(executable):
                         import subprocess
                         subprocess.Popen('"' + ' '.join([expand_tilde(t) for t in tokens]) + '"', shell=True)
                         return

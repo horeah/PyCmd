@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os, string, re, fsm, _winreg
+import os, string, re, fsm, _winreg, pefile, mmap
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
@@ -302,3 +302,33 @@ def full_executable_path(app):
     # We could not find the executable; this might be an internal command,
     # or a file that doesn't have a registered application
     return None
+
+
+def is_gui_application(executable):
+    """
+    Try to guess if an executable is a GUI or console app.
+    Note that the full executable name of an .exe file is 
+    required (use e.g. full_executable_path() to get it)
+    """
+    result = False
+    try:
+        fd = os.open(executable, os.O_RDONLY)
+        m = mmap.mmap(fd, 0, access = mmap.ACCESS_READ)
+        
+        try:
+            pe = pefile.PE(data = m, fast_load=True)
+            if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
+                # We only return true if all went well
+                result = True
+        except pefile.PEFormatError, e:
+            # There's not much we can do if pefile fails
+            pass
+
+        m.close()
+        os.close(fd)
+    except Exception, e:
+        # Not much we can do for exceptions
+        pass
+
+    # Return False when not sure
+    return result
