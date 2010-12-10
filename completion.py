@@ -340,9 +340,11 @@ def find_common_prefix(original, completions):
 def fnmatch(name, pattern):
     """Match the given file path/name against the given pattern"""
     # Transform pattern into regexp
-    translations = [('(', '\\('), 
-                    ('\\', '\\\\'),
+    translations = [('\\', '\\\\'),
+                    ('(', '\\('), 
                     (')', '\\)'),
+                    ('[', '\\['), 
+                    (']', '\\]'),
                     ('.', '\\.'),
                     ('?', '(.)'), 
                     ('*', '(.*)')]

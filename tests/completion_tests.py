@@ -6,7 +6,7 @@ import unittest
 from completion import fnmatch
 
 class TestFnmatch(unittest.TestCase):
-    matches_true = [
+    matches = [
         ('abc', 'abc', ()),
         ('abc', 'ab?', ('c',)),
         ('abc', 'a*', ('bc',)),
@@ -17,11 +17,14 @@ class TestFnmatch(unittest.TestCase):
         ('a.c', 'a?.c', None),
         ('test.py', '*est.*', ('t', 'py')),
         ('test.pyc', '*.py', None),
+        ('a(b)', 'a(*', ('b)',)),
+        ('abc[2]', 'a*[', None),
+        ('abc[2]', 'a*[*', ('bc', '2]')),
         ]
 
     def test_fnmatch(self):
         """Test the matching and grouping of shell patterns"""
-        for name, pattern, groups in self.matches_true:
+        for name, pattern, groups in self.matches:
             result = fnmatch(name, pattern)
             if result != None:
                 self.assertEqual(result.groups(), groups)
