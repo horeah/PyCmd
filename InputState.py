@@ -388,7 +388,8 @@ class InputState:
             text = wclip.GetClipboardData()
             
             # Purge garbage chars that some apps put in the clipboard
-            text = text.strip('\0')
+            if text.find('\0') >= 0:
+                text = text[:text.find('\0')]
             
             # Convert newlines to blanks
             text = text.replace('\r', '').replace('\n', ' ')
