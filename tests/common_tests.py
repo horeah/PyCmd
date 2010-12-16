@@ -2,10 +2,11 @@
 # Unit tests for common.py
 #
 
-import unittest
+from unittest import TestCase, TestSuite, defaultTestLoader
 from common import parse_line, unescape
+from common import associated_application, full_executable_path, is_gui_application
 
-class TestParseLine(unittest.TestCase):
+class TestParseLine(TestCase):
 
     lines_to_parse = [
 
@@ -197,5 +198,62 @@ class TestParseLine(unittest.TestCase):
         for input, expected in self.strings_to_unescape:
             self.assertEqual(unescape(input), expected)
 
+
+class TestAppIdentification(TestCase):
+    """
+    Test various functions used for identifying the executable
+    that will be run for a given command, and its type (GUI or console)
+    
+    We rely on a few applications and file associations that are
+    more-or-less standard in Windows; if things break here, make
+    sure to check that the environment matches our assumptions.
+    """
+    standard_associations = { '.reg': 'regedit.exe',
+                              '.chm': 'C:\\Windows\\hh.exe',}
+
+    standard_app_locations = { 'cmdxxxxxx': None,
+                      'c:\\windows\\system32\\___cxxxxxx___.exe': None,
+                      'cmd': 'c:\\windows\\system32\\cmd.exe',
+                      'cmd.exe': 'c:\\windows\\system32\\cmd.exe',
+                      'c:\\windows\system32\\cmd': 'c:\\windows\\system32\\cmd.exe',
+                      'c:\\windows\system32\\cmd.exe': 'c:\\windows\\system32\\cmd.exe',
+                      'regedit': 'c:\\windows\\regedit.exe',
+                      'regedit.exe': 'c:\\windows\\regedit.exe',
+                      'c:\\windows\\regedit': 'c:\\windows\\regedit.exe',
+                      'c:\\windows\\regedit.exe': 'c:\\windows\\regedit.exe',}
+
+    standard_app_types = {'c:\\windows\\notepad.exe': True, 
+                          'c:\\windows\\system32\\cmd.exe': False, }
+                      
+    def testAssociatedApplication(self):
+        """
+        Test the (registry-based) detection of the app associated to
+        an extension
+        """
+        for ext, app in self.standard_associations.items():
+            self.assertEqual(associated_application(ext).strip('"').lower(), 
+                             app.lower())
+
+    def testFullExecutablePath(self):
+        """
+        Test the function that tries to find out the actual executable 
+        that will be spawned for a command
+        """
+        for cmd, app in self.standard_app_locations.items():
+            if app is None:
+                self.assertEqual(full_executable_path(cmd), None)
+            else:
+                self.assertEqual(full_executable_path(cmd).lower(), app.lower())
+
+    def testIsGuiApplication(self):
+        """Test the detection of the app type (GUI vs. console)"""
+        for app, type in self.standard_app_types.items():
+            self.assertEqual(is_gui_application(app), type)
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(TestParseLine)
+    suite = TestSuite()
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestParseLine))
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAppIdentification))
+    return suite
+
