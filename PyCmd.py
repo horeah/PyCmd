@@ -459,7 +459,7 @@ def run_command(tokens):
             # line is an executable, check its PE header to decide whether it's
             # GUI application. If it is, spawn the process and then get on with
             # life.
-            cmd = tokens[0].strip('"')
+            cmd = expand_env_vars(tokens[0].strip('"'))
             dir, name = os.path.split(cmd)
             ext = os.path.splitext(name)[1]
 
