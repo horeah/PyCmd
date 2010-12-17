@@ -229,7 +229,10 @@ def abbrev_string(string):
 
 def has_exec_extension(file_name):
     """Check whether the specified file is executable, i.e. its extension is .exe, .com or .bat"""
-    return file_name.endswith('.com') or file_name.endswith('.exe') or file_name.endswith('.bat')
+    return (file_name.endswith('.com') 
+            or file_name.endswith('.exe') 
+            or file_name.endswith('.bat')
+            or file_name.endswith('.cmd'))
 
 
 def strip_extension(file_name):
