@@ -26,6 +26,7 @@ persistent history, etc.)
     - support emacs key bindings
     - Copy-Paste using the keyboard (Ctrl-C/X/V or Emacs-style)
     - Undo/Redo with Ctrl-(Shift-)Z (regular style) or Ctrl-_ (Emacs-style)
+    - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
     - smart word-by-word navigation
 
  d. Other
@@ -33,7 +34,6 @@ persistent history, etc.)
     - smart prompt that abbreviates directory names to save screen space
     - Shift-PgUp/PgDn to scroll the buffer
     - history of recently visited directories (Alt-Left/Right/D on empty line)
-    - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
     - expand ~ as %HOME% or %USERPROFILE%
     - Ctrl-D on an empty line closes PyCmd
     - show the current working directory in the window title
@@ -54,7 +54,7 @@ persistent history, etc.)
       of hacky)
 
 
-4. How do I download/install/run it?
+5. How do I download/install/run it?
 ------------------------------------   
  a. Download the binary distribution (created with Py2Exe, see 
     http://www.py2exe.org/) from  
@@ -78,7 +78,15 @@ persistent history, etc.)
                        as py2exe won't handle .egg files
 
 
-5. Credits
+6. How do I report a crash/problem?
+-----------------------------------
+For any kind of bug, please use the bug tracker provided by SourceForge at
+  http://sourceforge.net/tracker/?group_id=261720&atid=1127597
+When reporting crashes, please try to locate and attach a crash log (look in
+%APPDATA%\PyCmd for files named crash-yyyymmdd_hhmmss.log).
+
+
+7. Credits
 ----------
    - The fish shell is an endless source of good ideas:
             http://fishshell.org/index.php
