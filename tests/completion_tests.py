@@ -20,6 +20,10 @@ class TestFnmatch(unittest.TestCase):
         ('a(b)', 'a(*', ('b)',)),
         ('abc[2]', 'a*[', None),
         ('abc[2]', 'a*[*', ('bc', '2]')),
+        ('a+b', 'a++', None),
+        ('a++b', 'a+*', ('+b',)),
+        ('c^ab', '*^*b', ('c', 'a')),
+        ('c$ab', '*$*b', ('c', 'a')),
         ]
 
     def test_fnmatch(self):
