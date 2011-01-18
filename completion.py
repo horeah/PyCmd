@@ -315,16 +315,23 @@ def find_common_prefix(original, completions):
     Search for the longest common prefix in a list of strings
     Returns the longest common prefix
     """
-    
     common_len = 0
     common_string = ''
     mismatch = False
     perfect = True
+
+    # Cache lowercase version to avoid repeated calls to str.lower()
+    completions_lower = [s.lower() for s in completions]
+    common_string_lower = ''
+
     while common_len < len(completions[0]) and not mismatch:
         common_len += 1
         common_string = completions[0][0:common_len]
-        for completion in completions[1 : ]:
-            if completion[0:common_len].lower() != common_string.lower():
+        common_string_lower = completions_lower[0][0:common_len]
+        for i in range(1, len(completions)):
+            completion = completions[i]
+            completion_lower = completions_lower[i]
+            if completion_lower[0:common_len] != common_string_lower:
                 mismatch = True
             elif completion[0:common_len] != common_string:
                 perfect = False
