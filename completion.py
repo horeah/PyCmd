@@ -39,10 +39,14 @@ def complete_file(line):
     else:
         dir_to_complete = expand_env_vars(path_to_complete) + '\\'
 
+    # This is the wildcard matcher used throughout the function
+    matcher = wildcard_to_regex(prefix + '*')
+
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem, prefix + '*')]
+            completions = [elem for elem in os.listdir(dir_to_complete) 
+                           if matcher.match(elem)]
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -60,7 +64,7 @@ def complete_file(line):
             dir_to_complete = expand_env_vars(elem_in_path) + '\\'
             try:                
                 completions_path += [elem for elem in os.listdir(dir_to_complete) 
-                                     if fnmatch(elem, prefix + '*')
+                                     if matcher.match(elem)
                                      and os.path.isfile(dir_to_complete + '\\' + elem)
                                      and has_exec_extension(elem)
                                      and not elem in completions
@@ -84,7 +88,7 @@ def complete_file(line):
                              'time', 'title', 'type',
                              'ver', 'verify', 'vol']
         completions_path += [elem for elem in internal_commands
-                             if fnmatch(elem, prefix + '*')
+                             if matcher.match(elem)
                              and not elem in completions
                              and not elem in completions_path]
 
@@ -181,10 +185,13 @@ def complete_wildcard(line):
     else:
         dir_to_complete = expand_env_vars(path_to_complete) + '\\'
 
+    # This is the wildcard matcher used throughout the function
+    matcher = wildcard_to_regex(prefix + '*')
+
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if fnmatch(elem, prefix + '*')]
+            completions = [elem for elem in os.listdir(dir_to_complete) if matcher.match(elem)]
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -198,7 +205,7 @@ def complete_wildcard(line):
     if completions != []:
         completed_suffixes = []
         for c in completions:
-            match = fnmatch(c, prefix + '*')
+            match = matcher.match(c)
             completed_suffixes.append(match.group(match.lastindex))
 
         if len(completions) == 1:
@@ -337,8 +344,11 @@ def find_common_prefix(original, completions):
     return common_string
 
 
-def fnmatch(name, pattern):
-    """Match the given file path/name against the given pattern"""
+def wildcard_to_regex(pattern):
+    """
+    Transform a wildcard pattern into a compiled regex object.
+    This also handles escaping as needed.    
+    """
     # Transform pattern into regexp
     translations = [('\\', '\\\\'),
                     ('(', '\\('), 
@@ -356,7 +366,7 @@ def fnmatch(name, pattern):
     for src, dest in translations:
         re_pattern = re_pattern.replace(src, dest)
     re_pattern += '$'
-    return re.match(re_pattern, name, re.IGNORECASE)
+    return re.compile(re_pattern, re.IGNORECASE)
 
 
 def has_wildcards(pattern):

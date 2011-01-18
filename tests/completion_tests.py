@@ -3,7 +3,7 @@
 #
 
 import unittest
-from completion import fnmatch
+from completion import wildcard_to_regex
 
 class TestFnmatch(unittest.TestCase):
     matches = [
@@ -29,7 +29,7 @@ class TestFnmatch(unittest.TestCase):
     def test_fnmatch(self):
         """Test the matching and grouping of shell patterns"""
         for name, pattern, groups in self.matches:
-            result = fnmatch(name, pattern)
+            result = wildcard_to_regex(pattern).match(name)
             if result != None:
                 self.assertEqual(result.groups(), groups)
             else:
