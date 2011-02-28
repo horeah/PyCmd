@@ -348,7 +348,6 @@ def main():
                     # Show multiple completions if available
                     if len(suggestions) > 1:
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
-                        sys.stdout.write('\n')
                         column_width = max([len(s) for s in suggestions]) + 10
                         if column_width > get_buffer_size()[0] - 1:
                             column_width = get_buffer_size()[0] - 1
@@ -361,6 +360,22 @@ def main():
                         num_lines = len(suggestions) / num_columns
                         if len(suggestions) % num_columns != 0:
                             num_lines += 1
+
+                        num_screens = 1.0 * num_lines / (get_viewport()[3] - get_viewport()[1])
+                        if num_screens >= 0.9:
+                            # We ask for confirmation before displaying many completions
+                            (c_x, c_y) = get_cursor()
+                            offset_from_bottom = get_buffer_size()[1] - c_y
+                            message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
+                            sys.stdout.write('\n' + message)
+                            rec = read_input()
+                            move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                            sys.stdout.write('\n' + ' ' * len(message))
+                            move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                            if rec.char != '\t':
+                                continue
+                            
+                        sys.stdout.write('\n')
                         for line in range(0, num_lines):
                             # Print one line
                             sys.stdout.write('\r')
