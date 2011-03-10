@@ -17,6 +17,10 @@ class DirHistory:
     # call to display() would actually be an update, not a fresh paint)
     shown = False
 
+    # Maximum allowed length (if the history gets too long it becomes hard to
+    # navigate)
+    max_len = 9
+
     def __init__(self):
         """Create an empty directory history"""
         self.locations = []
@@ -27,21 +31,25 @@ class DirHistory:
         self.index -= 1
         if self.index < 0:
             self.index = len(self.locations) - 1
-        try:
-            os.chdir(self.locations[self.index])
-            changed = True
-        except OSError, error:
-            sys.stdout.write('\n  ' + str(error) + '\n')
-            self.locations.pop(self.index) 
-            changed = False
-            self.shown = False
-        return changed
+        return self._apply()
 
     def go_right(self):
         """Go to the next location (checks whether it's still valid)"""
         self.index += 1
         if self.index >= len(self.locations):
             self.index = 0
+        return self._apply()
+
+    def jump(self, index):
+        """Jump to the specified index (checks whether it's still valid)"""
+        if index == 9:
+            self.index = len(self.locations) - 1
+        else:
+            self.index = index - 1
+        return self._apply()
+
+    def _apply(self):
+        """Change to the currently selected directory (checks if still valid)"""
         try:
             os.chdir(self.locations[self.index])
             changed = True
@@ -64,7 +72,7 @@ class DirHistory:
         to_remove.remove(self.index)
         self.index -= len(filter(lambda x: x < self.index, to_remove))
         map(lambda x: self.locations.pop(x), to_remove)
-        while len(self.locations) > 16:
+        while len(self.locations) > self.max_len:
             # Unusable if it gets too long
             to_remove = (self.index + 8) % len(self.locations)
             self.locations.pop(to_remove)
@@ -95,24 +103,19 @@ class DirHistory:
         sys.stdout.write('\n')
         lines_written = 2
 
-        # From 0 to index - 1
-        for location in self.locations[: self.index]:
-            lines_written += (len('  ' + location) / buffer_size[0] + 1)
-            sys.stdout.write('  ' + location + '\n')
-
-        # Entry at index
-        sys.stdout.write('  ')
-        location = self.locations[self.index]
-        set_text_attributes(orig_attr ^ BACKGROUND_BRIGHT ^ FOREGROUND_BRIGHT)
-        sys.stdout.write(location)
-        lines_written += (len('  ' + location) / buffer_size[0] + 1)
-        set_text_attributes(orig_attr)
-        sys.stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
-
-        # From index + 1 to end
-        for location in self.locations[self.index + 1 :]:
-            sys.stdout.write('  ' + location + '\n')
-            lines_written += (len('  ' + location) / buffer_size[0] + 1)
+        for i in range(len(self.locations)):
+            location = self.locations[i]
+            prefix = ' %d  ' % (i + 1)
+            lines_written += (len(prefix + location) / buffer_size[0] + 1)
+            if i != self.index:
+                # Non-selected entry, simply print 
+                sys.stdout.write(prefix + location + '\n')
+            else:
+                # Currently selected entry, print with highlight
+                set_text_attributes(orig_attr ^ BACKGROUND_BRIGHT ^ FOREGROUND_BRIGHT)
+                sys.stdout.write(prefix + location)
+                set_text_attributes(orig_attr)
+                sys.stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
 
         # Check whether we have overflown the buffer
         if lines_written > self.offset_from_bottom:

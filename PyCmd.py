@@ -241,35 +241,30 @@ def main():
                     else:                               # Ctrl-Shift-Z
                         state.handle(ActionCode.ACTION_REDO)
                     auto_select = False
-            elif is_alt_pressed(rec) and not is_ctrl_pressed(rec): # Alt-Something
-                if rec.virtualKeyCode == 37:            # Alt-Left
+            elif is_alt_pressed(rec) and not is_ctrl_pressed(rec):      # Alt-Something
+                if rec.virtualKeyCode in [37, 39] + range(49, 59):      # Dir history 
                     if state.before_cursor + state.after_cursor == '':
                         state.reset_prev_line()
-                        if dir_hist.go_left():
+                        if rec.virtualKeyCode == 37:            # Alt-Left
+                            changed = dir_hist.go_left()
+                        elif rec.virtualKeyCode == 39:          # Alt-Right     
+                            changed = dir_hist.go_right()
+                        else:                                   # Alt-1..Alt-9        
+                            changed = dir_hist.jump(rec.virtualKeyCode - 48)
+                        if changed:
                             state.prev_prompt = state.prompt
                             state.prompt = prompt()
                         save_history(dir_hist.locations,
                                      pycmd_data_dir + '\\dir_history',
-                                     16)
+                                     dir_hist.max_len)
                         if dir_hist.shown:
                             dir_hist.display()
                             sys.stdout.write(state.prev_prompt)
                     else:
-                        state.handle(ActionCode.ACTION_LEFT_WORD, select)
-                elif rec.virtualKeyCode == 39:          # Alt-right
-                    if state.before_cursor + state.after_cursor == '':
-                        state.reset_prev_line()
-                        if dir_hist.go_right():
-                            state.prev_prompt = state.prompt
-                            state.prompt = prompt()
-                        save_history(dir_hist.locations,
-                                     pycmd_data_dir + '\\dir_history',
-                                     16)
-                        if dir_hist.shown:
-                            dir_hist.display()
-                            sys.stdout.write(state.prev_prompt)
-                    else:
-                        state.handle(ActionCode.ACTION_RIGHT_WORD, select)
+                        if rec.virtualKeyCode == 37:            # Alt-Left
+                            state.handle(ActionCode.ACTION_LEFT_WORD, select)
+                        elif rec.virtualKeyCode == 39:          # Alt-Right
+                            state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.virtualKeyCode == 66:          # Alt-B
                     state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.virtualKeyCode == 70:          # Alt-F
@@ -435,7 +430,7 @@ def main():
         dir_hist.visit_cwd()
         save_history(dir_hist.locations,
                      pycmd_data_dir + '\\dir_history',
-                     16)
+                     dir_hist.max_len)
 
 
 def internal_cd(args):
