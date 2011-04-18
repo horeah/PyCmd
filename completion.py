@@ -384,7 +384,11 @@ def complete_env_var(line):
     tokens = parse_line(line)
     if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
         tokens += ['']   # This saves some checks later
-    token_orig = tokens[-1]
+
+    # Account for the VAR=VALUE syntax
+    (token_prefix, equals, token_orig) = tokens[-1].rpartition('=')
+    token_prefix += equals
+
     if token_orig.count('%') % 2 == 0 and token_orig.strip('"').endswith('%'):
         [lead, prefix] = token_orig.strip('"').rstrip('%').rsplit('%', 2)
     else:
