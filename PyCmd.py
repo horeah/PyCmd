@@ -53,7 +53,10 @@ def main():
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
+    # Default options
     title_prefix = ""
+    global quiet_mode
+    quiet_mode = False
 
     # Parse arguments
     arg = 1
@@ -83,6 +86,9 @@ def main():
                 internal_exit()
             title_prefix = sys.argv[arg+1] + ' - '
             arg += 1
+        elif switch in ['/Q', '-Q']:
+            # Quiet mode: suppress messages
+            quiet_mode = True
         else:
             # Invalid command line switch
             sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
@@ -90,10 +96,12 @@ def main():
             internal_exit()
         arg += 1
 
-    # Print some splash text
-    print
-    print 'Welcome to PyCmd 0.7!'
-    print
+    if not quiet_mode:
+        # Print some splash text
+        print
+        print 'Welcome to PyCmd 0.7!'
+        print
+
     # Run an empty command to initialize environment
     run_command(['echo', '>', 'NUL'])
 
@@ -451,7 +459,8 @@ def internal_cd(args):
 
 def internal_exit(message = ''):
     """The EXIT command, with an optional goodbye message"""
-    if (message != ''):
+    global quiet_mode
+    if ((not quiet_mode) and message != ''):
         print message
     os.remove(tmpfile)
     sys.exit()
@@ -629,6 +638,7 @@ def print_usage():
     print '\t\t-c command \tRun command, then exit'
     print '\t\t-k command \tRun command, then continue to the prompt'
     print '\t\t-t title \tShow title in window caption'
+    print '\t\t-q\t\tQuiet (suppress messages)'
     print '\t\t-h \t\tShow this help'
     print
     print 'Note that you can use \'/\' instead of \'-\', uppercase instead of '
