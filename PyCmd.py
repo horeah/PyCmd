@@ -1,4 +1,5 @@
 import sys, os, msvcrt, tempfile, signal, time, traceback
+import win32console, win32gui, win32con
 
 from common import parse_line, unescape, sep_tokens, sep_chars
 from common import split_nocase, abbrev_path
@@ -507,8 +508,12 @@ def run_command(tokens):
                         return
 
         # Regular (external) command
+        start_time = time.time()
         run_in_cmd(tokens)
-
+        console_window = win32console.GetConsoleWindow()
+        if win32gui.GetForegroundWindow() != console_window and time.time() - start_time > 15:
+            # If the window is inactive, flash after long tasks
+            win32gui.FlashWindowEx(console_window, win32con.FLASHW_ALL, 3, 750)
 
 def run_in_cmd(tokens):
     pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
