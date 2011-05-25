@@ -1,3 +1,18 @@
+What's new in PyCmd 0.8?
+
+ * Treat .cmd files as executable (just like .bat)
+ * Flash titlebar after long tasks if the window is inactive
+ * Faster completions
+ * Warn before displaying long completion list
+ * The completion works correctly for (semicolon-separated) lists of paths
+   (e.g. --classpath="C:\Program Files\classes;d:\users\horea\my_jars;...)
+ * Avoid duplicate backslash when completing
+ * Quiet option (/Q) to suppress welcome and bye messages
+ * Numbered entries in the directory history (use Alt-1..9 to switch)
+ * Improved README
+ * Bugfixes in completion, copy & paste
+
+
 What's new in PyCmd 0.7?
 
  * Tab-completion now works with wildcards (*, ?)

@@ -100,7 +100,7 @@ def main():
     if not quiet_mode:
         # Print some splash text
         print
-        print 'Welcome to PyCmd 0.7!'
+        print 'Welcome to PyCmd 0.8!'
         print
 
     # Run an empty command to initialize environment
