@@ -11,13 +11,14 @@ RM = rm -f
 CP = cp
 MV = mv
 ZIP = zip
+SHELL = cmd
 
 SRC = PyCmd.py InputState.py DirHistory.py common.py completion.py console.py fsm.py
 SRC_TEST = common_tests.py
 
 dist: clean $(SRC)
-	python setup.py py2exe
-	$(MV) dist PyCmd
+	python setup.py build
+	$(MV) build\exe.win32-2.5 PyCmd
 	$(CP) NEWS.txt README.txt PyCmd
 	$(ZIP) -r PyCmd.zip PyCmd
 

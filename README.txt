@@ -56,8 +56,8 @@ persistent history, etc.)
 
 5. How do I download/install/run it?
 ------------------------------------   
- a. Download the binary distribution (created with Py2Exe, see 
-    http://www.py2exe.org/) from  
+ a. Download the binary distribution (created with cz_freeze, see 
+    http://cx-freeze.sourceforge.net/) from
           https://sourceforge.net/projects/pycmd/files/
     Then, unpack and start PyCmd.exe. No installation is necessary.
 
@@ -70,12 +70,10 @@ persistent history, etc.)
                  http://www.python.org/download/releases/2.5/
         - Python for Windows extensions from 
                  https://sourceforge.net/projects/pywin32/
-        - py2exe from 
-                 http://www.py2exe.org/
+        - cx_freeze from 
+                 http://cx-freeze.sourceforge.net/
         - pefile from   
                  http://code.google.com/p/pefile/
-                 NOTE: install with `python setup.py install_lib` 
-                       as py2exe won't handle .egg files
 
 
 6. How do I report a crash/problem?

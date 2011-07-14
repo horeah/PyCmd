@@ -5,6 +5,8 @@ import ctypes
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
 
+import pywintypes       # Unneeded import to trick cx_freeze into including the DLL
+
 global FOREGROUND_RED
 global FOREGROUND_GREEN
 global FOREGROUND_BLUE
