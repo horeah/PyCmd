@@ -56,7 +56,7 @@ persistent history, etc.)
 
 5. How do I download/install/run it?
 ------------------------------------   
- a. Download the binary distribution (created with cz_freeze, see 
+ a. Download the binary distribution (created with cx_freeze, see 
     http://cx-freeze.sourceforge.net/) from
           https://sourceforge.net/projects/pycmd/files/
     Then, unpack and start PyCmd.exe. No installation is necessary.
@@ -66,8 +66,8 @@ persistent history, etc.)
     then start PyCmd.py in Python or run 'make' to build the binary 
     distribution.
     You will need:
-        - Python 2.5 from
-                 http://www.python.org/download/releases/2.5/
+        - Python 2.7 from
+                 http://www.python.org/download/releases/2.7/
         - Python for Windows extensions from 
                  https://sourceforge.net/projects/pywin32/
         - cx_freeze from 
