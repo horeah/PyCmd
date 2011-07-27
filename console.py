@@ -4,6 +4,10 @@
 import ctypes
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
+from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY_EVENT
+from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
+from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
+from win32con import SHIFT_PRESSED
 
 import pywintypes       # Unneeded import to trick cx_freeze into including the DLL
 
@@ -50,11 +54,6 @@ class KEY_EVENT_RECORD(Structure):
                 ('char', c_char),
                 ('controlKeyState', DWORD)]
     
-class INPUT_RECORD(Structure):
-    _fields_ = [('EventType', WORD),
-                ('Event', KEY_EVENT_RECORD)]
-
-
 def get_text_attributes():
     """Get the current foreground/background RGB components"""
     buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
@@ -125,42 +124,37 @@ def scroll_buffer(lines):
 
 def read_input():
     """Read one input event from the console input buffer"""
-    record = INPUT_RECORD()
-    records_read = c_long(0)
     while True:
-        ctypes.windll.kernel32.ReadConsoleInputA(stdin_handle, byref(record), 1, byref(records_read))
-        # print '\n\n', record.EventType, '\n\n'
-        if record.EventType == 0x001 and record.Event.keyDown == True:
-            return record.Event
+        record = stdin_handle.ReadConsoleInput(1)[0]
+        if record.EventType == KEY_EVENT and record.KeyDown:
+            return record
 
 def write_input(key_code, control_state):
     """Emulate a key press with the given key code and control key mask"""
-    record = INPUT_RECORD()
-    record.EventType = 0x001
-    record.Event.keyDown = True
-    record.Event.virtualKeyCode = key_code
-    record.Event.controlKeyState = control_state
-    records_read = c_long(0)
-    ctypes.windll.kernel32.WriteConsoleInputA(stdin_handle, byref(record), 1, byref(records_read))
+    record = PyINPUT_RECORDType(KEY_EVENT)
+    record.KeyDown = True
+    record.VirtualKeyCode = key_code
+    record.ControlKeyState = control_state
+    stdin_handle.WriteConsoleInput([record])
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""
-    return record.controlKeyState & (0x0008 | 0x0004) != 0
+    return record.ControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) != 0
 
 def is_alt_pressed(record):
     """Check whether the Alt key is pressed"""
-    return record.controlKeyState & (0x0001 | 0x0002) != 0
+    return record.ControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED) != 0
 
 def is_shift_pressed(record):
     """Check whether the Shift key is pressed"""
-    return record.controlKeyState & 0x0010 != 0
+    return record.ControlKeyState & SHIFT_PRESSED != 0
 
 def is_control_only(record):
     """
     Check whether this is a control-key-only press, i.e. just a modifier
     key w/out an "actual" key
     """
-    return record.virtualKeyCode in [16, 17, 18]
+    return record.VirtualKeyCode in [16, 17, 18]
 
 # Initialization
 FOREGROUND_BLUE = 0x01
@@ -174,5 +168,5 @@ BACKGROUND_RED = 0x40
 BACKGROUND_BRIGHT = 0x80
 BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
 
-stdin_handle = ctypes.windll.kernel32.GetStdHandle(-10)
+stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
 stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
