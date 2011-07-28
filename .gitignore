@@ -1,8 +1,8 @@
 # leading `/' means at top level only
 /build/
 /PyCmd/
-/PyCmd.zip
-
+/buildinfo.py
+/PyCmd-*-w??.zip
 
 # no leading `/' means anywhere
 *.pyc
