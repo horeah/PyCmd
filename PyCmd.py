@@ -99,8 +99,13 @@ def main():
 
     if not quiet_mode:
         # Print some splash text
+        try:
+            from buildinfo import build_info
+        except ImportError, ie:
+            build_info = '<no build info>'
+
         print
-        print 'Welcome to PyCmd 0.8!'
+        print 'Welcome to PyCmd %s!' % build_info
         print
 
     # Run an empty command to initialize environment

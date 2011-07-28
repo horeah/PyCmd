@@ -6,7 +6,6 @@
 #
 # Author: Horea Haitonic
 #
-
 RM = rm -f
 CP = cp
 MV = mv
@@ -22,6 +21,10 @@ PYTHONHOME_W64 = C:\Python27-amd64
 PYTHON_W32 = (set PYTHONHOME=$(PYTHONHOME_W32)) && "$(PYTHONHOME_W32)\python.exe"
 PYTHON_W64 = (set PYTHONHOME=$(PYTHONHOME_W64)) && "$(PYTHONHOME_W64)\python.exe"
 
+ifndef BUILD_INFO
+	BUILD_INFO = $(shell echo %DATE%| sed "s/...\ \(..\)\/\(..\)\/\(....\)/\3\1\2/")
+endif
+
 .PHONY: all
 all: 
 	$(MAKE) clean
@@ -30,19 +33,22 @@ all:
 	$(MAKE) dist_w64
 
 dist_w32: clean $(SRC)
+	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W32) setup.py build
 	$(MV) build\exe.win32-2.7 PyCmd
 	$(CP) NEWS.txt README.txt PyCmd
-	$(ZIP) -r PyCmd-w32.zip PyCmd
+	$(ZIP) -r PyCmd-$(BUILD_INFO)-w32.zip PyCmd
 
 dist_w64: clean $(SRC)
+	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W64) setup.py build
 	$(MV) build\exe.win-amd64-2.7 PyCmd
 	$(CP) NEWS.txt README.txt PyCmd
-	$(ZIP) -r PyCmd-w64.zip PyCmd
+	$(ZIP) -r PyCmd-$(BUILD_INFO)-w64.zip PyCmd
 
 .PHONY: clean
 clean:
+	$(RM) buildinfo.*
 	$(RM) $(SRC:%.py=%.pyc)
 	cd tests && $(RM) $(SRC_TEST:%.py=%.pyc) && $(RM) __init__.pyc
 	$(RM) -r build PyCmd
