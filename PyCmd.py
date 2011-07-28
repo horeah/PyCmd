@@ -509,7 +509,7 @@ def run_command(tokens):
                     # or console application
                     if is_gui_application(executable):
                         import subprocess
-                        subprocess.Popen('"' + ' '.join([expand_tilde(t) for t in tokens]) + '"', shell=True)
+                        subprocess.Popen(' '.join([expand_tilde(t) for t in tokens]), shell=True)
                         return
 
         # Regular (external) command
