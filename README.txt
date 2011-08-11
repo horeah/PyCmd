@@ -70,10 +70,13 @@ persistent history, etc.)
                  http://www.python.org/download/releases/2.7/
         - Python for Windows extensions from 
                  https://sourceforge.net/projects/pywin32/
-        - cx_freeze from 
-                 http://cx-freeze.sourceforge.net/
         - pefile from   
                  http://code.google.com/p/pefile/
+    If you want to build (make), you'll also need:
+        - cx_freeze from 
+                 http://cx-freeze.sourceforge.net/
+        - MinGW from
+                 http://www.mingw.org/ 
 
 
 6. How do I report a crash/problem?

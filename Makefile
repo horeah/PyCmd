@@ -1,8 +1,9 @@
 #
 # Makefile for creating a PyCmd.zip binary distribution
 # Requires:
+#	* Python >= 2.7 (32-bit or 64-bit)
 #	* MinGW (make, rm, cp etc) and python in the %PATH%
-#	* py2exe and pywin32 installed in the Python 
+#	* cx_freeze, pywin32 and pefile installed in the Python dist
 #
 # Author: Horea Haitonic
 #
