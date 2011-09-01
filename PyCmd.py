@@ -715,7 +715,6 @@ if __name__ == '__main__':
         init()
         main()
     except Exception, e:        
-        global pycmd_data_dir
         report_file_name = (pycmd_data_dir
                             + '\\crash-' 
                             + time.strftime('%Y%m%d_%H%M%S') 
