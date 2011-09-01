@@ -16,7 +16,14 @@ from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
 from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 
-def main():
+pycmd_data_dir = None
+state = None
+dir_hist = None
+tmpfile = None
+tmpfile_errorlevel = None
+quiet_mode = None
+
+def init():
     # %APPDATA% is not always defined (e.g. when using runas.exe)
     if 'APPDATA' in os.environ.keys():
         APPDATA = '%APPDATA%'
@@ -63,9 +70,16 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     # Default options
-    title_prefix = ""
     global quiet_mode
     quiet_mode = False
+
+def deinit():
+    os.remove(tmpfile)
+    os.remove(tmpfile_errorlevel)
+
+def main():
+    global quiet_mode
+    title_prefix = ""
 
     # Parse arguments
     arg = 1
@@ -473,11 +487,10 @@ def internal_cd(args):
 
 def internal_exit(message = ''):
     """The EXIT command, with an optional goodbye message"""
+    deinit()
     global quiet_mode
     if ((not quiet_mode) and message != ''):
         print message
-    os.remove(tmpfile)
-    os.remove(tmpfile_errorlevel)
     sys.exit()
 
 
@@ -699,6 +712,7 @@ def print_usage():
 # Entry point
 if __name__ == '__main__':
     try:
+        init()
         main()
     except Exception, e:        
         global pycmd_data_dir
