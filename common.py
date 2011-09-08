@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os, string, re, fsm, _winreg, pefile, mmap
+import os, string, re, fsm, _winreg, pefile, mmap, sys
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
@@ -109,7 +109,7 @@ def unescape(string):
     """Unescape string from ^ escaping. ^ inside double quotes is ignored"""
     if (string == None):
         return None
-    result = ''
+    result = u''
     in_quotes = False
     escape_next = False
     for c in string:
@@ -271,11 +271,13 @@ def associated_application(ext):
         return None
 
 
-def full_executable_path(app):
+def full_executable_path(app_unicode):
     """
     Compute the full path of the executable that will be spawned 
     for the given command
     """
+    app = app_unicode.encode(sys.getfilesystemencoding())
+
     # Split the app into a dir, a name and an extension; we
     # will configure our search for the actual executable based
     # on these

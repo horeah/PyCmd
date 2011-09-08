@@ -1,5 +1,6 @@
 import sys, os
 from console import set_text_attributes, get_text_attributes
+from console import write_str
 from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
 from console import BACKGROUND_BRIGHT, FOREGROUND_BRIGHT
 
@@ -54,7 +55,7 @@ class DirHistory:
             os.chdir(self.locations[self.index])
             changed = True
         except OSError, error:
-            sys.stdout.write('\n  ' + str(error) + '\n')
+            write_str('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
             self.index -= 1
             if self.index < 0:
@@ -65,7 +66,7 @@ class DirHistory:
 
     def visit_cwd(self):
         """Add the current directory to the history of visited locations"""
-        self.locations.insert(self.index + 1, os.getcwd())
+        self.locations.insert(self.index + 1, os.getcwd().decode(sys.getfilesystemencoding()))
         self.index += 1
         to_remove = [i for i in range(len(self.locations)) 
                      if self.locations[i].lower() == self.locations[self.index].lower()]
@@ -100,7 +101,7 @@ class DirHistory:
 
         orig_attr = get_text_attributes()
         set_text_attributes(orig_attr)
-        sys.stdout.write('\n')
+        write_str('\n')
         lines_written = 2
 
         for i in range(len(self.locations)):
@@ -109,13 +110,13 @@ class DirHistory:
             lines_written += (len(prefix + location) / buffer_size[0] + 1)
             if i != self.index:
                 # Non-selected entry, simply print 
-                sys.stdout.write(prefix + location + '\n')
+                write_str(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
                 set_text_attributes(orig_attr ^ BACKGROUND_BRIGHT ^ FOREGROUND_BRIGHT)
-                sys.stdout.write(prefix + location)
+                write_str(prefix + location)
                 set_text_attributes(orig_attr)
-                sys.stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
+                write_str(' ' * (buffer_size[0] - get_cursor()[0]))
 
         # Check whether we have overflown the buffer
         if lines_written > self.offset_from_bottom:

@@ -1,7 +1,7 @@
 #
 # Functions for manipulating the console using Microsoft's Console API
 #
-import ctypes
+import ctypes, sys
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
 from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY_EVENT
@@ -136,6 +136,13 @@ def write_input(key_code, control_state):
     record.VirtualKeyCode = key_code
     record.ControlKeyState = control_state
     stdin_handle.WriteConsoleInput([record])
+
+def write_str(s):
+    """
+    Output s to stdout after encoding it with stdout encoding to
+    avoid conversion errors with non ASCII characters
+    """
+    sys.stdout.write(s.encode(sys.stdout.encoding))
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""
