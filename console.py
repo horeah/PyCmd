@@ -142,7 +142,7 @@ def write_str(s):
     Output s to stdout after encoding it with stdout encoding to
     avoid conversion errors with non ASCII characters
     """
-    sys.stdout.write(s.encode(sys.stdout.encoding))
+    sys.stdout.write(s.encode(sys.stdout.encoding, 'replace'))
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""

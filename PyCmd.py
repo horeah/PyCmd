@@ -660,7 +660,7 @@ def save_history(lines, filename, length):
     """
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
-        history_file = codecs.open(filename, 'r', 'utf8')
+        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
         history_to_save = [line.rstrip(u'\n') for line in history_file.readlines()]
         history_file.close()
         for line in lines:
@@ -685,8 +685,8 @@ def read_history(filename):
     Read and return a list of lines from a history file
     """
     if os.path.isfile(filename):
-        history_file = codecs.open(filename, 'r', 'utf8')
-        history = [line.rstrip(u'\n') for line in history_file.readlines()]
+        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
+        history = [line.rstrip(u'\n\r') for line in history_file.readlines()]
         history_file.close()
     else:
         print 'Warning: Can\'t open ' + os.path.basename(filename) + '!'
