@@ -15,13 +15,13 @@ from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_contro
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
 from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
+import configuration
 
 pycmd_data_dir = None
 state = None
 dir_hist = None
 tmpfile = None
 tmpfile_errorlevel = None
-quiet_mode = None
 
 def init():
     # %APPDATA% is not always defined (e.g. when using runas.exe)
@@ -69,17 +69,16 @@ def init():
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Default options
-    global quiet_mode
-    quiet_mode = False
-
 def deinit():
     os.remove(tmpfile)
     os.remove(tmpfile_errorlevel)
 
 def main():
-    global quiet_mode
     title_prefix = ""
+
+    # Apply user configurations
+    configuration.apply_settings(pycmd_data_dir + '\\init.py')
+    configuration.sanitize()
 
     # Parse arguments
     arg = 1
@@ -111,7 +110,7 @@ def main():
             arg += 1
         elif switch in ['/Q', '-Q']:
             # Quiet mode: suppress messages
-            quiet_mode = True
+            configuration.behavior.quiet_mode = True
         else:
             # Invalid command line switch
             sys.stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
@@ -119,7 +118,7 @@ def main():
             internal_exit()
         arg += 1
 
-    if not quiet_mode:
+    if not configuration.behavior.quiet_mode:
         # Print some splash text
         try:
             from buildinfo import build_info
@@ -488,8 +487,7 @@ def internal_cd(args):
 def internal_exit(message = ''):
     """The EXIT command, with an optional goodbye message"""
     deinit()
-    global quiet_mode
-    if ((not quiet_mode) and message != ''):
+    if ((not configuration.behavior.quiet_mode) and message != ''):
         print message
     sys.exit()
 
@@ -640,7 +638,10 @@ def prompt():
     """Return a custom prompt"""
     curdir = os.getcwd().decode(sys.getfilesystemencoding())
     curdir = curdir[0].upper() + curdir[1:]
-    return abbrev_path(curdir) + u'> '
+    if configuration.appearance.abbreviate_prompt:
+        return abbrev_path(curdir) + u'> '
+    else:
+        return curdir + u'> ' 
 
 
 def signal_handler(signum, frame):
