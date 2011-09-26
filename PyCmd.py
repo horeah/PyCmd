@@ -2,7 +2,7 @@ import codecs, subprocess, re, sys, os, msvcrt, tempfile, signal, time, tracebac
 import win32console, win32gui, win32con
 
 from common import parse_line, unescape, sep_tokens, sep_chars
-from common import split_nocase, abbrev_path
+from common import split_nocase
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -135,7 +135,7 @@ def main():
     # Main loop
     while True:
         # Prepare buffer for reading one line
-        state.reset_line(prompt())
+        state.reset_line(configuration.appearance.prompt())
         scrolling = False
         auto_select = False
         force_repaint = True
@@ -288,7 +288,7 @@ def main():
                             changed = dir_hist.jump(rec.VirtualKeyCode - 48)
                         if changed:
                             state.prev_prompt = state.prompt
-                            state.prompt = prompt()
+                            state.prompt = configuration.appearance.prompt()
                         save_history(dir_hist.locations,
                                      pycmd_data_dir + '\\dir_history',
                                      dir_hist.max_len)
@@ -632,16 +632,6 @@ def run_in_cmd(tokens):
             os.environ[variable] = new_environ[variable]
     cd = os.environ['CD'].decode(sys.stdout.encoding)
     os.chdir(cd.encode(sys.getfilesystemencoding()))
-
-
-def prompt():
-    """Return a custom prompt"""
-    curdir = os.getcwd().decode(sys.getfilesystemencoding())
-    curdir = curdir[0].upper() + curdir[1:]
-    if configuration.appearance.abbreviate_prompt:
-        return abbrev_path(curdir) + u'> '
-    else:
-        return curdir + u'> ' 
 
 
 def signal_handler(signum, frame):

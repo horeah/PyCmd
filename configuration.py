@@ -1,7 +1,7 @@
 #
 # Basic mechanism for customizing PyCmd
 #
-import os, traceback
+import os, traceback, pycmd_public
 
 class Settings(object):
     """
@@ -16,19 +16,25 @@ class Settings(object):
 class Appearance(Settings):
     """Appearance settings"""
 
-    # Abbreviate current path when displaying the prompt
-    abbreviate_prompt = True
+    def __init__(self):
+        # Prompt function (should return a string)
+        self.prompt = pycmd_public.abbrev_path_prompt
+
+    def sanitize(self):
+        if not callable(self.prompt):
+            print 'Prompt function doesn\'t look like a callable; reverting to PyCmd\'s default prompt'
+            self.prompt = pycmd_public.abbrev_path_prompt
 
 
 class Behavior(Settings):
     """Behavior settings"""
-    # Skip splash message (welcome and bye).
-    # This can be also overriden with the '-Q' command line argument'
-    quiet_mode = False
-
-    # Select the completion mode; currently supported: 'bash'
-    completion_mode = 'bash'
-
+    def __init__(self):
+        # Skip splash message (welcome and bye).
+        # This can be also overriden with the '-Q' command line argument'
+        self.quiet_mode = False
+        
+        # Select the completion mode; currently supported: 'bash'
+        self.completion_mode = 'bash'
 
     def sanitize(self):
         if not self.completion_mode in ['bash']:
@@ -39,7 +45,7 @@ class Behavior(Settings):
 def apply_settings(settings_file):
     """
     Execute a configuration file (if it exists), overriding values from the
-    specified global_variables dictionary
+    global configuration objects (created when this module is loaded)
     """
     if os.path.exists(settings_file):
         try:

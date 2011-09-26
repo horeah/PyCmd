@@ -183,26 +183,6 @@ def split_nocase(string, separator):
     return (chunks, seps)
 
 
-def abbrev_path(path):
-    """Abbreviate a full path to make it shorter, yet still unambiguous"""
-    current_dir = path[ : 3]
-    path = path[3 : ]
-    path_abbrev = current_dir[ : 2]
-
-    for elem in path.split('\\')[ : -1]:
-        elem_abbrev = abbrev_string(elem)
-        for other in os.listdir(current_dir):
-            if os.path.isdir(current_dir + '\\' + other) and abbrev_string(other).lower() == elem_abbrev.lower() and other.lower() != elem.lower():
-                # Found other directory with the same abbreviation
-                # In this case, we use the entire name
-                elem_abbrev = elem
-                break
-        current_dir += '\\' + elem
-        path_abbrev += '\\' + elem_abbrev
-
-    return path_abbrev + '\\' + path.split('\\')[-1]
-
-
 def abbrev_string(string):
     """Abbreviate a string by keeping uppercase and non-alphabetical characters"""
     string_abbrev = ''
