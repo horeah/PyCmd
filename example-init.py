@@ -1,18 +1,29 @@
 #
 # Example init.py for documentation purposes
 #
-# Use this file as a template/example for creating an init.py script in PyCmd's
-# installation directory (for "global" settings) or in %APPDATA%\PyCmd (for
-# "user" settings, possibly overriding the "global" ones); such a script will be
-# executed by PyCmd on startup, allowing you to configure the way PyCmd works.
+# Use this file as a template/example for creating an
+# initialization/configuration script for PyCmd. Scripts are loaded and applied
+# based on the following rules:
+#
+#  * If present, an init.py script in PyCmd's installation directory is
+#    automatically executed and defines "global" (system-wide) settings
+#
+#  * If present, an init.py script in %APPDATA%\PyCmd is automatically executed
+#    and defines "user" settings, possibly overriding the "global" ones
+#
+#  * An additional .py script can be specified using the '-i' switch on the
+#    command line to define settings custom to a PyCmd session (possibly
+#    overriding the "global" and "user" ones)
 #
 # This file lists all the configuration options supported by PyCmd, together
 # with default values, explanations and various advice. 
 #
 
-# This is a regular Python script that gets executed in PyCmd's Python context;
-# therefore, you can do virtually anything you want here, like play a song,
-# format your hard-disk or show some custom greeting:
+
+# An important thing to have in mind: this is a regular Python script that gets
+# executed in PyCmd's Python context; therefore, you can do virtually anything
+# you want here, like play a song, format your hard-disk or show some custom
+# greeting:
 print '\n*** Hi, there! ***\n'
 
 
@@ -24,11 +35,12 @@ def git_prompt():
 
     Requires git & grep to be present in the PATH.
     """
-    # Most common modules are readily shipped with PyCmd, you can directly
-    # import them for use in your init.py. If you need extra modules that are
-    # not bundled, manipulate the sys.path so that they can be found (just make
-    # sure that the version is compatible with the one used to build PyCmd --
-    # check README.txt)
+    # Many common modules (sys, os, subprocess, time, re, ...) are readily
+    # shipped with PyCmd, you can directly import them for use in your
+    # configuration script. If you need extra modules that are not bundled,
+    # manipulate the sys.path so that they can be found (just make sure that the
+    # version is compatible with the one used to build PyCmd -- check
+    # README.txt)
     import os, subprocess
 
     # pycmd_public is a collection of utilities that PyCmd "exports" for use

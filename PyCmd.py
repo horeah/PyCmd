@@ -109,10 +109,17 @@ def main():
             internal_exit()
         elif switch in ['/T', '-T']:
             if arg == len(sys.argv) - 1:
-                sys.stderr.write('PyCmd: no title specified to /T switch\n')
+                sys.stderr.write('PyCmd: no title specified to \'-t\'\n')
                 print_usage()
                 internal_exit()
-            title_prefix = sys.argv[arg+1] + ' - '
+            title_prefix = sys.argv[arg + 1] + ' - '
+            arg += 1
+        elif switch in ['/I', '-I']:
+            if arg == len(sys.argv) - 1:
+                sys.stderr.write('PyCmd: no script specified to \'-i\'\n')
+                print_usage()
+                internal_exit()
+            configuration.apply_settings(sys.argv[arg + 1])
             arg += 1
         elif switch in ['/Q', '-Q']:
             # Quiet mode: suppress messages
@@ -694,11 +701,12 @@ def read_history(filename):
 def print_usage():
     """Print usage information"""
     print 'Usage:'
-    print '\t PyCmd [-t title] ( [-c command] | [-k command] | [-h] )'
+    print '\t PyCmd [-i script] [-t title] ( [-c command] | [-k command] | [-h] )'
     print
     print '\t\t-c command \tRun command, then exit'
     print '\t\t-k command \tRun command, then continue to the prompt'
     print '\t\t-t title \tShow title in window caption'
+    print '\t\t-i script \tRun additional init/config script'
     print '\t\t-q\t\tQuiet (suppress messages)'
     print '\t\t-h \t\tShow this help'
     print
