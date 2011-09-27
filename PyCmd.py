@@ -18,6 +18,7 @@ from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGRO
 import configuration
 
 pycmd_data_dir = None
+pycmd_install_dir = None
 state = None
 dir_hist = None
 tmpfile = None
@@ -37,6 +38,10 @@ def init():
         os.mkdir(pycmd_data_dir)
     if not os.path.isdir(pycmd_data_dir + '\\tmp'):
         os.mkdir(pycmd_data_dir + '\\tmp')
+
+    # Determine the "installation" directory
+    global pycmd_install_dir
+    pycmd_install_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     # Current state of the input (prompt, entered chars, history)
     global state
@@ -76,7 +81,8 @@ def deinit():
 def main():
     title_prefix = ""
 
-    # Apply user configurations
+    # Apply global and user configurations
+    configuration.apply_settings(pycmd_install_dir + '\\init.py')
     configuration.apply_settings(pycmd_data_dir + '\\init.py')
     configuration.sanitize()
 

@@ -1,9 +1,10 @@
 #
 # Example init.py for documentation purposes
 #
-# Use this file as a template/example for creating an %APPDATA%\PyCmd\init.py
-# script that will be executed by PyCmd on startup; this allows you to configure
-# the way PyCmd works.
+# Use this file as a template/example for creating an init.py script in PyCmd's
+# installation directory (for "global" settings) or in %APPDATA%\PyCmd (for
+# "user" settings, possibly overriding the "global" ones); such a script will be
+# executed by PyCmd on startup, allowing you to configure the way PyCmd works.
 #
 # This file lists all the configuration options supported by PyCmd, together
 # with default values, explanations and various advice. 
