@@ -45,7 +45,8 @@ def git_prompt():
 
     # pycmd_public is a collection of utilities that PyCmd "exports" for use
     # within init.py files; you can safely rely on these being maintained
-    # throughout following versions
+    # throughout following versions. The documentation for this module can be
+    # found in pycmd_public.html.
     import pycmd_public
 
     stdout = subprocess.Popen(

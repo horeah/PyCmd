@@ -33,14 +33,17 @@ all:
 	$(MAKE) clean
 	$(MAKE) dist_w64
 
-dist_w32: clean $(SRC)
+doc: pycmd_public.py
+	$(PYTHON_W32) -c "import pycmd_public, pydoc; pydoc.writedoc('pycmd_public')"
+
+dist_w32: clean $(SRC) doc
 	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W32) setup.py build
 	$(MV) build\exe.win32-2.7 PyCmd
 	$(CP) NEWS.txt README.txt PyCmd
 	$(ZIP) -r PyCmd-$(BUILD_INFO)-w32.zip PyCmd
 
-dist_w64: clean $(SRC)
+dist_w64: clean $(SRC) doc
 	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W64) setup.py build
 	$(MV) build\exe.win-amd64-2.7 PyCmd
@@ -51,5 +54,6 @@ dist_w64: clean $(SRC)
 clean:
 	$(RM) buildinfo.*
 	$(RM) $(SRC:%.py=%.pyc)
+	$(RM) pycmd_public.html
 	cd tests && $(RM) $(SRC_TEST:%.py=%.pyc) && $(RM) __init__.pyc
 	$(RM) -r build PyCmd

@@ -3,6 +3,7 @@
 /PyCmd/
 /buildinfo.py
 /PyCmd-*-w??.zip
+/pycmd_public.html
 
 # no leading `/' means anywhere
 *.pyc
