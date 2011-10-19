@@ -240,9 +240,10 @@ def associated_application(ext):
     extension.
     """
     try:
-        file_class = _winreg.QueryValue(_winreg.HKEY_CLASSES_ROOT, ext)
+        file_class = _winreg.QueryValue(_winreg.HKEY_CLASSES_ROOT, ext) or ext
+        action = _winreg.QueryValue(_winreg.HKEY_CLASSES_ROOT, file_class + '\\shell') or 'open'
         assoc_key = _winreg.OpenKey(_winreg.HKEY_CLASSES_ROOT, 
-                                    file_class + '\\shell\\open\\command')
+                                    file_class + '\\shell\\' + action + '\\command')
         open_command = _winreg.QueryValueEx(assoc_key, None)[0]
         
         # We assume a value `similar to '<command> %1 %2'
