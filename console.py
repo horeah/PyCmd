@@ -9,6 +9,7 @@ from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
 from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
 from win32con import SHIFT_PRESSED
 
+import pycmd_public
 import pywintypes       # Unneeded import to trick cx_freeze into including the DLL
 
 global FOREGROUND_RED
@@ -142,7 +143,77 @@ def write_str(s):
     Output s to stdout after encoding it with stdout encoding to
     avoid conversion errors with non ASCII characters
     """
-    sys.stdout.write(s.encode(sys.stdout.encoding, 'replace'))
+    encoded_str = s.encode(sys.stdout.encoding, 'replace')
+    i = 0
+    buf = ''
+    while i < len(encoded_str):
+        c = encoded_str[i]
+        if c == chr(27):
+            # Escape sequence detected, 
+            
+            # 1. Flush buffer
+            sys.stdout.write(buf)
+            buf = ''
+
+            # 2. Process color commands to compute and set new attributes
+            target = encoded_str[i + 1]
+            command = encoded_str[i + 2]
+            component = encoded_str[i + 3]
+            i = i + 3
+
+            # Escape sequence format is [ESC][TGT][OP][COMP], where:
+            #  * ESC is the Escape character: chr(27)
+            #  * TGT is the target: 'F' for foreground, 'B' for background
+            #  * OP is the operation: 'S' (set), 'C' (clear), 'T' (toggle) a component
+            #  * COMP is the color component: 'R', 'G', 'B' or 'X' (bright)
+            if target == 'F':
+                name_prefix = 'FOREGROUND'
+            else:
+                name_prefix = 'BACKGROUND'
+
+            if component == 'R':
+                name_suffix = 'RED'
+            elif component == 'G':
+                name_suffix = 'GREEN'
+            elif component == 'B':
+                name_suffix = 'BLUE'
+            else:
+                name_suffix = 'BRIGHT'
+
+            if command == 'S':
+                operator = lambda x, y: x | y
+            elif command == 'C':
+                operator = lambda x, y: x & ~y
+            else:
+                operator = lambda x, y: x ^ y
+
+            import console
+            attr = get_text_attributes()
+            # We use the bit masks defined at the end of console.py by computing
+            # the name and accessing the module's dictionary (FOREGROUND_RED,
+            # BACKGROUND_BRIGHT etc)
+            bit_mask = console.__dict__[name_prefix + '_' + name_suffix]
+            set_text_attributes(operator(attr, bit_mask))
+        else:
+            buf += c
+        i = i + 1
+
+    # Flush buffer
+    sys.stdout.write(buf)
+
+def remove_escape_sequences(s):
+    """
+    Remove color escape sequences from the given string
+    
+    """
+    from pycmd_public import color
+    escape_sequences_fore = [v for (k, v) in color.Fore.__dict__.items() + color.Back.__dict__.items()
+                             if not k in ['__dict__', '__doc__', '__weakref__', '__module__']]
+    return reduce(lambda x, y: x.replace(y, ''), 
+                  escape_sequences_fore,
+                  s)
+
+            
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""

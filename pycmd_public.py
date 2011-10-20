@@ -47,6 +47,75 @@ def abbrev_path_prompt():
     """
     curdir = os.getcwd().decode(sys.getfilesystemencoding())
     curdir = curdir[0].upper() + curdir[1:]
-    return abbrev_path(curdir) + u'> '
+    return color.Fore.TOGGLE_BRIGHT + abbrev_path(curdir) + u'> ' + color.Fore.TOGGLE_BRIGHT
 
 
+class color(object):
+    """
+    Constants for color manipulation within PyCmd.
+
+    These constants are similar to ANSI escape sequences, only more powerful in
+    the sense that they support setting, resetting and toggling of individual R,
+    G, B components
+    """
+
+    class Fore(object):
+        """Color constants for the foreground"""
+
+        # For individually setting a RGB field
+        SET_RED = chr(27) + 'FSR'
+        SET_GREEN = chr(27) + 'FSG'
+        SET_BLUE = chr(27) + 'FSB'
+        SET_BRIGHT = chr(27) +'FSX'
+
+        # For individually clearing a RGB field
+        CLEAR_RED = chr(27) + 'FCR'
+        CLEAR_GREEN = chr(27) + 'FCG'
+        CLEAR_BLUE = chr(27) + 'FCB'
+        CLEAR_BRIGHT = chr(27) + 'FCX'
+
+        # For individually toggling a RGB field
+        TOGGLE_RED = chr(27) + 'FTR'
+        TOGGLE_GREEN = chr(27) + 'FTG'
+        TOGGLE_BLUE = chr(27) + 'FTB'
+        TOGGLE_BRIGHT = chr(27) + 'FTX'
+
+        # Standard colors defined as combinations of the RGB constants
+        RED = SET_RED + CLEAR_GREEN + CLEAR_BLUE
+        GREEN = CLEAR_RED + SET_GREEN + CLEAR_BLUE
+        YELLOW = SET_RED + SET_GREEN + CLEAR_BLUE
+        BLUE = CLEAR_RED + CLEAR_GREEN + SET_BLUE
+        MAGENTA = SET_RED + CLEAR_GREEN + SET_BLUE
+        CYAN = CLEAR_RED + SET_GREEN + SET_BLUE
+        WHITE = SET_RED + SET_GREEN + SET_BLUE
+
+
+    class Back(object):
+        """Color constants for the background"""
+
+        # For individually setting a RGB field
+        SET_RED = chr(27) + 'BSR'
+        SET_GREEN = chr(27) + 'BSG'
+        SET_BLUE = chr(27) + 'BSB'
+        SET_BRIGHT = chr(27) +'BSX'
+
+        # For individually clearing a RGB field
+        CLEAR_RED = chr(27) + 'BCR'
+        CLEAR_GREEN = chr(27) + 'BCG'
+        CLEAR_BLUE = chr(27) + 'BCB'
+        CLEAR_BRIGHT = chr(27) + 'BCX'
+
+        # For individually toggling a RGB field
+        TOGGLE_RED = chr(27) + 'BTR'
+        TOGGLE_GREEN = chr(27) + 'BTG'
+        TOGGLE_BLUE = chr(27) + 'BTB'
+        TOGGLE_BRIGHT = chr(27) + 'BTX'
+
+        # Standard colors defined as combinations of the RGB constants
+        RED = SET_RED + CLEAR_GREEN + CLEAR_BLUE
+        GREEN = CLEAR_RED + SET_GREEN + CLEAR_BLUE
+        YELLOW = SET_RED + SET_GREEN + CLEAR_BLUE
+        BLUE = CLEAR_RED + CLEAR_GREEN + SET_BLUE
+        MAGENTA = SET_RED + CLEAR_GREEN + SET_BLUE
+        CYAN = CLEAR_RED + SET_GREEN + SET_BLUE
+        WHITE = SET_RED + SET_GREEN + SET_BLUE

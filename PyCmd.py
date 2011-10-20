@@ -15,6 +15,7 @@ from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_contro
 from console import scroll_buffer, get_viewport
 from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
 from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
+from console import remove_escape_sequences
 import configuration
 
 pycmd_data_dir = None
@@ -166,18 +167,17 @@ def main():
             orig_attr = get_text_attributes()
 
             if state.changed() or force_repaint:
-                prev_total_len = len(state.prev_prompt + state.prev_before_cursor + state.prev_after_cursor)
-                cursor_backward(len(state.prev_prompt + state.prev_before_cursor))
+                prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
+                cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 write_str('\r')
 
                 # Update the offset of the directory history in case of overflow
                 # Note that if the history display is marked as 'dirty'
                 # (dir_hist.shown == False) the result of this action can be
                 # ignored
-                dir_hist.check_overflow(state.prompt)
+                dir_hist.check_overflow(remove_escape_sequences(state.prompt))
 
                 # Write current line
-                set_text_attributes(orig_attr ^ FOREGROUND_BRIGHT)       # Revert brightness bit for prompt
                 write_str(u'\r' + state.prompt)
                 if state.history_filter == '':
                     line = state.before_cursor + state.after_cursor
@@ -202,7 +202,7 @@ def main():
                     set_text_attributes(orig_attr)
 
                 # Erase remaining chars from old line
-                to_erase = prev_total_len - len(state.prompt + state.before_cursor + state.after_cursor)
+                to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
                 if to_erase > 0:
                     for i in range(to_erase):
                         write_str(' ')
@@ -324,7 +324,7 @@ def main():
                 elif rec.VirtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
                         dir_hist.display()
-                        dir_hist.check_overflow(state.prev_prompt)
+                        dir_hist.check_overflow(remove_escape_sequences(state.prev_prompt))
                         write_str(state.prev_prompt)
                     else:
                         state.handle(ActionCode.ACTION_DELETE_WORD) 

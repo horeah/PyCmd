@@ -48,6 +48,7 @@ def git_prompt():
     # throughout following versions. The documentation for this module can be
     # found in pycmd_public.html.
     import pycmd_public
+    from pycmd_public import color
 
     stdout = subprocess.Popen(
         'git branch | grep "^*"', 
@@ -56,10 +57,13 @@ def git_prompt():
         stderr=-1).communicate()[0]
     branch_name = stdout.strip(' \n\r*')
     abbrev_path = pycmd_public.abbrev_path(os.getcwd())
+
+    prompt = ''
     if branch_name != '':
-        return '%s [%s]> ' % (abbrev_path, branch_name)
-    else:
-        return abbrev_path + '> '
+        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.TOGGLE_BLUE + ' '        
+    prompt += color.Fore.TOGGLE_BRIGHT + abbrev_path + '> ' + color.Fore.TOGGLE_BRIGHT
+
+    return prompt
 
 
 # Define a custom prompt function.
