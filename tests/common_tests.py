@@ -217,10 +217,10 @@ class TestAppIdentification(TestCase):
                       'cmd.exe': 'c:\\windows\\system32\\cmd.exe',
                       'c:\\windows\system32\\cmd': 'c:\\windows\\system32\\cmd.exe',
                       'c:\\windows\system32\\cmd.exe': 'c:\\windows\\system32\\cmd.exe',
-                      'regedit': 'c:\\windows\\regedit.exe',
-                      'regedit.exe': 'c:\\windows\\regedit.exe',
-                      'c:\\windows\\regedit': 'c:\\windows\\regedit.exe',
-                      'c:\\windows\\regedit.exe': 'c:\\windows\\regedit.exe',}
+                      'winhlp32': 'c:\\windows\\winhlp32.exe',
+                      'winhlp32.exe': 'c:\\windows\\winhlp32.exe',
+                      'c:\\windows\\winhlp32': 'c:\\windows\\winhlp32.exe',
+                      'c:\\windows\\winhlp32.exe': 'c:\\windows\\winhlp32.exe',}
 
     standard_app_types = {'c:\\windows\\notepad.exe': True, 
                           'c:\\windows\\system32\\cmd.exe': False, }
