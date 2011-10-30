@@ -4,7 +4,7 @@ Public utilities exported by PyCmd.
 These are meant to be used in init.py files; users can rely on them being kept
 unchanged (interface-wise) throughout later versions.
 """
-import os, sys, common
+import os, sys, common, console
 
 def abbrev_path(path):
     """
@@ -80,6 +80,7 @@ class color(object):
         TOGGLE_BLUE = chr(27) + 'FTB'
         TOGGLE_BRIGHT = chr(27) + 'FTX'
 
+
         # Standard colors defined as combinations of the RGB constants
         RED = SET_RED + CLEAR_GREEN + CLEAR_BLUE
         GREEN = CLEAR_RED + SET_GREEN + CLEAR_BLUE
@@ -88,6 +89,9 @@ class color(object):
         MAGENTA = SET_RED + CLEAR_GREEN + SET_BLUE
         CYAN = CLEAR_RED + SET_GREEN + SET_BLUE
         WHITE = SET_RED + SET_GREEN + SET_BLUE
+
+        # Default terminal color
+        DEFAULT = console.get_current_foreground()
 
 
     class Back(object):
@@ -119,3 +123,6 @@ class color(object):
         MAGENTA = SET_RED + CLEAR_GREEN + SET_BLUE
         CYAN = CLEAR_RED + SET_GREEN + SET_BLUE
         WHITE = SET_RED + SET_GREEN + SET_BLUE
+
+        # Default terminal color
+        DEFAULT = console.get_current_background()

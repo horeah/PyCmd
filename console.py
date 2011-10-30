@@ -9,7 +9,6 @@ from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
 from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
 from win32con import SHIFT_PRESSED
 
-import pycmd_public
 import pywintypes       # Unneeded import to trick cx_freeze into including the DLL
 
 global FOREGROUND_RED
@@ -213,7 +212,33 @@ def remove_escape_sequences(s):
                   escape_sequences_fore,
                   s)
 
-            
+def get_current_foreground():
+    """Get the current foreground setting as a color string"""
+    color = ''
+    attr = get_text_attributes()
+    letters = ['R', 'G', 'B', 'X']
+
+    for i in range(4):
+        if attr & 1 << i:
+            color += chr(27) + 'FS' + letters[i]
+        else:
+            color += chr(27) + 'FC' + letters[i]
+
+    return color
+
+def get_current_background():
+    """Get the current background setting as a color string"""
+    color = ''
+    attr = get_text_attributes()
+    letters = ['R', 'G', 'B', 'X']
+
+    for i in range(4):
+        if attr & 1 << (i + 4):
+            color += chr(27) + 'BS' + letters[i]
+        else:
+            color += chr(27) + 'BC' + letters[i]
+
+    return color
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""

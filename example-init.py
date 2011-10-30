@@ -60,7 +60,7 @@ def git_prompt():
 
     prompt = ''
     if branch_name != '':
-        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.TOGGLE_BLUE + ' '        
+        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.DEFAULT + ' '        
     prompt += color.Fore.TOGGLE_BRIGHT + abbrev_path + '> ' + color.Fore.TOGGLE_BRIGHT
 
     return prompt
