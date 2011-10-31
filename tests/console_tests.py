@@ -102,6 +102,10 @@ class TestColors(TestCase):
                         and attr & console.FOREGROUND_GREEN
                         and attr & console.FOREGROUND_BLUE)
 
+        write_str(color.Fore.DEFAULT)
+        attr = get_text_attributes()
+        self.assertEqual(attr , self.orig_attr)
+
 
 def suite():
     suite = TestSuite()
