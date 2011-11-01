@@ -41,7 +41,7 @@ def git_prompt():
     # manipulate the sys.path so that they can be found (just make sure that the
     # version is compatible with the one used to build PyCmd -- check
     # README.txt)
-    import os, subprocess
+    import subprocess
 
     # pycmd_public is a collection of utilities that PyCmd "exports" for use
     # within init.py files; you can safely rely on these being maintained
@@ -56,7 +56,7 @@ def git_prompt():
         stdout=subprocess.PIPE,
         stderr=-1).communicate()[0]
     branch_name = stdout.strip(' \n\r*')
-    abbrev_path = pycmd_public.abbrev_path(os.getcwd())
+    abbrev_path = pycmd_public.abbrev_path()
 
     prompt = ''
     if branch_name != '':

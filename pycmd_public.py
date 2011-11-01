@@ -6,9 +6,10 @@ unchanged (interface-wise) throughout later versions.
 """
 import os, sys, common, console
 
-def abbrev_path(path):
+def abbrev_path(path = None):
     """
-    Abbreviate a full path to make it shorter, yet still unambiguous.
+    Abbreviate a full path (or the current path, if None is provided) to make
+    it shorter, yet still unambiguous.
 
     This function takes a directory path and tries to abbreviate it as much as
     possible while making sure that the resulting shortened path is not
@@ -20,6 +21,9 @@ def abbrev_path(path):
     "word" composing a path element. "Words" are defined by CamelCase,
     underscore_separation or "whitespace separation".
     """
+    if not path:
+        path = os.getcwd().decode(sys.getfilesystemencoding())
+        path = path[0].upper() + path[1:]
     current_dir = path[ : 3]
     path = path[3 : ]
     path_abbrev = current_dir[ : 2]
@@ -45,9 +49,7 @@ def abbrev_path_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the typical '> '.
     """
-    curdir = os.getcwd().decode(sys.getfilesystemencoding())
-    curdir = curdir[0].upper() + curdir[1:]
-    return color.Fore.TOGGLE_BRIGHT + abbrev_path(curdir) + u'> ' + color.Fore.TOGGLE_BRIGHT
+    return color.Fore.TOGGLE_BRIGHT + abbrev_path() + u'> ' + color.Fore.TOGGLE_BRIGHT
 
 
 class color(object):
