@@ -65,6 +65,11 @@ def git_prompt():
 
     return prompt
 
+# Importing the configuration objects (appearance, behavior) is optional, as PyCmd
+# will automatically make them available within the init.py files; still, having
+# them explicitly imported might help you get coding assistance from your Python
+# environment
+from configuration import appearance, behavior
 
 # Define a custom prompt function.
 #
