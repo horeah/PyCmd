@@ -216,7 +216,7 @@ def get_current_foreground():
     """Get the current foreground setting as a color string"""
     color = ''
     attr = get_text_attributes()
-    letters = ['R', 'G', 'B', 'X']
+    letters = ['B', 'G', 'R', 'X']
 
     for i in range(4):
         if attr & 1 << i:
@@ -230,7 +230,7 @@ def get_current_background():
     """Get the current background setting as a color string"""
     color = ''
     attr = get_text_attributes()
-    letters = ['R', 'G', 'B', 'X']
+    letters = ['B', 'G', 'R', 'X']
 
     for i in range(4):
         if attr & 1 << (i + 4):
