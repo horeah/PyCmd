@@ -143,6 +143,7 @@ def write_str(s):
     avoid conversion errors with non ASCII characters
     """
     encoded_str = s.encode(sys.stdout.encoding, 'replace')
+    set_cursor_visible(False)
     i = 0
     buf = ''
     while i < len(encoded_str):
@@ -196,6 +197,8 @@ def write_str(s):
         else:
             buf += c
         i = i + 1
+
+    set_cursor_visible(True)
 
     # Flush buffer
     sys.stdout.write(buf)
