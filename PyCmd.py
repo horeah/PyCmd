@@ -1,21 +1,19 @@
-import codecs, subprocess, re, sys, os, msvcrt, tempfile, signal, time, traceback
+import codecs, re, sys, os, tempfile, signal, time, traceback
 import win32console, win32gui, win32con
 
 from common import parse_line, unescape, sep_tokens, sep_chars
-from common import split_nocase
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
-from console import get_text_attributes, set_text_attributes, get_buffer_size, set_console_title
+import console
 from console import move_cursor, get_cursor, cursor_backward
 from console import read_input, write_input, write_str
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
-from console import FOREGROUND_WHITE, FOREGROUND_BRIGHT, FOREGROUND_RED
-from console import BACKGROUND_WHITE, BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_RED
 from console import remove_escape_sequences
+from pycmd_public import color
 import configuration
 
 pycmd_data_dir = None
@@ -160,11 +158,8 @@ def main():
             # Update console title and environment
             curdir = os.getcwd()
             curdir = curdir[0].upper() + curdir[1:]
-            set_console_title(title_prefix + curdir + ' - PyCmd')
+            console.set_console_title(title_prefix + curdir + ' - PyCmd')
             os.environ['CD'] = curdir
-
-            # Save default (original) text attributes
-            orig_attr = get_text_attributes()
 
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
@@ -179,27 +174,21 @@ def main():
 
                 # Write current line
                 write_str(u'\r' + state.prompt)
+                line = state.before_cursor + state.after_cursor
                 if state.history_filter == '':
-                    line = state.before_cursor + state.after_cursor
-                    cursor = len(state.before_cursor)
                     sel_start, sel_end = state.get_selection_range()
-                    set_text_attributes(orig_attr)
-                    write_str(line[:sel_start])
-                    set_text_attributes(orig_attr ^ FOREGROUND_WHITE ^ BACKGROUND_WHITE)
-                    write_str(line[sel_start: sel_end])
-                    set_text_attributes(orig_attr)
-                    write_str(line[sel_end:])
+                    write_str(line[:sel_start]
+                              + color.Fore.TOGGLE_RED + color.Fore.TOGGLE_GREEN + color.Fore.TOGGLE_BLUE
+                              + color.Back.TOGGLE_RED + color.Back.TOGGLE_GREEN + color.Back.TOGGLE_BLUE
+                              + line[sel_start: sel_end]
+                              + color.Fore.DEFAULT + color.Back.DEFAULT
+                              + line[sel_end:])
                 else:
                     # print '\n\n', (before_cursor + after_cursor).split(history_filter), '\n\n'
-                    (chunks, seps) = split_nocase(state.before_cursor + state.after_cursor, state.history_filter)
-                    # print '\n\n', chunks, seps, '\n\n'
-                    for i in range(len(chunks)):
-                        set_text_attributes(orig_attr)
-                        write_str(chunks[i])
-                        if i < len(chunks) - 1:
-                            set_text_attributes(orig_attr ^ BACKGROUND_BLUE ^ BACKGROUND_RED ^ FOREGROUND_BRIGHT)
-                            write_str(seps[i])
-                    set_text_attributes(orig_attr)
+                    write_str(line.replace(state.history_filter,
+                                           (color.Back.TOGGLE_BLUE + color.Back.TOGGLE_RED
+                                            + state.history_filter
+                                            + color.Back.DEFAULT)))
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
@@ -392,11 +381,11 @@ def main():
                     if len(suggestions) > 1:
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         column_width = max([len(s) for s in suggestions]) + 10
-                        if column_width > get_buffer_size()[0] - 1:
-                            column_width = get_buffer_size()[0] - 1
+                        if column_width > console.get_buffer_size()[0] - 1:
+                            column_width = console.get_buffer_size()[0] - 1
                         if len(suggestions) > (get_viewport()[3] - get_viewport()[1]) / 4:
                             # We print multiple columns to save space
-                            num_columns = (get_buffer_size()[0] - 1) / column_width
+                            num_columns = (console.get_buffer_size()[0] - 1) / column_width
                         else:
                             # We print a single column for clarity
                             num_columns = 1
@@ -408,13 +397,13 @@ def main():
                         if num_screens >= 0.9:
                             # We ask for confirmation before displaying many completions
                             (c_x, c_y) = get_cursor()
-                            offset_from_bottom = get_buffer_size()[1] - c_y
+                            offset_from_bottom = console.get_buffer_size()[1] - c_y
                             message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
                             write_str('\n' + message)
                             rec = read_input()
-                            move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                            move_cursor(c_x, console.get_buffer_size()[1] - offset_from_bottom)
                             write_str('\n' + ' ' * len(message))
-                            move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                            move_cursor(c_x, console.get_buffer_size()[1] - offset_from_bottom)
                             if rec.Char != '\t':
                                 continue
                             
@@ -433,22 +422,21 @@ def main():
                                         match = wildcard_to_regex(prefix + '*').match(s)
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
-                                            set_text_attributes(orig_attr ^ FOREGROUND_RED)
-                                            write_str(s[current_index : match.start(i)])
-                                            set_text_attributes(orig_attr)
-                                            write_str(s[match.start(i) : match.end(i)])
+                                            write_str(color.Fore.TOGGLE_RED
+                                                      + s[current_index : match.start(i)]
+                                                      + color.Fore.DEFAULT
+                                                      + s[match.start(i) : match.end(i)])
                                             current_index = match.end(i)
                                         write_str(' ' * (column_width - len(s)))
                                     else:
                                         # Print the common part in a different color
                                         common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
-                                        set_text_attributes(orig_attr ^ FOREGROUND_RED)
-                                        write_str(s[:common_prefix_len])
-                                        set_text_attributes(orig_attr)
-                                        write_str(s[common_prefix_len : ])
+                                        write_str(color.Fore.TOGGLE_RED
+                                                  + s[:common_prefix_len]
+                                                  + color.Fore.DEFAULT
+                                                  + s[common_prefix_len : ])
                                         write_str(' ' * (column_width - len(s)))
                             write_str('\n')
-                            line += 1
                         state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.Char == chr(8):                # Backspace
