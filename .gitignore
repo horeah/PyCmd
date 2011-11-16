@@ -8,4 +8,5 @@
 # no leading `/' means anywhere
 *.pyc
 .ropeproject
+.idea
 semantic.cache
