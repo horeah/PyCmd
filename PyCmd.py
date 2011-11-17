@@ -1,7 +1,7 @@
 import codecs, re, sys, os, tempfile, signal, time, traceback
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars
+from common import parse_line, unescape, sep_tokens, sep_chars, split_nocase
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -184,11 +184,17 @@ def main():
                               + color.Fore.DEFAULT + color.Back.DEFAULT
                               + line[sel_end:])
                 else:
-                    # print '\n\n', (before_cursor + after_cursor).split(history_filter), '\n\n'
-                    write_str(line.replace(state.history_filter,
-                                           (color.Back.TOGGLE_BLUE + color.Back.TOGGLE_RED
-                                            + state.history_filter
-                                            + color.Back.DEFAULT)))
+                    (chunks, seps) = split_nocase(state.before_cursor + state.after_cursor, state.history_filter)
+                    # print '\n\n', chunks, seps, '\n\n'
+                    for i in range(len(chunks)):
+                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT + chunks[i])
+                        if i < len(seps):
+                            #set_text_attributes(orig_attr ^ BACKGROUND_BLUE ^ BACKGROUND_RED ^ FOREGROUND_BRIGHT)
+                            write_str(color.Back.TOGGLE_RED +
+                                      color.Back.TOGGLE_BLUE +
+                                      color.Fore.TOGGLE_BRIGHT +
+                                      seps[i])
+                    write_str(color.Fore.DEFAULT + color.Back.DEFAULT)
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
