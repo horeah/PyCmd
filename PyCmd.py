@@ -713,13 +713,16 @@ if __name__ == '__main__':
                             + time.strftime('%Y%m%d_%H%M%S') 
                             + '.log')
         print '\n'
-        print '************************'
-        print 'Internal error in PyCmd!' 
+        print '************************************'
+        print 'PyCmd has encountered a fatal error!'
+        print
         report_file = open(report_file_name, 'w')
         traceback.print_exc(file=report_file)
         report_file.close()
         traceback.print_exc()
         print 
         print 'Crash report written to:\n  ' + report_file_name
-        print 'Exiting... sorry :('
-        print '************************'
+        print
+        print 'Press any key to exit... '
+        print '************************************'
+        read_input()
