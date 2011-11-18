@@ -1,8 +1,7 @@
 import sys, os
-from console import set_text_attributes, get_text_attributes
 from console import write_str
 from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
-from console import BACKGROUND_BRIGHT, FOREGROUND_BRIGHT
+from pycmd_public import color
 
 class DirHistory:
     """
@@ -99,8 +98,6 @@ class DirHistory:
             self.disp_size = buffer_size
             self.offset_from_bottom = buffer_size[1] - get_cursor()[1]
 
-        orig_attr = get_text_attributes()
-        set_text_attributes(orig_attr)
         write_str('\n')
         lines_written = 2
 
@@ -113,9 +110,12 @@ class DirHistory:
                 write_str(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
-                set_text_attributes(orig_attr ^ BACKGROUND_BRIGHT ^ FOREGROUND_BRIGHT)
-                write_str(prefix + location)
-                set_text_attributes(orig_attr)
+                write_str(color.Fore.TOGGLE_BRIGHT +
+                          color.Back.TOGGLE_BRIGHT +
+                          prefix +
+                          location +
+                          color.Fore.DEFAULT +
+                          color.Back.DEFAULT)
                 write_str(' ' * (buffer_size[0] - get_cursor()[0]))
 
         # Check whether we have overflown the buffer
