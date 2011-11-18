@@ -98,7 +98,7 @@ def complete_file_simple(line):
 
         # Add internal commands
         internal_commands = ['assoc',
-                             'call', 'cd', 'cls', 'color', 'copy',
+                             'call', 'cd', 'chdir', 'cls', 'color', 'copy',
                              'date', 'del', 'dir',
                              'echo', 'endlocal', 'erase', 'exit',
                              'for', 'ftype',
@@ -106,10 +106,13 @@ def complete_file_simple(line):
                              'if',
                              'md', 'mkdir', 'move',
                              'path', 'pause', 'popd', 'prompt', 'pushd',
-                             'rem', 'ren', 'rd', 'rmdir',
+                             'rem', 'ren', 'rename', 'rd', 'rmdir',
                              'set', 'setlocal', 'shift', 'start',
                              'time', 'title', 'type',
                              'ver', 'verify', 'vol']
+        if sys.getwindowsversion()[0] >= 6:
+            # Windows 7 or newer
+            internal_commands.append('mklink')
         completions_path += [elem for elem in internal_commands
                              if matcher.match(elem)
                              and not elem in completions
