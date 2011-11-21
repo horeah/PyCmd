@@ -1,4 +1,4 @@
-import codecs, re, sys, os, tempfile, signal, time, traceback
+import sys, os, tempfile, signal, time, traceback, codecs
 import win32console, win32gui, win32con
 
 from common import parse_line, unescape, sep_tokens, sep_chars, split_nocase
@@ -21,7 +21,6 @@ pycmd_install_dir = None
 state = None
 dir_hist = None
 tmpfile = None
-tmpfile_errorlevel = None
 
 def init():
     # %APPDATA% is not always defined (e.g. when using runas.exe)
@@ -62,20 +61,11 @@ def init():
     (handle, tmpfile) = tempfile.mkstemp(dir = pycmd_data_dir + '\\tmp')
     os.close(handle)
 
-    # Create temporary .bat file for retrieving ERRORLEVEL
-    global tmpfile_errorlevel
-    (handle_errorlevel, tmpfile_errorlevel) = tempfile.mkstemp(suffix = '.bat', dir = pycmd_data_dir + '\\tmp')
-    os.close(handle_errorlevel)
-    f = open(tmpfile_errorlevel, 'w')
-    f.writelines('@echo ERRORLEVEL="%ERRORLEVEL%">"' + tmpfile + '"\n')
-    f.close()
-
     # Catch SIGINT to emulate Ctrl-C key combo
     signal.signal(signal.SIGINT, signal_handler)
 
 def deinit():
     os.remove(tmpfile)
-    os.remove(tmpfile_errorlevel)
 
 def main():
     title_prefix = ""
@@ -572,8 +562,6 @@ def run_in_cmd(tokens):
         os.system('echo |')
         return
 
-    errorlevel = os.getenv("ERRORLEVEL", "0")
-
     # Cleanup environment
     for var in pseudo_vars:
         if var in os.environ.keys():
@@ -581,41 +569,13 @@ def run_in_cmd(tokens):
 
     # Run command
     if line_sanitized != '':
-        # Replace all occurrences of "%ERRORLEVEL%" with the current
-        # errorlevel value (like cmd.exe does it); relevant if the
-        # sanitized line contains "%ERRORLEVEL%", because we want
-        # to use the captured ERRORLEVEL (but os.system() creates
-        # a new cmd.exe instance that has ERRORLEVEL=0 for starters;
-        # improves mimicking original cmd.exe behavior)
-        line_sanitized = re.compile("%errorlevel%", re.IGNORECASE).sub(errorlevel, line_sanitized)
-
         command = u'"'
-
-        # Set ERRORLEVEL properly in cmd.exe to captured value;
-        # relevant for batch files which access the current
-        # ERRORLEVEL (improves mimicking original cmd.exe behavior)
-        command = 'cmd /c exit ' + errorlevel + ' & '
-
         command += line_sanitized
-
-        # Capture ERRORLEVEL via separate batch file as only this
-        # will get us the actual, current ERRORLEVEL; we cannot use
-        # "os.system('... echo %ERRORLEVEL% ....)" because in that
-        # "%ERRORLEVEL%" will be replaced with the then current
-        # ERRORLEVEL of the newly created cmd.exe instance before
-        # executing the actual command(s) (and a new cmd.exe instance
-        # always has ERRORLEVEL=0)
-        command += u' & call "' + tmpfile_errorlevel + u'"'
-        command += u' &set >> "' + tmpfile + u'"'
+        command += u' &set > "' + tmpfile + u'"'
         for var in pseudo_vars:
-            # We already captured ERRORLEVEL directly after executing
-            # the user's command; don't try to capture it here
-            # because every command above could have altered
-            # ERRORLEVEL already!
-            if var != u'ERRORLEVEL':
-                command += u' & echo ' + var + u'="%' + var + u'%" >> "' + tmpfile + u'"'
-        command += u'& <nul (set /p xxx=CD=) >>"' + tmpfile + u'" & cd >>"' + tmpfile + u'"'
-        command +=  u'"'
+            command += u' & echo ' + var + u'="%' + var + u'%" >> "' + tmpfile + '"'
+        command += u'& <nul (set /p xxx=CD=) >>"' + tmpfile + u'" & cd >>"' + tmpfile + '"'
+        command += u'"'
         os.system(command.encode(sys.getfilesystemencoding()))
 
     # Update environment and state
