@@ -163,32 +163,31 @@ def main():
                 dir_hist.check_overflow(remove_escape_sequences(state.prompt))
 
                 # Write current line
-                write_str(u'\r' + state.prompt)
+                write_str(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.prompt +
+                          state.prompt +
+                          color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text)
                 line = state.before_cursor + state.after_cursor
                 if state.history_filter == '':
                     sel_start, sel_end = state.get_selection_range()
                     write_str(line[:sel_start]
-                              + color.Fore.TOGGLE_RED + color.Fore.TOGGLE_GREEN + color.Fore.TOGGLE_BLUE
-                              + color.Back.TOGGLE_RED + color.Back.TOGGLE_GREEN + color.Back.TOGGLE_BLUE
+                              + configuration.appearance.colors.selection
                               + line[sel_start: sel_end]
-                              + color.Fore.DEFAULT + color.Back.DEFAULT
+                              + color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text
                               + line[sel_end:])
                 else:
                     (chunks, seps) = split_nocase(state.before_cursor + state.after_cursor, state.history_filter)
                     # print '\n\n', chunks, seps, '\n\n'
                     for i in range(len(chunks)):
-                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT + chunks[i])
+                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text +
+                                  chunks[i])
                         if i < len(seps):
                             #set_text_attributes(orig_attr ^ BACKGROUND_BLUE ^ BACKGROUND_RED ^ FOREGROUND_BRIGHT)
-                            write_str(color.Back.TOGGLE_RED +
-                                      color.Back.TOGGLE_BLUE +
-                                      color.Fore.TOGGLE_BRIGHT +
-                                      seps[i])
-                    write_str(color.Fore.DEFAULT + color.Back.DEFAULT)
+                            write_str(configuration.appearance.colors.search_filter + seps[i])
+                    write_str(color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text)
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
-                write_str(to_erase * ' ')
+                write_str(color.Fore.DEFAULT + color.Back.DEFAULT + to_erase * ' ')
                 cursor_backward(to_erase)
                 cursor_backward(len(state.after_cursor))
 
@@ -416,20 +415,22 @@ def main():
                                         match = wildcard_to_regex(prefix + '*').match(s)
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
-                                            write_str(color.Fore.TOGGLE_RED
-                                                      + s[current_index : match.start(i)]
-                                                      + color.Fore.DEFAULT
-                                                      + s[match.start(i) : match.end(i)])
+                                            write_str(color.Fore.DEFAULT + color.Back.DEFAULT +
+                                                      configuration.appearance.colors.completion_match +
+                                                      s[current_index : match.start(i)] +
+                                                      color.Fore.DEFAULT + color.Back.DEFAULT +
+                                                      s[match.start(i) : match.end(i)])
                                             current_index = match.end(i)
-                                        write_str(' ' * (column_width - len(s)))
+                                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                                     else:
                                         # Print the common part in a different color
                                         common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
-                                        write_str(color.Fore.TOGGLE_RED
-                                                  + s[:common_prefix_len]
-                                                  + color.Fore.DEFAULT
-                                                  + s[common_prefix_len : ])
-                                        write_str(' ' * (column_width - len(s)))
+                                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT +
+                                                  configuration.appearance.colors.completion_match +
+                                                  s[:common_prefix_len] +
+                                                  color.Fore.DEFAULT + color.Back.DEFAULT +
+                                                  s[common_prefix_len : ])
+                                        write_str(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                             write_str('\n')
                         state.reset_prev_line()
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
@@ -441,6 +442,7 @@ def main():
 
         # Done reading line, now execute
         write_str(state.after_cursor)        # Move cursor to the end
+        write_str(color.Fore.DEFAULT + color.Back.DEFAULT)
         line = (state.before_cursor + state.after_cursor).strip()
         tokens = parse_line(line)
         if tokens == [] or tokens[0] == '':

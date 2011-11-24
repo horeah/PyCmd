@@ -49,7 +49,7 @@ def abbrev_path_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the typical '> '.
     """
-    return color.Fore.TOGGLE_BRIGHT + abbrev_path() + u'> ' + color.Fore.TOGGLE_BRIGHT
+    return abbrev_path() + u'> '
 
 
 class color(object):

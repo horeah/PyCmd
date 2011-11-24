@@ -1,7 +1,8 @@
 #
 # Basic mechanism for customizing PyCmd
 #
-import os, traceback, pycmd_public
+import os, traceback
+from pycmd_public import color, abbrev_path_prompt
 
 class Settings(object):
     """
@@ -16,14 +17,36 @@ class Settings(object):
 class Appearance(Settings):
     """Appearance settings"""
 
+    class ColorSettings(Settings):
+        """Color-related settings"""
+        def __init__(self):
+            self.text = ''
+            self.prompt = color.Fore.TOGGLE_BRIGHT
+            self.selection = (color.Fore.TOGGLE_RED +
+                              color.Fore.TOGGLE_GREEN +
+                              color.Fore.TOGGLE_BLUE +
+                              color.Back.TOGGLE_RED +
+                              color.Back.TOGGLE_GREEN +
+                              color.Back.TOGGLE_BLUE)
+            self.search_filter = (color.Back.TOGGLE_RED +
+                                  color.Back.TOGGLE_BLUE +
+                                  color.Fore.TOGGLE_BRIGHT)
+            self.completion_match = color.Fore.TOGGLE_RED
+            self.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
+                                          color.Back.TOGGLE_BRIGHT)
+
     def __init__(self):
         # Prompt function (should return a string)
-        self.prompt = pycmd_public.abbrev_path_prompt
+        self.prompt = abbrev_path_prompt
+
+        # Color configuration
+        self.colors = self.ColorSettings()
+
 
     def sanitize(self):
         if not callable(self.prompt):
             print 'Prompt function doesn\'t look like a callable; reverting to PyCmd\'s default prompt'
-            self.prompt = pycmd_public.abbrev_path_prompt
+            self.prompt = abbrev_path_prompt
 
 
 class Behavior(Settings):

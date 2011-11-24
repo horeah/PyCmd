@@ -26,6 +26,78 @@
 # greeting:
 print '\n*** Hi, there! ***\n'
 
+# pycmd_public is a collection of utilities that PyCmd "exports" for use
+# within init.py files; you can safely rely on these being maintained
+# throughout following versions. The documentation for this module can be
+# found in pycmd_public.html.
+import pycmd_public
+
+# Importing the configuration objects (appearance, behavior) is optional, as PyCmd
+# will automatically make them available within the init.py files; still, having
+# them explicitly imported might help you get coding assistance from your Python
+# environment
+from configuration import appearance, behavior
+
+
+# Color configuration is performed by including color specification sequences
+# (defined by pycmd_public.color) in your strings, similarly to the ANSI escape
+# sequences.
+from pycmd_public import color
+
+# The color of the regular user text (relative to the console's default)
+# The default value is the console's default:
+#    appearance.colors.text = ''
+appearance.colors.text = ''
+
+# The color of the prompt (relative to the console's default); note that you can
+# always override this if you define a custom prompt function -- see below
+# The default value inverts the brightness (to make it stand out it from  regular
+# console text):
+#    appearance.colors.prompt = color.Fore.TOGGLE_BRIGHT
+appearance.colors.prompt = color.Fore.TOGGLE_BRIGHT
+
+# The color of text selected for copy/cut operations (relative to the regular
+# user text as configured above)
+# The default value inverts the background and the foreground
+#    appearance.colors.selection = (color.Fore.TOGGLE_RED +
+#                               color.Fore.TOGGLE_GREEN +
+#                               color.Fore.TOGGLE_BLUE +
+#                               color.Back.TOGGLE_RED +
+#                               color.Back.TOGGLE_GREEN +
+#                               color.Back.TOGGLE_BLUE)
+appearance.colors.selection = (color.Fore.TOGGLE_RED +
+                               color.Fore.TOGGLE_GREEN +
+                               color.Fore.TOGGLE_BLUE +
+                               color.Back.TOGGLE_RED +
+                               color.Back.TOGGLE_GREEN +
+                               color.Back.TOGGLE_BLUE)
+
+# The color of the current search filter during a history search (relative to the
+# regular user text as configured above)
+# The default is to highlight the filter by altering both background and the
+# foreground:
+#   appearance.colors.search_filter = (color.Back.TOGGLE_RED +
+#                                      color.Back.TOGGLE_BLUE +
+#                                      color.Fore.TOGGLE_BRIGHT)
+appearance.colors.search_filter = (color.Back.TOGGLE_RED +
+                                   color.Back.TOGGLE_BLUE +
+                                   color.Fore.TOGGLE_BRIGHT)
+
+# The color of the matched substring(s) when displaying completion alternatives
+# (relative to the console's default)
+# The default value highlights the matched substrings by toggling their RED bit:
+#    appearance.colors.completion_match = color.Fore.TOGGLE_RED
+appearance.colors.completion_match = color.Fore.TOGGLE_RED
+
+# The color of the current directory in the directory history listing (relative to
+# the console's default color)
+# The default is to obtain an "inverted" effect by toggling the brightness of the
+# foreground and background:
+#    appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
+#                                               color.Back.TOGGLE_BRIGHT)
+appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
+                                           color.Back.TOGGLE_BRIGHT)
+
 
 # Custom prompt function, see below for comments on appearance.prompt
 def git_prompt():
@@ -43,13 +115,6 @@ def git_prompt():
     # README.txt)
     import subprocess
 
-    # pycmd_public is a collection of utilities that PyCmd "exports" for use
-    # within init.py files; you can safely rely on these being maintained
-    # throughout following versions. The documentation for this module can be
-    # found in pycmd_public.html.
-    import pycmd_public
-    from pycmd_public import color
-
     stdout = subprocess.Popen(
         'git branch | grep "^*"', 
         shell=True,
@@ -58,18 +123,13 @@ def git_prompt():
     branch_name = stdout.strip(' \n\r*')
     abbrev_path = pycmd_public.abbrev_path()
 
+    # The current color setting is defined by appearance.colors.prompt
     prompt = ''
     if branch_name != '':
-        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.DEFAULT + ' '        
-    prompt += color.Fore.TOGGLE_BRIGHT + abbrev_path + '> ' + color.Fore.TOGGLE_BRIGHT
+        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.TOGGLE_BLUE + ' '
+    prompt += abbrev_path + '> '
 
     return prompt
-
-# Importing the configuration objects (appearance, behavior) is optional, as PyCmd
-# will automatically make them available within the init.py files; still, having
-# them explicitly imported might help you get coding assistance from your Python
-# environment
-from configuration import appearance, behavior
 
 # Define a custom prompt function.
 #

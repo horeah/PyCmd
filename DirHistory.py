@@ -1,4 +1,5 @@
 import sys, os
+import configuration
 from console import write_str
 from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
 from pycmd_public import color
@@ -110,8 +111,8 @@ class DirHistory:
                 write_str(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
-                write_str(color.Fore.TOGGLE_BRIGHT +
-                          color.Back.TOGGLE_BRIGHT +
+                write_str(color.Fore.DEFAULT + color.Back.DEFAULT +
+                          configuration.appearance.colors.dir_history_selection +
                           prefix +
                           location +
                           color.Fore.DEFAULT +
