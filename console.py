@@ -142,7 +142,10 @@ def write_str(s):
     Output s to stdout after encoding it with stdout encoding to
     avoid conversion errors with non ASCII characters
     """
-    encoded_str = s.encode(sys.stdout.encoding, 'replace')
+    if sys.__stdout__.encoding:
+        encoded_str = s.encode(sys.__stdout__.encoding, 'replace')
+    else:
+        encoded_str = s
     set_cursor_visible(False)
     i = 0
     buf = ''
@@ -152,7 +155,7 @@ def write_str(s):
             # Escape sequence detected, 
             
             # 1. Flush buffer
-            sys.stdout.write(buf)
+            sys.__stdout__.write(buf)
             buf = ''
 
             # 2. Process color commands to compute and set new attributes
@@ -201,7 +204,7 @@ def write_str(s):
     set_cursor_visible(True)
 
     # Flush buffer
-    sys.stdout.write(buf)
+    sys.__stdout__.write(buf)
 
 def remove_escape_sequences(s):
     """
@@ -276,3 +279,20 @@ BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
 
 stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
 stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
+
+class ColorOutputStream:
+    """
+    We install a custom sys.stdout that handles:
+     * our color sequences
+     * string encoding
+
+     Note that this requires sys.stdout be only imported _after_ console;
+     not doing so will bring the original stdout in the current scope!
+     """
+    encoding = sys.__stdout__.encoding
+    
+    def write(self, str):
+        """Dispatch printing to our enhanced write function"""
+        write_str(str)
+
+sys.stdout = ColorOutputStream()

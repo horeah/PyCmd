@@ -1,7 +1,7 @@
-import sys, os
+import os, sys
 import configuration
-from console import write_str
 from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
+from sys import stdout
 from pycmd_public import color
 
 class DirHistory:
@@ -55,7 +55,7 @@ class DirHistory:
             os.chdir(self.locations[self.index])
             changed = True
         except OSError, error:
-            write_str('\n  ' + str(error) + '\n')
+            stdout.write('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
             self.index -= 1
             if self.index < 0:
@@ -99,7 +99,7 @@ class DirHistory:
             self.disp_size = buffer_size
             self.offset_from_bottom = buffer_size[1] - get_cursor()[1]
 
-        write_str('\n')
+        stdout.write('\n')
         lines_written = 2
 
         for i in range(len(self.locations)):
@@ -108,16 +108,16 @@ class DirHistory:
             lines_written += (len(prefix + location) / buffer_size[0] + 1)
             if i != self.index:
                 # Non-selected entry, simply print 
-                write_str(prefix + location + '\n')
+                stdout.write(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
-                write_str(color.Fore.DEFAULT + color.Back.DEFAULT +
-                          configuration.appearance.colors.dir_history_selection +
-                          prefix +
-                          location +
-                          color.Fore.DEFAULT +
-                          color.Back.DEFAULT)
-                write_str(' ' * (buffer_size[0] - get_cursor()[0]))
+                stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
+                                 configuration.appearance.colors.dir_history_selection +
+                                 prefix +
+                                 location +
+                                 color.Fore.DEFAULT +
+                                 color.Back.DEFAULT)
+                stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
 
         # Check whether we have overflown the buffer
         if lines_written > self.offset_from_bottom:
