@@ -24,7 +24,7 @@
 # executed in PyCmd's Python context; therefore, you can do virtually anything
 # you want here, like play a song, format your hard-disk or show some custom
 # greeting:
-print '\n*** Hi, there! ***\n'
+print '\n***  Hi, there!  ***'
 
 # pycmd_public is a collection of utilities that PyCmd "exports" for use
 # within init.py files; you can safely rely on these being maintained
@@ -42,15 +42,36 @@ from configuration import appearance, behavior
 # Color configuration is performed by including color specification sequences
 # (defined by pycmd_public.color) in your strings, similarly to the ANSI escape
 # sequences.
+#
+# "absolute" color specifications will result in the same color being used no
+# matter the current color; some examples are color.Fore.YELLOW, color.Fore.SET_RED,
+# color.Back.CLEAR_BRIGHT.
+#
+# "relative" color options define the color to use in terms of the current color;
+# examples: color.Fore.TOGGLE_RED, color.Fore.TOGGLE_BRIGHT.
+#
+# You will notice that relative specifications are preferred in the default
+# settings -- this is in order to make PyCmd work reasonably on any console color
+# scheme. The absolute specs are clearer and easier to use, though, you can go
+# probably go with them for your customizations.
+#
+# The console's default color attributes are available as color.Fore.DEFAULT and
+# color.Back.DEFAULT.
 from pycmd_public import color
 
 # The color of the regular user text (relative to the console's default)
+#
+# Note that this defines only the attributes of the user-typed text, *not* the
+# default attributes of the console (i.e. the console's background or the output
+# of the executed commands); use the console configuration dialog to change those.
+#
 # The default value is the console's default:
 #    appearance.colors.text = ''
 appearance.colors.text = ''
 
 # The color of the prompt (relative to the console's default); note that you can
 # always override this if you define a custom prompt function -- see below
+#
 # The default value inverts the brightness (to make it stand out it from  regular
 # console text):
 #    appearance.colors.prompt = color.Fore.TOGGLE_BRIGHT
@@ -58,6 +79,7 @@ appearance.colors.prompt = color.Fore.TOGGLE_BRIGHT
 
 # The color of text selected for copy/cut operations (relative to the regular
 # user text as configured above)
+#
 # The default value inverts the background and the foreground
 #    appearance.colors.selection = (color.Fore.TOGGLE_RED +
 #                               color.Fore.TOGGLE_GREEN +
@@ -74,6 +96,7 @@ appearance.colors.selection = (color.Fore.TOGGLE_RED +
 
 # The color of the current search filter during a history search (relative to the
 # regular user text as configured above)
+#
 # The default is to highlight the filter by altering both background and the
 # foreground:
 #   appearance.colors.search_filter = (color.Back.TOGGLE_RED +
@@ -84,13 +107,15 @@ appearance.colors.search_filter = (color.Back.TOGGLE_RED +
                                    color.Fore.TOGGLE_BRIGHT)
 
 # The color of the matched substring(s) when displaying completion alternatives
-# (relative to the console's default)
+# (relative to the console's default color)
+#
 # The default value highlights the matched substrings by toggling their RED bit:
 #    appearance.colors.completion_match = color.Fore.TOGGLE_RED
 appearance.colors.completion_match = color.Fore.TOGGLE_RED
 
 # The color of the current directory in the directory history listing (relative to
 # the console's default color)
+#
 # The default is to obtain an "inverted" effect by toggling the brightness of the
 # foreground and background:
 #    appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
@@ -136,6 +161,11 @@ def git_prompt():
 # This is called by PyCmd whenever a prompt is to be displayed. It should return
 # a string to be shown as a prompt.
 #
+# Before the returned string is printed, the text color is set to
+# appearance.colors.prompt; but you can always alter it or add more complex
+# coloring by embedding color specifications in the returned string (like we do
+# in our example git_prompt).
+#
 # The default is the typical "abbreviated path" prompt:
 #       appearance.prompt = pycmd_public.abbrev_path_prompt
 appearance.prompt = git_prompt
@@ -157,3 +187,14 @@ behavior.quiet_mode = False
 # the typical bash-like completion.
 #
 behavior.completion_mode = 'bash'
+
+
+# Remember, you can do whatever you want in this Python script!
+#
+# Also note that you can directly output colored text via the color
+# specifications.
+print ('*** Enjoy ' +
+       color.Fore.TOGGLE_RED + color.Fore.TOGGLE_BLUE +
+       'PyCmd' +
+       color.Fore.DEFAULT +
+       '! ***')
