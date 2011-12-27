@@ -86,7 +86,6 @@ class DirHistory:
         highlighted. If a clean display is present on the screen, this
         overwrites it to perform an 'update'.
         """
-        set_cursor_visible(False)
         buffer_size = get_buffer_size()
 
         if self.shown and self.disp_size == buffer_size:
@@ -101,7 +100,7 @@ class DirHistory:
 
         stdout.write('\n')
         lines_written = 2
-
+        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT)
         for i in range(len(self.locations)):
             location = self.locations[i]
             prefix = ' %d  ' % (i + 1)
@@ -111,12 +110,11 @@ class DirHistory:
                 stdout.write(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
-                stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
-                                 configuration.appearance.colors.dir_history_selection +
-                                 prefix +
-                                 location +
-                                 color.Fore.DEFAULT +
-                                 color.Back.DEFAULT)
+                stdout.write(configuration.appearance.colors.dir_history_selection +
+                             prefix +
+                             location +
+                             color.Fore.DEFAULT +
+                             color.Back.DEFAULT)
                 stdout.write(' ' * (buffer_size[0] - get_cursor()[0]))
 
         # Check whether we have overflown the buffer
@@ -125,7 +123,6 @@ class DirHistory:
 
         # Mark a clean display of the history
         self.shown = True
-        set_cursor_visible(True)
 
     def check_overflow(self, line):
         """

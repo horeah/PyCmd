@@ -139,30 +139,30 @@ def write_input(key_code, control_state):
 
 def write_str(s):
     """
-    Output s to stdout after encoding it with stdout encoding to
-    avoid conversion errors with non ASCII characters
+    Output s to stdout (after encoding it with stdout encoding to
+    avoid conversion errors with non ASCII characters)
     """
     if sys.__stdout__.encoding:
         encoded_str = s.encode(sys.__stdout__.encoding, 'replace')
     else:
         encoded_str = s
-    set_cursor_visible(False)
     i = 0
     buf = ''
+    attr = get_text_attributes()
     while i < len(encoded_str):
         c = encoded_str[i]
         if c == chr(27):
-            # Escape sequence detected, 
-            
-            # 1. Flush buffer
-            sys.__stdout__.write(buf)
-            buf = ''
+            if buf:
+                # We have some characters, apply attributes and write them out
+                set_text_attributes(attr)
+                sys.__stdout__.write(buf)
+                buf = ''
 
-            # 2. Process color commands to compute and set new attributes
+            # Process color commands to compute and set new attributes
             target = encoded_str[i + 1]
             command = encoded_str[i + 2]
             component = encoded_str[i + 3]
-            i = i + 3
+            i += 3
 
             # Escape sequence format is [ESC][TGT][OP][COMP], where:
             #  * ESC is the Escape character: chr(27)
@@ -191,20 +191,20 @@ def write_str(s):
                 operator = lambda x, y: x ^ y
 
             import console
-            attr = get_text_attributes()
             # We use the bit masks defined at the end of console.py by computing
             # the name and accessing the module's dictionary (FOREGROUND_RED,
             # BACKGROUND_BRIGHT etc)
             bit_mask = console.__dict__[name_prefix + '_' + name_suffix]
-            set_text_attributes(operator(attr, bit_mask))
+            attr = operator(attr, bit_mask)
         else:
+            # Regular character, just append to the buffer
             buf += c
-        i = i + 1
+        i += 1
 
-    set_cursor_visible(True)
-
-    # Flush buffer
-    sys.__stdout__.write(buf)
+    # Apply the last attributes and write the remaining chars (if any)
+    set_text_attributes(attr)
+    if buf:
+        sys.__stdout__.write(buf)
 
 def remove_escape_sequences(s):
     """

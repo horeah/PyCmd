@@ -188,8 +188,9 @@ def main():
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
-                stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + to_erase * ' ')
-                cursor_backward(to_erase)
+                if to_erase > 0:
+                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + to_erase * ' ')
+                    cursor_backward(to_erase)
                 cursor_backward(len(state.after_cursor))
 
             # Prepare new input state
