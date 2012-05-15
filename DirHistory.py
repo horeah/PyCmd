@@ -1,8 +1,7 @@
 import os, sys
-import configuration
 from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
 from sys import stdout
-from pycmd_public import color
+from pycmd_public import appearance, color
 
 class DirHistory:
     """
@@ -110,7 +109,7 @@ class DirHistory:
                 stdout.write(prefix + location + '\n')
             else:
                 # Currently selected entry, print with highlight
-                stdout.write(configuration.appearance.colors.dir_history_selection +
+                stdout.write(appearance.colors.dir_history_selection +
                              prefix +
                              location +
                              color.Fore.DEFAULT +

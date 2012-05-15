@@ -1,7 +1,8 @@
 #
 # Common utility functions
 #
-import os, string, re, fsm, _winreg, pefile, mmap, sys
+import os, string, fsm, _winreg, pefile, mmap, sys, traceback
+import pycmd_public
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
@@ -318,3 +319,23 @@ def is_gui_application(executable):
 
     # Return False when not sure
     return result
+
+def apply_settings(settings_file):
+    """
+    Execute a configuration file (if it exists), overriding values from the
+    global configuration objects (created when this module is loaded)
+    """
+    if os.path.exists(settings_file):
+        try:
+            # We initialize the dictionary to readily contain the settings
+            # structures; anything else needs to be explicitly imported
+            execfile(settings_file, pycmd_public.__dict__)
+        except Exception, e:
+            print 'Error encountered when loading ' + settings_file
+            print 'Subsequent settings will NOT be applied!'
+            traceback.print_exc()
+
+def sanitize_settings():
+    """Sanitize all the configuration instances"""
+    pycmd_public.appearance.sanitize()
+    pycmd_public.behavior.sanitize()

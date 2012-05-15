@@ -14,8 +14,8 @@ from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
 from console import remove_escape_sequences
-from pycmd_public import color
-import configuration
+from pycmd_public import color, appearance, behavior
+from common import apply_settings, sanitize_settings
 
 pycmd_data_dir = None
 pycmd_install_dir = None
@@ -72,9 +72,9 @@ def main():
     title_prefix = ""
 
     # Apply global and user configurations
-    configuration.apply_settings(pycmd_install_dir + '\\init.py')
-    configuration.apply_settings(pycmd_data_dir + '\\init.py')
-    configuration.sanitize()
+    apply_settings(pycmd_install_dir + '\\init.py')
+    apply_settings(pycmd_data_dir + '\\init.py')
+    sanitize_settings()
 
     # Parse arguments
     arg = 1
@@ -109,11 +109,12 @@ def main():
                 stderr.write('PyCmd: no script specified to \'-i\'\n')
                 print_usage()
                 internal_exit()
-            configuration.apply_settings(sys.argv[arg + 1])
+            apply_settings(sys.argv[arg + 1])
+            sanitize_settings()
             arg += 1
         elif switch in ['/Q', '-Q']:
             # Quiet mode: suppress messages
-            configuration.behavior.quiet_mode = True
+            behavior.quiet_mode = True
         else:
             # Invalid command line switch
             stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
@@ -121,7 +122,7 @@ def main():
             internal_exit()
         arg += 1
 
-    if not configuration.behavior.quiet_mode:
+    if not behavior.quiet_mode:
         # Print some splash text
         try:
             from buildinfo import build_info
@@ -138,7 +139,7 @@ def main():
     # Main loop
     while True:
         # Prepare buffer for reading one line
-        state.reset_line(configuration.appearance.prompt())
+        state.reset_line(appearance.prompt())
         scrolling = False
         auto_select = False
         force_repaint = True
@@ -164,32 +165,32 @@ def main():
                 dir_hist.check_overflow(remove_escape_sequences(state.prompt))
 
                 # Write current line
-                stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.prompt +
+                stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt +
                           state.prompt +
-                          color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text)
+                          color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                 line = state.before_cursor + state.after_cursor
                 if state.history_filter == '':
                     sel_start, sel_end = state.get_selection_range()
                     stdout.write(line[:sel_start] +
-                                 configuration.appearance.colors.selection +
+                                 appearance.colors.selection +
                                  line[sel_start: sel_end] +
-                                 color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text +
+                                 color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                  line[sel_end:])
                 else:
                     (chunks, seps) = split_nocase(state.before_cursor + state.after_cursor, state.history_filter)
                     # print '\n\n', chunks, seps, '\n\n'
                     for i in range(len(chunks)):
-                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text +
+                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                          chunks[i])
                         if i < len(seps):
                             #set_text_attributes(orig_attr ^ BACKGROUND_BLUE ^ BACKGROUND_RED ^ FOREGROUND_BRIGHT)
-                            stdout.write(configuration.appearance.colors.search_filter + seps[i])
-                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + configuration.appearance.colors.text)
+                            stdout.write(appearance.colors.search_filter + seps[i])
+                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
                 if to_erase > 0:
-                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + to_erase * ' ')
+                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
                     cursor_backward(to_erase)
                 cursor_backward(len(state.after_cursor))
 
@@ -285,7 +286,7 @@ def main():
                             changed = dir_hist.jump(rec.VirtualKeyCode - 48)
                         if changed:
                             state.prev_prompt = state.prompt
-                            state.prompt = configuration.appearance.prompt()
+                            state.prompt = appearance.prompt()
                         save_history(dir_hist.locations,
                                      pycmd_data_dir + '\\dir_history',
                                      dir_hist.max_len)
@@ -418,7 +419,7 @@ def main():
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
                                             stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                         configuration.appearance.colors.completion_match +
+                                                         appearance.colors.completion_match +
                                                          s[current_index : match.start(i)] +
                                                          color.Fore.DEFAULT + color.Back.DEFAULT +
                                                          s[match.start(i) : match.end(i)])
@@ -428,7 +429,7 @@ def main():
                                         # Print the common part in a different color
                                         common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                     configuration.appearance.colors.completion_match +
+                                                     appearance.colors.completion_match +
                                                      s[:common_prefix_len] +
                                                      color.Fore.DEFAULT + color.Back.DEFAULT +
                                                      s[common_prefix_len : ])
@@ -486,7 +487,7 @@ def internal_cd(args):
 def internal_exit(message = ''):
     """The EXIT command, with an optional goodbye message"""
     deinit()
-    if ((not configuration.behavior.quiet_mode) and message != ''):
+    if ((not behavior.quiet_mode) and message != ''):
         print message
     sys.exit()
 

@@ -1,5 +1,5 @@
 """
-Public utilities exported by PyCmd.
+Public constants, objects and utilities exported by PyCmd.
 
 These are meant to be used in init.py files; users can rely on them being kept
 unchanged (interface-wise) throughout later versions.
@@ -128,3 +128,72 @@ class color(object):
 
         # Default terminal color
         DEFAULT = console.get_current_background()
+
+
+class _Settings(object):
+    """
+    Generic settings class; extend this to create a "group" of options
+    (accessible as instance members in the settings.py files)
+    """
+    def sanitize(self):
+        """Make sure the settings have sane values"""
+        pass
+
+
+class _Appearance(_Settings):
+    """Appearance settings"""
+
+    class _ColorSettings(_Settings):
+        """Color-related settings"""
+        def __init__(self):
+            self.text = ''
+            self.prompt = color.Fore.TOGGLE_BRIGHT
+            self.selection = (color.Fore.TOGGLE_RED +
+                              color.Fore.TOGGLE_GREEN +
+                              color.Fore.TOGGLE_BLUE +
+                              color.Back.TOGGLE_RED +
+                              color.Back.TOGGLE_GREEN +
+                              color.Back.TOGGLE_BLUE)
+            self.search_filter = (color.Back.TOGGLE_RED +
+                                  color.Back.TOGGLE_BLUE +
+                                  color.Fore.TOGGLE_BRIGHT)
+            self.completion_match = color.Fore.TOGGLE_RED
+            self.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
+                                          color.Back.TOGGLE_BRIGHT)
+
+    def __init__(self):
+        # Prompt function (should return a string)
+        self.prompt = abbrev_path_prompt
+
+        # Color configuration
+        self.colors = self._ColorSettings()
+
+    def sanitize(self):
+        if not callable(self.prompt):
+            print 'Prompt function doesn\'t look like a callable; reverting to PyCmd\'s default prompt'
+            self.prompt = abbrev_path_prompt
+
+
+class Behavior(_Settings):
+    """Behavior settings"""
+    def __init__(self):
+        # Skip splash message (welcome and bye).
+        # This can be also overriden with the '-Q' command line argument'
+        self.quiet_mode = False
+
+        # Select the completion mode; currently supported: 'bash'
+        self.completion_mode = 'bash'
+
+    def sanitize(self):
+        if not self.completion_mode in ['bash']:
+            print 'Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "bash"'
+            self.completion_mode = 'bash'
+
+
+# Initialize global configuration instances with default values
+#
+# These objects are directly manipulated by the settings.py files, executed via
+# apply_settings(). Then, they are directly used by PyCmd.py to get the current
+# configuration settings
+appearance = _Appearance()
+behavior = Behavior()

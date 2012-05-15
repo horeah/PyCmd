@@ -26,18 +26,15 @@
 # greeting:
 print '\n***  Hi, there!  ***'
 
-# pycmd_public is a collection of utilities that PyCmd "exports" for use
-# within init.py files; you can safely rely on these being maintained
-# throughout following versions. The documentation for this module can be
-# found in pycmd_public.html.
-import pycmd_public
-
-# Importing the configuration objects (appearance, behavior) is optional, as PyCmd
-# will automatically make them available within the init.py files; still, having
-# them explicitly imported might help you get coding assistance from your Python
-# environment
-from configuration import appearance, behavior
-
+# pycmd_public is a collection of public functions, constants and objects that
+# PyCmd "exports" for use within init.py files; you can safely rely on these
+# being maintained throughout following versions. The documentation for this module
+# can be found in pycmd_public.html.
+#
+# Note that importing symbols from pycmd_public is optional, as PyCmd automatically
+# makes them available within the init.py files; still, having them explicitly
+# imported might help you get coding assistance from your Python environment
+from pycmd_public import appearance, behavior, abbrev_path        # Redundant
 
 # Color configuration is performed by including color specification sequences
 # (defined by pycmd_public.color) in your strings, similarly to the ANSI escape
@@ -57,7 +54,7 @@ from configuration import appearance, behavior
 #
 # The console's default color attributes are available as color.Fore.DEFAULT and
 # color.Back.DEFAULT.
-from pycmd_public import color
+from pycmd_public import color        # Redundant
 
 # The color of the regular user text (relative to the console's default)
 #
@@ -146,13 +143,13 @@ def git_prompt():
         stdout=subprocess.PIPE,
         stderr=-1).communicate()[0]
     branch_name = stdout.strip(' \n\r*')
-    abbrev_path = pycmd_public.abbrev_path()
+    path = abbrev_path()
 
     # The current color setting is defined by appearance.colors.prompt
     prompt = ''
     if branch_name != '':
         prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.TOGGLE_BLUE + ' '
-    prompt += abbrev_path + '> '
+    prompt += path + '> '
 
     return prompt
 
