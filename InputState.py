@@ -197,8 +197,7 @@ class InputState:
             self.before_cursor = self.before_cursor[0 : -1]
         if not select:
             self.reset_selection()
-        else:
-            self.reset_history()
+        self.reset_history()
 
     def key_right(self, select=False):
         """
@@ -210,8 +209,7 @@ class InputState:
             self.after_cursor = self.after_cursor[1 : ]
         if not select:
             self.reset_selection()
-        else:
-            self.reset_history()
+        self.reset_history()
 
     def key_home(self, select=False):
         """
@@ -222,8 +220,7 @@ class InputState:
         self.before_cursor = ''
         if not select:
             self.reset_selection()
-        else:
-            self.reset_history()
+        self.reset_history()
 
 
     def key_end(self, select=False):
@@ -235,8 +232,7 @@ class InputState:
         self.after_cursor = ''
         if not select:
             self.reset_selection()
-        else:
-            self.reset_history()
+        self.reset_history()
 
 
     def key_left_word(self, select=False):
@@ -300,6 +296,7 @@ class InputState:
             self.delete_selection()
         else:
             self.after_cursor = ''
+        self.reset_history()
 
     def key_up(self):
         """Arrow up (history previous)"""
@@ -399,8 +396,8 @@ class InputState:
                 self.delete_selection()
             self.before_cursor = self.before_cursor + text
             self.reset_selection()
-            self.reset_history()
         wclip.CloseClipboard()
+        self.reset_history()
 
     def key_insert(self, text):
         """Insert text at the current cursor position"""
@@ -417,6 +414,7 @@ class InputState:
             self.after_cursor = self.after_cursor[1:]
         self.before_cursor = completed
         self.reset_selection()
+        self.reset_history()
 
     def key_undo(self):
         """Undo the last action or group of actions"""
@@ -492,6 +490,7 @@ class InputState:
         self.before_cursor = self.expand_line[:len(self.expand_line) 
                                                - len(self.expand_stub)] + match
         self.reset_selection()
+        self.reset_history()
         del self.expand_matches[-1]
 
     def add_to_history(self, line):
