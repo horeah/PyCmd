@@ -1,5 +1,5 @@
 import os, sys
-from console import get_cursor, move_cursor, get_buffer_size, set_cursor_visible
+from console import get_cursor, move_cursor, get_buffer_size
 from sys import stdout
 from pycmd_public import appearance, color
 

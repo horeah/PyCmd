@@ -9,7 +9,7 @@ from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
 from sys import stdout, stderr
-from console import move_cursor, get_cursor, cursor_backward
+from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
@@ -155,6 +155,7 @@ def main():
 
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
+                set_cursor_visible(False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 stdout.write('\r')
 
@@ -192,6 +193,9 @@ def main():
                 if to_erase > 0:
                     stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
                     cursor_backward(to_erase)
+
+                # Move cursor to the correct position
+                set_cursor_visible(True)
                 cursor_backward(len(state.after_cursor))
 
             # Prepare new input state
