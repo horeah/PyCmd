@@ -231,6 +231,7 @@ def main():
                         save_history(state.history,
                                      pycmd_data_dir + '\\history',
                                      1000)
+                        auto_select = False
                 elif rec.VirtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.VirtualKeyCode == 69:          # Ctrl-E
@@ -364,6 +365,7 @@ def main():
                         save_history(state.history, 
                                      pycmd_data_dir + '\\history',
                                      1000)
+                        auto_select = False
                 elif rec.Char == '\t':                  # Tab
                     stdout.write(state.after_cursor)        # Move cursor to the end
 
