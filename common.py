@@ -2,7 +2,12 @@
 # Common utility functions
 #
 import os, string, fsm, _winreg, pefile, mmap, sys, traceback
+import re
 import pycmd_public
+
+
+# Stop points when navigating one word at a time
+word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';']
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
@@ -183,6 +188,19 @@ def split_nocase(string, separator):
     chunks.append(string)
     return (chunks, seps)
 
+def fuzzy_match(substr, str):
+    """
+    Check if a substring is part of a string, while ignoring case and
+    allowing for "fuzzy" matching, i.e. require that only the "words" in
+    substr be individually matched in str (instead of an full match of
+    substr)
+    """
+    #print '\n\nMatch "' + substr + '" in "' + str + '"\n\n'
+    words = substr.split(' ')
+    pattern = ['(' + word + ').*' for word in words]
+    pattern = ''.join(pattern)
+    matches = re.search(pattern, str, re.IGNORECASE)
+    return [matches.start(i) for i in range(1, len(words) + 1)] if matches else []
 
 def abbrev_string(string):
     """Abbreviate a string by keeping uppercase and non-alphabetical characters"""

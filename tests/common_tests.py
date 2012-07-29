@@ -3,7 +3,7 @@
 #
 
 from unittest import TestCase, TestSuite, defaultTestLoader
-from common import parse_line, unescape
+from common import parse_line, unescape, fuzzy_match
 from common import associated_application, full_executable_path, is_gui_application
 
 class TestParseLine(TestCase):
@@ -198,6 +198,20 @@ class TestParseLine(TestCase):
         for input, expected in self.strings_to_unescape:
             self.assertEqual(unescape(input), expected)
 
+class TestFuzzyMatch(TestCase):
+    match_tests = [
+        ('first', 'this first line will match first', [5]),
+        ('first', 'this line will not match', []),
+        ('second line', 'this second line will match', [5, 12]),
+        ('second line', 'this line will not match', []),
+        ('third fourth', 'this fuzzily matches third and fourth', [21, 31]),
+        ('third fourth', 'reversed fourth and third won\'t match', []),
+        ('cd py', 'cd ~/pycmd', [0, 5])
+    ]
+
+    def testFuzzyMatch(self):
+        for (substr, str, result) in self.match_tests:
+            self.assertEqual(fuzzy_match(substr, str), result)
 
 class TestAppIdentification(TestCase):
     """
@@ -254,6 +268,7 @@ class TestAppIdentification(TestCase):
 def suite():
     suite = TestSuite()
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestParseLine))
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestFuzzyMatch))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAppIdentification))
     return suite
 

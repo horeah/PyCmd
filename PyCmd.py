@@ -1,7 +1,7 @@
 import sys, os, tempfile, signal, time, traceback, codecs
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars, split_nocase
+from common import parse_line, unescape, sep_tokens, sep_chars, split_nocase, fuzzy_match
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -178,15 +178,16 @@ def main():
                                  color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                  line[sel_end:])
                 else:
-                    (chunks, seps) = split_nocase(state.before_cursor + state.after_cursor, state.history_filter)
-                    # print '\n\n', chunks, seps, '\n\n'
-                    for i in range(len(chunks)):
-                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
-                                         chunks[i])
-                        if i < len(seps):
-                            #set_text_attributes(orig_attr ^ BACKGROUND_BLUE ^ BACKGROUND_RED ^ FOREGROUND_BRIGHT)
-                            stdout.write(appearance.colors.search_filter + seps[i])
-                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
+                    matches = fuzzy_match(state.history_filter, line)
+                    words = state.history_filter.split(' ')
+                    pos = 0
+                    colored_line = ''
+                    for i in range(0, len(words)):
+                        colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos : matches[i]]
+                        colored_line += appearance.colors.search_filter + line[matches[i] : matches[i] + len(words[i])]
+                        pos = matches[i] + len(words[i])
+                    colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos:]
+                    stdout.write(colored_line)
 
                 # Erase remaining chars from old line
                 to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)

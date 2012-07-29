@@ -1,8 +1,6 @@
+from common import fuzzy_match
 from completion import complete_file, complete_env_var
 import win32clipboard as wclip
-
-# Stop points when navigating one word at a time
-word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';']
 
 class ActionCode:
     """
@@ -312,8 +310,9 @@ class InputState:
             self.history_filter = self.before_cursor + self.after_cursor
         prev_index = self.history_index
         self.history_index -= 1
-        while self.history_index >= 0 and self.history[self.history_index].lower().find(self.history_filter.lower()) < 0:
+        while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index]):
             self.history_index -= 1
+            # print '\n\n', self.history_index, '\n\n'
         if self.history_index < 0:
             self.history_index = prev_index
         if self.history_index < len(self.history):
@@ -331,7 +330,7 @@ class InputState:
         # print '\n\n', history, history_index, '\n\n'
         if self.history_index < len(self.history) - 1:
             self.history_index += 1
-            while self.history_index < len(self.history) and self.history[self.history_index].lower().find(self.history_filter.lower()) < 0:
+            while self.history_index < len(self.history) and not fuzzy_match(self.history_filter, self.history[self.history_index]):
                 self.history_index += 1
             self.before_cursor = self.history[self.history_index]
             self.after_cursor = ''
