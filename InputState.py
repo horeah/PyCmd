@@ -1,5 +1,4 @@
-from common import fuzzy_match
-from completion import complete_file, complete_env_var
+from common import fuzzy_match, word_sep
 import win32clipboard as wclip
 
 class ActionCode:
@@ -57,6 +56,7 @@ class InputState:
         self.history = []
         self.history_filter = ''
         self.history_index = 0
+        self.history_trail = []
 
         # Text selection
         self.selection_start = 0
@@ -304,20 +304,38 @@ class InputState:
         self.redo = []
 
         # print '\n\n', history, history_index, '\n\n'
-        if (self.before_cursor + self.after_cursor).strip() != '' and self.history_index == len(self.history) and self.history_filter == '':
+        if self.history_index == len(self.history):
             # Start history navigation; save current line
             self.history.append(self.before_cursor + self.after_cursor)
             self.history_filter = self.before_cursor + self.after_cursor
-        prev_index = self.history_index
+            self.history_trail = []
+
+        orig_index = self.history_index
+
+        # First search for prefix matches, as they are usually better
         self.history_index -= 1
-        while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index]):
+        while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index], True):
             self.history_index -= 1
             # print '\n\n', self.history_index, '\n\n'
         if self.history_index < 0:
-            self.history_index = prev_index
-        if self.history_index < len(self.history):
+            self.history_index = orig_index
+
+            # Then search for the less strict, everywhere in the command line, fuzzy matching
+            self.history_index -= 1
+            while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index], False):
+                self.history_index -= 1
+                # print '\n\n', self.history_index, '\n\n'
+
+        if self.history_index < 0:
+            self.history_index = orig_index
+        else:
+            self.history_trail.append(orig_index)
             self.before_cursor = self.history[self.history_index]
             self.after_cursor = ''
+
+        #print '\n\nHistory:', self.history
+        #print 'Trail:', self.history_trail, '\n\n'
+
         self.reset_selection()
 
     def key_down(self):
@@ -327,16 +345,13 @@ class InputState:
         self.undo = []
         self.redo = []
 
-        # print '\n\n', history, history_index, '\n\n'
-        if self.history_index < len(self.history) - 1:
-            self.history_index += 1
-            while self.history_index < len(self.history) and not fuzzy_match(self.history_filter, self.history[self.history_index]):
-                self.history_index += 1
+        if self.history_trail:
+            self.history_index = self.history_trail.pop()
             self.before_cursor = self.history[self.history_index]
             self.after_cursor = ''
         else:
-            if self.history_filter != '':
-                self.reset_history()
+            self.reset_history()
+
         self.reset_selection()
 
     def key_esc(self):
@@ -506,6 +521,7 @@ class InputState:
             self.history = self.history[:-1]
         self.history_index = len(self.history)
         self.history_filter = ''
+        self.history_trail = []
 
     def reset_selection(self):
         """Reset text selection"""

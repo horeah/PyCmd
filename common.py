@@ -188,16 +188,18 @@ def split_nocase(string, separator):
     chunks.append(string)
     return (chunks, seps)
 
-def fuzzy_match(substr, str):
+def fuzzy_match(substr, str, prefix_only = False):
     """
     Check if a substring is part of a string, while ignoring case and
     allowing for "fuzzy" matching, i.e. require that only the "words" in
     substr be individually matched in str (instead of an full match of
-    substr)
+    substr). The prefix_only option only matches "words" in the substr at
+    word boundaries in str.
     """
     #print '\n\nMatch "' + substr + '" in "' + str + '"\n\n'
     words = substr.split(' ')
-    pattern = ['(' + word + ').*' for word in words]
+    pattern = [('\\b' if prefix_only else '') + '(' + word + ').*' for word in words]
+    # print '\n\n', pattern, '\n\n'
     pattern = ''.join(pattern)
     matches = re.search(pattern, str, re.IGNORECASE)
     return [matches.start(i) for i in range(1, len(words) + 1)] if matches else []

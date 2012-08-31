@@ -178,7 +178,9 @@ def main():
                                  color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                  line[sel_end:])
                 else:
-                    matches = fuzzy_match(state.history_filter, line)
+                    matches = fuzzy_match(state.history_filter, line, True)
+                    if not matches:
+                        matches = fuzzy_match(state.history_filter, line, False)
                     words = state.history_filter.split(' ')
                     pos = 0
                     colored_line = ''
