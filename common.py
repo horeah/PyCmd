@@ -202,7 +202,7 @@ def fuzzy_match(substr, str, prefix_only = False):
     # print '\n\n', pattern, '\n\n'
     pattern = ''.join(pattern)
     matches = re.search(pattern, str, re.IGNORECASE)
-    return [matches.start(i) for i in range(1, len(words) + 1)] if matches else []
+    return [matches.span(i) for i in range(1, len(words) + 1)] if matches else []
 
 def abbrev_string(string):
     """Abbreviate a string by keeping uppercase and non-alphabetical characters"""

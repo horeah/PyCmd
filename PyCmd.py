@@ -1,7 +1,7 @@
 import sys, os, tempfile, signal, time, traceback, codecs
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars, split_nocase, fuzzy_match
+from common import parse_line, unescape, sep_tokens, sep_chars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -178,16 +178,12 @@ def main():
                                  color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                  line[sel_end:])
                 else:
-                    matches = fuzzy_match(state.history_filter, line, True)
-                    if not matches:
-                        matches = fuzzy_match(state.history_filter, line, False)
-                    words = state.history_filter.split(' ')
                     pos = 0
                     colored_line = ''
-                    for i in range(0, len(words)):
-                        colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos : matches[i]]
-                        colored_line += appearance.colors.search_filter + line[matches[i] : matches[i] + len(words[i])]
-                        pos = matches[i] + len(words[i])
+                    for (start, end) in state.history_filter_matches:
+                        colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos : start]
+                        colored_line += appearance.colors.search_filter + line[start : end]
+                        pos = end
                     colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos:]
                     stdout.write(colored_line)
 

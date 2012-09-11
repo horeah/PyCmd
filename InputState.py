@@ -57,6 +57,7 @@ class InputState:
         self.history_filter = ''
         self.history_index = 0
         self.history_trail = []
+        self.history_filter_matches = None
 
         # Text selection
         self.selection_start = 0
@@ -314,7 +315,11 @@ class InputState:
 
         # First search for prefix matches, as they are usually better
         self.history_index -= 1
-        while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index], True):
+        while self.history_index >= 0:
+            self.history_filter_matches = fuzzy_match(self.history_filter, self.history[self.history_index], True)
+            if self.history_filter_matches:
+                # Found a match
+                break
             self.history_index -= 1
             # print '\n\n', self.history_index, '\n\n'
         if self.history_index < 0:
@@ -322,13 +327,17 @@ class InputState:
 
             # Then search for the less strict, everywhere in the command line, fuzzy matching
             self.history_index -= 1
-            while self.history_index >= 0 and not fuzzy_match(self.history_filter, self.history[self.history_index], False):
+            while self.history_index >= 0:
+                self.history_filter_matches = fuzzy_match(self.history_filter, self.history[self.history_index], False)
+                if self.history_filter_matches:
+                    break
                 self.history_index -= 1
                 # print '\n\n', self.history_index, '\n\n'
 
         if self.history_index < 0:
             self.history_index = orig_index
         else:
+            # We have a match
             self.history_trail.append(orig_index)
             self.before_cursor = self.history[self.history_index]
             self.after_cursor = ''
@@ -349,6 +358,7 @@ class InputState:
             self.history_index = self.history_trail.pop()
             self.before_cursor = self.history[self.history_index]
             self.after_cursor = ''
+            self.history_filter_matches = fuzzy_match(self.history_filter, self.before_cursor)
         else:
             self.reset_history()
 
@@ -521,6 +531,7 @@ class InputState:
             self.history = self.history[:-1]
         self.history_index = len(self.history)
         self.history_filter = ''
+        self.history_filter_matches = []
         self.history_trail = []
 
     def reset_selection(self):

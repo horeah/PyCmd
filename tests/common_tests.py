@@ -200,13 +200,13 @@ class TestParseLine(TestCase):
 
 class TestFuzzyMatch(TestCase):
     match_tests = [
-        ('first', 'this first line will match first', [5]),
+        ('first', 'this first line will match first', [(5, 10)]),
         ('first', 'this line will not match', []),
-        ('second line', 'this second line will match', [5, 12]),
+        ('second line', 'this second line will match', [(5, 11), (12, 16)]),
         ('second line', 'this line will not match', []),
-        ('third fourth', 'this fuzzily matches third and fourth', [21, 31]),
+        ('third fourth', 'this fuzzily matches third and fourth', [(21, 26), (31, 37)]),
         ('third fourth', 'reversed fourth and third won\'t match', []),
-        ('cd py', 'cd ~/pycmd', [0, 5])
+        ('cd py', 'cd ~/pycmd', [(0, 2), (5, 7)])
     ]
 
     def testFuzzyMatch(self):
