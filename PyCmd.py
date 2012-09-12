@@ -47,8 +47,8 @@ def init():
     state = InputState()
 
     # Read/initialize command history
-    state.history = read_history(pycmd_data_dir + '\\history')
-    state.history_index = len(state.history)
+    state.history.list = read_history(pycmd_data_dir + '\\history')
+    state.history.index = len(state.history.list)
 
     # Read/initialize directory history
     global dir_hist
@@ -170,7 +170,7 @@ def main():
                           state.prompt +
                           color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                 line = state.before_cursor + state.after_cursor
-                if state.history_filter == '':
+                if state.history.filter == '':
                     sel_start, sel_end = state.get_selection_range()
                     stdout.write(line[:sel_start] +
                                  appearance.colors.selection +
@@ -180,7 +180,7 @@ def main():
                 else:
                     pos = 0
                     colored_line = ''
-                    for (start, end) in state.history_filter_matches:
+                    for (start, end) in state.history.filter_matches:
                         colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos : start]
                         colored_line += appearance.colors.search_filter + line[start : end]
                         pos = end
@@ -227,7 +227,7 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        save_history(state.history,
+                        save_history(state.history.list,
                                      pycmd_data_dir + '\\history',
                                      1000)
                         auto_select = False
@@ -354,14 +354,14 @@ def main():
                     elif rec.VirtualKeyCode == 46:      # Delete
                         state.handle(ActionCode.ACTION_DELETE)
                 elif rec.Char == chr(13):               # Enter
-                    state.reset_history()
+                    state.history.reset()
                     break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        save_history(state.history, 
+                        save_history(state.history.list,
                                      pycmd_data_dir + '\\history',
                                      1000)
                         auto_select = False
@@ -460,8 +460,8 @@ def main():
             run_command(tokens)
 
         # Add to history
-        state.add_to_history(line)
-        save_history(state.history,
+        state.history.add(line)
+        save_history(state.history.list,
                      pycmd_data_dir + '\\history',
                      1000)
 

@@ -1,3 +1,4 @@
+from CommandHistory import CommandHistory
 from common import fuzzy_match, word_sep
 import win32clipboard as wclip
 
@@ -52,12 +53,8 @@ class InputState:
         self.prev_before_cursor = ''
         self.prev_after_cursor = ''
 
-        # History
-        self.history = []
-        self.history_filter = ''
-        self.history_index = 0
-        self.history_trail = []
-        self.history_filter_matches = None
+        # Command history
+        self.history = CommandHistory()
 
         # Text selection
         self.selection_start = 0
@@ -196,7 +193,7 @@ class InputState:
             self.before_cursor = self.before_cursor[0 : -1]
         if not select:
             self.reset_selection()
-        self.reset_history()
+        self.history.reset()
 
     def key_right(self, select=False):
         """
@@ -208,7 +205,7 @@ class InputState:
             self.after_cursor = self.after_cursor[1 : ]
         if not select:
             self.reset_selection()
-        self.reset_history()
+        self.history.reset()
 
     def key_home(self, select=False):
         """
@@ -219,8 +216,7 @@ class InputState:
         self.before_cursor = ''
         if not select:
             self.reset_selection()
-        self.reset_history()
-
+        self.history.reset()
 
     def key_end(self, select=False):
         """
@@ -231,7 +227,7 @@ class InputState:
         self.after_cursor = ''
         if not select:
             self.reset_selection()
-        self.reset_history()
+        self.history.reset()
 
 
     def key_left_word(self, select=False):
@@ -286,7 +282,7 @@ class InputState:
             self.delete_selection()
         else:
             self.after_cursor = self.after_cursor[1 : ]
-            self.reset_history()
+            self.history.reset()
             self.reset_selection()
 
     def key_kill_line(self):
@@ -295,7 +291,7 @@ class InputState:
             self.delete_selection()
         else:
             self.after_cursor = ''
-        self.reset_history()
+        self.history.reset()
 
     def key_up(self):
         """Arrow up (history previous)"""
@@ -305,42 +301,12 @@ class InputState:
         self.redo = []
 
         # print '\n\n', history, history_index, '\n\n'
-        if self.history_index == len(self.history):
-            # Start history navigation; save current line
-            self.history.append(self.before_cursor + self.after_cursor)
-            self.history_filter = self.before_cursor + self.after_cursor
-            self.history_trail = []
-
-        orig_index = self.history_index
-
-        # First search for prefix matches, as they are usually better
-        self.history_index -= 1
-        while self.history_index >= 0:
-            self.history_filter_matches = fuzzy_match(self.history_filter, self.history[self.history_index], True)
-            if self.history_filter_matches:
-                # Found a match
-                break
-            self.history_index -= 1
-            # print '\n\n', self.history_index, '\n\n'
-        if self.history_index < 0:
-            self.history_index = orig_index
-
-            # Then search for the less strict, everywhere in the command line, fuzzy matching
-            self.history_index -= 1
-            while self.history_index >= 0:
-                self.history_filter_matches = fuzzy_match(self.history_filter, self.history[self.history_index], False)
-                if self.history_filter_matches:
-                    break
-                self.history_index -= 1
-                # print '\n\n', self.history_index, '\n\n'
-
-        if self.history_index < 0:
-            self.history_index = orig_index
-        else:
-            # We have a match
-            self.history_trail.append(orig_index)
-            self.before_cursor = self.history[self.history_index]
-            self.after_cursor = ''
+        if not self.history.trail:
+            # Start search
+            self.history.start(self.before_cursor + self.after_cursor)
+        self.history.up()
+        self.before_cursor = self.history.current()
+        self.after_cursor = ''
 
         #print '\n\nHistory:', self.history
         #print 'Trail:', self.history_trail, '\n\n'
@@ -354,13 +320,9 @@ class InputState:
         self.undo = []
         self.redo = []
 
-        if self.history_trail:
-            self.history_index = self.history_trail.pop()
-            self.before_cursor = self.history[self.history_index]
-            self.after_cursor = ''
-            self.history_filter_matches = fuzzy_match(self.history_filter, self.before_cursor)
-        else:
-            self.reset_history()
+        self.history.down()
+        self.before_cursor = self.history.current()
+        self.after_cursor = ''
 
         self.reset_selection()
 
@@ -370,12 +332,12 @@ class InputState:
             # Reset selection, if any
             self.reset_selection()
         else:
-            if self.history_filter != '':
+            if self.history.filter != '':
                 # Reset search filter, if any
-                self.reset_history()
+                self.history.reset()
             else:
                 # Clear current line (we keep it in the history though)
-                self.add_to_history(self.before_cursor + self.after_cursor)
+                self.history.add(self.before_cursor + self.after_cursor)
                 self.before_cursor = ''
                 self.after_cursor = ''
 
@@ -385,7 +347,7 @@ class InputState:
             self.delete_selection()
         else:
             self.before_cursor = self.before_cursor[0 : -1]
-            self.reset_history()
+            self.history.reset()
             self.reset_selection()
 
     def key_copy(self):
@@ -394,13 +356,13 @@ class InputState:
         wclip.EmptyClipboard()
         wclip.SetClipboardText(self.get_selection())
         wclip.CloseClipboard()
-        self.reset_history()
+        self.history.reset()
 
     def key_cut(self):
         """Cut selection to clipboard"""
         self.key_copy()
         self.delete_selection()
-        self.reset_history()
+        self.history.reset()
 
     def key_paste(self):
         """Paste from clipboard"""
@@ -421,11 +383,11 @@ class InputState:
             self.before_cursor = self.before_cursor + text
             self.reset_selection()
         wclip.CloseClipboard()
-        self.reset_history()
+        self.history.reset()
 
     def key_insert(self, text):
         """Insert text at the current cursor position"""
-        self.reset_history()
+        self.history.reset()
         self.delete_selection()
         self.before_cursor += text
         self.reset_selection()
@@ -438,7 +400,7 @@ class InputState:
             self.after_cursor = self.after_cursor[1:]
         self.before_cursor = completed
         self.reset_selection()
-        self.reset_history()
+        self.history.reset()
 
     def key_undo(self):
         """Undo the last action or group of actions"""
@@ -488,7 +450,7 @@ class InputState:
 
             context_matches = []
             no_context_matches = []
-            for line in reversed(self.history):
+            for line in reversed(self.history.list):
                 line_words = [''] + line.split(' ')
                 for i in range(len(line_words) - 1, 0, -1):
                     word = line_words[i]
@@ -514,25 +476,8 @@ class InputState:
         self.before_cursor = self.expand_line[:len(self.expand_line) 
                                                - len(self.expand_stub)] + match
         self.reset_selection()
-        self.reset_history()
+        self.history.reset()
         del self.expand_matches[-1]
-
-    def add_to_history(self, line):
-        """Add a new line to the history"""
-        if line != '':
-            if line in self.history:
-                self.history.remove(line)
-            self.history.append(line)
-            self.reset_history()
-
-    def reset_history(self):
-        """Reset browsing through the history"""
-        if self.history_filter != '':
-            self.history = self.history[:-1]
-        self.history_index = len(self.history)
-        self.history_filter = ''
-        self.history_filter_matches = []
-        self.history_trail = []
 
     def reset_selection(self):
         """Reset text selection"""
