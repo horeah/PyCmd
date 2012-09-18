@@ -48,7 +48,6 @@ def init():
 
     # Read/initialize command history
     state.history.list = read_history(pycmd_data_dir + '\\history')
-    state.history.index = len(state.history.list)
 
     # Read/initialize directory history
     global dir_hist
@@ -180,7 +179,7 @@ def main():
                 else:
                     pos = 0
                     colored_line = ''
-                    for (start, end) in state.history.filter_matches:
+                    for (start, end) in state.history.current()[1]:
                         colored_line += color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text + line[pos : start]
                         colored_line += appearance.colors.search_filter + line[start : end]
                         pos = end

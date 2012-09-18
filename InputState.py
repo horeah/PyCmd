@@ -305,7 +305,7 @@ class InputState:
             # Start search
             self.history.start(self.before_cursor + self.after_cursor)
         self.history.up()
-        self.before_cursor = self.history.current()
+        self.before_cursor = self.history.current()[0]
         self.after_cursor = ''
 
         #print '\n\nHistory:', self.history
@@ -321,7 +321,7 @@ class InputState:
         self.redo = []
 
         self.history.down()
-        self.before_cursor = self.history.current()
+        self.before_cursor = self.history.current()[0]
         self.after_cursor = ''
 
         self.reset_selection()

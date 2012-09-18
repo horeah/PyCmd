@@ -1,21 +1,19 @@
+import re
 from common import fuzzy_match
 
 class CommandHistory:
     """
     Handle all things related to storing and navigating the command history
     """
-    # The actual command list
     def __init__(self):
+        # The actual command list
         self.list = []
 
         # The current search filter
         self.filter = ''
 
-        # The match groups as returned by the filter function
-        self.filter_matches = None
-
-        # The current index in the list (while navigating)
-        self.index = 0
+        # A filtered list based on the current filter
+        self.filtered_list = []
 
         # A trail of visited indices (while navigating)
         self.trail = []
@@ -25,58 +23,63 @@ class CommandHistory:
         Start history navigation
         """
         #print '\n\nStart\n\n'
-        if self.index != len(self.list):
-            print 'index =', self.index, 'len(list) =', len(self.list)
         self.filter = line
-        self.trail = []
+
+        words = re.findall('[a-zA-Z0-9]+', line) # Split the filter into words
+        boundary = '[\\s\\.\\-\\\\_]+'   # Word boundary characters
+
+        # Regexp patterns used for matching; strongest first, weakest last
+        patterns = [
+            # Exact string match (strongest, these will be the first results)
+            '(' + re.escape(line) + ')',
+
+            # Prefixes match for each word in the command
+            '^' + boundary.join(['(' + word + ')[a-zA-Z0-9]*' for word in words]) + '$',
+
+            # Prefixes match for some words in the command
+            boundary.join(['(' + word + ')[a-zA-Z0-9]*' for word in words]),
+
+            # Substring match in different words
+            boundary.join(['(' + word + ').*' for word in words]),
+
+            # Substring match anywhere (weakest, these will be the last results)
+            ''.join(['(' + word + ').*' for word in words])
+        ]
+
+        # Traverse the history and build the filtered list
+        self.filtered_list = []
+        for pattern in patterns:
+            #print '\n\n', pattern, '\n\n'
+            for line in reversed(self.list):
+                if line in [l for (l, p) in self.filtered_list]:
+                    # We already added this line, skip
+                    continue
+                matches = re.search(pattern, line, re.IGNORECASE)
+                if matches:
+                    self.filtered_list.insert(0, (line, [matches.span(i) for i in range(1, matches.lastindex + 1)]))
+                    #print '\n\n', self.filtered_list[-1], '\n\n'
+
+        # We use the trail to navigate back in the same order
+        self.trail = [(self.filter, [(0, len(self.filter))])]
 
     def up(self):
         """
         Navigate back in the command history
         """
-        orig_index = self.index
-
-        # First search for prefix matches, as they are usually better
-        self.index -= 1
-        while self.index >= 0:
-            self.filter_matches = fuzzy_match(self.filter, self.list[self.index], True)
-            if self.filter_matches:
-                # Found a match
-                break
-            self.index -= 1
-            # print '\n\n', self.history_index, '\n\n'
-        if self.index < 0:
-            self.index = orig_index
-
-            # Then search for the less strict, everywhere in the command line, fuzzy matching
-            self.index -= 1
-            while self.index >= 0:
-                self.filter_matches = fuzzy_match(self.filter, self.list[self.index], False)
-                if self.filter_matches:
-                    break
-                self.index -= 1
-                # print '\n\n', self.history_index, '\n\n'
-
-        if self.index < 0:
-            self.index = orig_index
-            self.filter_matches = fuzzy_match(self.filter, self.list[self.index], False)
-        else:
-            #print '\n\nIndex:', self.index, 'Trail:', orig_index, '\n\n'
-            self.trail.append(orig_index)
+        if self.filtered_list:
+            self.trail.append(self.filtered_list.pop())
 
     def down(self):
         """
         Navigate forward in the command history
         """
         if self.trail:
-            self.index = self.trail.pop()
-            self.filter_matches = fuzzy_match(self.filter, self.current())
+            self.filtered_list.append(self.trail.pop())
 
     def reset(self):
         """Reset browsing through the history"""
-        self.index = len(self.list)
         self.filter = ''
-        self.filter_matches = []
+        self.filtered_list = []
         self.trail = []
 
     def add(self, line):
@@ -89,5 +92,5 @@ class CommandHistory:
             self.reset()
 
     def current(self):
-        """Return the current hisotry item"""
-        return self.list[self.index] if self.index < len(self.list) else self.filter
+        """Return the current history item"""
+        return self.trail[-1] if self.trail else ('', [])
