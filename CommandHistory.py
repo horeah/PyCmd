@@ -46,6 +46,12 @@ class CommandHistory:
             ''.join(['(' + word + ').*' for word in words])
         ]
 
+        if len(words) <= 1:
+            # Optimization: Skip the advanced word-based matching for empty or
+            # simple (one-word) filters -- this saves a lot of computation effort
+            # as these filters will yield a long list of matched lines!
+            patterns[1:] = []
+
         # Traverse the history and build the filtered list
         self.filtered_list = []
         for pattern in patterns:
@@ -54,6 +60,8 @@ class CommandHistory:
                 if line in [l for (l, p) in self.filtered_list]:
                     # We already added this line, skip
                     continue
+                # No need to re.compile() this, the re library automatically caches compiled
+                # versions of the recently used expressions
                 matches = re.search(pattern, line, re.IGNORECASE)
                 if matches:
                     self.filtered_list.insert(0, (line, [matches.span(i) for i in range(1, matches.lastindex + 1)]))
