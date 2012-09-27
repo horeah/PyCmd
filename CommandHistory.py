@@ -3,7 +3,7 @@ from common import fuzzy_match
 
 class CommandHistory:
     """
-    Handle all things related to storing and navigating the command history
+    Handle all things related to managing and navigating the command history
     """
     def __init__(self):
         # The actual command list
@@ -25,19 +25,34 @@ class CommandHistory:
         #print '\n\nStart\n\n'
         self.filter = line
 
+        # Create a list of regex patterns to use when navigating the history
+        # using a filter
+        # A. First use just the space as word separator; these are the most
+        # useful matches (think acronyms 'g c m' for 'git checkout master' etc)
+        words = re.findall('[^\\s]+', line) # Split the filter into words
+        boundary = '[\\s]+'
+        patterns = [
+            # Prefixes match for each word in the command (strongest, these will be the
+            # first in the list
+            '^' + boundary.join(['(' + word + ')[^\\s]*' for word in words]) + '$',
+
+            # Prefixes match for some words in the command
+            boundary.join(['(' + word + ')[^\\s]*' for word in words]),
+        ]
+
+        # B. Then split based on other separator characters as well
         words = re.findall('[a-zA-Z0-9]+', line) # Split the filter into words
         boundary = '[\\s\\.\\-\\\\_]+'   # Word boundary characters
-
-        # Regexp patterns used for matching; strongest first, weakest last
-        patterns = [
-            # Exact string match (strongest, these will be the first results)
-            '(' + re.escape(line) + ')',
-
-            # Prefixes match for each word in the command
+        patterns += [
+            # Prefixes match for each word in the command (strongest, these will be the
+            # first in the list
             '^' + boundary.join(['(' + word + ')[a-zA-Z0-9]*' for word in words]) + '$',
 
             # Prefixes match for some words in the command
             boundary.join(['(' + word + ')[a-zA-Z0-9]*' for word in words]),
+
+            # Exact string match
+            '(' + re.escape(line) + ')',
 
             # Substring match in different words
             boundary.join(['(' + word + ').*' for word in words]),
@@ -50,7 +65,7 @@ class CommandHistory:
             # Optimization: Skip the advanced word-based matching for empty or
             # simple (one-word) filters -- this saves a lot of computation effort
             # as these filters will yield a long list of matched lines!
-            patterns[1:] = []
+            patterns = [patterns[4]]
 
         # Traverse the history and build the filtered list
         self.filtered_list = []
