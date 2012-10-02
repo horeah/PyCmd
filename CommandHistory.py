@@ -29,7 +29,7 @@ class CommandHistory:
         # using a filter
         # A. First use just the space as word separator; these are the most
         # useful matches (think acronyms 'g c m' for 'git checkout master' etc)
-        words = re.findall('[^\\s]+', line) # Split the filter into words
+        words = [re.escape(w) for w in re.findall('[^\\s]+', line)] # Split the filter into words
         boundary = '[\\s]+'
         patterns = [
             # Prefixes match for each word in the command (strongest, these will be the
@@ -41,7 +41,7 @@ class CommandHistory:
         ]
 
         # B. Then split based on other separator characters as well
-        words = re.findall('[a-zA-Z0-9]+', line) # Split the filter into words
+        words = [re.escape(w) for w in re.findall('[a-zA-Z0-9]+', line)] # Split the filter into words
         boundary = '[\\s\\.\\-\\\\_]+'   # Word boundary characters
         patterns += [
             # Prefixes match for each word in the command (strongest, these will be the
