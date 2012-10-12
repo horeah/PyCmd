@@ -370,7 +370,7 @@ def main():
                     tokens = parse_line(state.before_cursor)
                     if tokens == [] or state.before_cursor[-1] in sep_chars:
                         tokens.append('')   # This saves some checks later on
-                    if tokens[-1].strip('"').count('%') % 2 == 1 or tokens[-1].strip('"').endswith('%'):
+                    if tokens[-1].strip('"').count('%') % 2 == 1:
                         (completed, suggestions) = complete_env_var(state.before_cursor)
                     elif has_wildcards(tokens[-1]):
                         (completed, suggestions)  = complete_wildcard(state.before_cursor)
