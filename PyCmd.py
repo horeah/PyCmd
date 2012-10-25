@@ -484,7 +484,7 @@ def internal_cd(args):
             target = expand_env_vars(target.strip(u'"').strip(u' '))
             os.chdir(target.encode(sys.getfilesystemencoding()))
     except OSError, error:
-        stdout.write(u'\n' + str(error).decode(sys.getfilesystemencoding()))
+        stdout.write(u'\n' + str(error).replace('\\\\', '\\').decode(sys.getfilesystemencoding()))
     os.environ['CD'] = os.getcwd()
 
 
