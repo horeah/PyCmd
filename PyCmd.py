@@ -471,6 +471,9 @@ def main():
                      pycmd_data_dir + '\\dir_history',
                      dir_hist.max_len)
 
+        # Update default color
+        color.update()
+
 
 def internal_cd(args):
     """The internal CD command"""

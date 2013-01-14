@@ -129,6 +129,15 @@ class color(object):
         # Default terminal color
         DEFAULT = console.get_current_background()
 
+    @staticmethod
+    def update():
+        """
+        Update the current values of the DEFAULT color constant -- we have
+        to adapt these since they might change (e.g. with the "color"
+        command).
+        """
+        color.Back.DEFAULT = console.get_current_background()
+        color.Fore.DEFAULT = console.get_current_foreground()
 
 class _Settings(object):
     """
