@@ -23,7 +23,7 @@ PYTHON_W32 = (set PYTHONHOME=$(PYTHONHOME_W32)) && "$(PYTHONHOME_W32)\python.exe
 PYTHON_W64 = (set PYTHONHOME=$(PYTHONHOME_W64)) && "$(PYTHONHOME_W64)\python.exe"
 
 ifndef BUILD_INFO
-	BUILD_INFO = $(shell echo %DATE%| sed "s/...\ \(..\)\/\(..\)\/\(....\)/\3\1\2/")
+	BUILD_INFO = $(shell WMIC os GET LocalDateTime | grep -v Local | cut -c 1-8)
 endif
 
 .PHONY: all
