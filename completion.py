@@ -48,19 +48,21 @@ def complete_file_simple(line):
     if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
         tokens += ['']   # This saves us some checks later
     token = tokens[-1].replace('"', '')
+
+    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
     
-    (path_to_complete, _, prefix) = token.rpartition('\\')
-    if path_to_complete == '' and token != '' and token[0] == '\\':
-        path_to_complete = '\\'
+    (path_to_complete, _, prefix) = token.rpartition(path_sep)
+    if path_to_complete == '' and token != '' and token[0] == path_sep:
+        path_to_complete = path_sep
 
     # print '\n\n', path_to_complete, '---', prefix, '\n\n'
 
     if path_to_complete == '':
         dir_to_complete = os.getcwd()
-    elif path_to_complete == '\\':
+    elif path_to_complete == path_sep:
         dir_to_complete = os.getcwd()[0:3]
     else:
-        dir_to_complete = expand_env_vars(path_to_complete) + '\\'
+        dir_to_complete = expand_env_vars(path_to_complete) + path_sep
 
     # This is the wildcard matcher used throughout the function
     matcher = wildcard_to_regex(prefix + '*')
@@ -76,19 +78,19 @@ def complete_file_simple(line):
         
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + '\\' for elem in completions if os.path.isdir(dir_to_complete + '\\' + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
+    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
+    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
     completions = completions_dirs + completions_files
 
     if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
         # We are at the beginning of a command ==> also complete from the path
         completions_path = []
         for elem_in_path in os.environ['PATH'].split(';'):
-            dir_to_complete = expand_env_vars(elem_in_path) + '\\'
+            dir_to_complete = expand_env_vars(elem_in_path) + path_sep
             try:                
                 completions_path += [elem for elem in os.listdir(dir_to_complete) 
                                      if matcher.match(elem)
-                                     and os.path.isfile(dir_to_complete + '\\' + elem)
+                                     and os.path.isfile(dir_to_complete + path_sep + elem)
                                      and has_exec_extension(elem)
                                      and not elem in completions
                                      and not elem in completions_path]
@@ -142,10 +144,10 @@ def complete_file_simple(line):
             
         if path_to_complete == '':
             completed_file = common_string
-        elif path_to_complete == '\\':
-            completed_file = '\\' + common_string
+        elif path_to_complete == path_sep:
+            completed_file = path_sep + common_string
         else:
-            completed_file = path_to_complete + '\\' + common_string
+            completed_file = path_to_complete + path_sep + common_string
 
         if expand_env_vars(completed_file).find(' ') >= 0 or \
                 (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
@@ -168,9 +170,9 @@ def complete_file_simple(line):
             else:
                 end_quote = ''
                 
-            if result[-1] == '\\':
+            if result[-1] == path_sep:
                 # Directory -- we want the backslash (if any) AFTER the closing quote
-                result = result[ : -1] + end_quote + '\\'
+                result = result[ : -1] + end_quote + path_sep
             else:
                 # File -- add space if the completion is unique
                 result += end_quote
@@ -203,20 +205,22 @@ def complete_file_alternate(line):
     paths = last_token.split(';')
     token = paths[-1]
 
+    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
+
     # print '\n\nTokens:', tokens, '\n\nCompleting:', token, '\n\n'
 
-    (path_to_complete, _, prefix) = token.rpartition('\\')
-    if path_to_complete == '' and token != '' and token[0] == '\\':
-        path_to_complete = '\\'
+    (path_to_complete, _, prefix) = token.rpartition(path_sep)
+    if path_to_complete == '' and token != '' and token[0] == path_sep:
+        path_to_complete = path_sep
 
     # print '\n\n', path_to_complete, '---', prefix, '\n\n'
 
     if path_to_complete == '':
         dir_to_complete = os.getcwd()
-    elif path_to_complete == '\\':
+    elif path_to_complete == path_sep:
         dir_to_complete = os.getcwd()[0:3]
     else:
-        dir_to_complete = expand_env_vars(path_to_complete) + '\\'
+        dir_to_complete = expand_env_vars(path_to_complete) + path_sep
 
     # This is the wildcard matcher used throughout the function
     matcher = wildcard_to_regex(prefix + '*')
@@ -232,8 +236,8 @@ def complete_file_alternate(line):
         
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + '\\' for elem in completions if os.path.isdir(dir_to_complete + '\\' + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
+    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
+    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
     completions = completions_dirs + completions_files
 
     if completions != []:
@@ -242,10 +246,10 @@ def complete_file_alternate(line):
             
         if path_to_complete == '':
             completed_file = common_string
-        elif path_to_complete == '\\':
-            completed_file = '\\' + common_string
+        elif path_to_complete == path_sep:
+            completed_file = path_sep + common_string
         else:
-            completed_file = path_to_complete + '\\' + common_string
+            completed_file = path_to_complete + path_sep + common_string
 
         if expand_env_vars(last_token + completed_file).find(' ') >= 0 or \
                 (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
@@ -284,19 +288,21 @@ def complete_wildcard(line):
     if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
         tokens += ['']   # This saves us some checks later
     token = tokens[-1].replace('"', '')
+
+    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
     
-    (path_to_complete, _, prefix) = token.rpartition('\\')
-    if path_to_complete == '' and token != '' and token[0] == '\\':
-        path_to_complete = '\\'
+    (path_to_complete, _, prefix) = token.rpartition(path_sep)
+    if path_to_complete == '' and token != '' and token[0] == path_sep:
+        path_to_complete = path_sep
 
     # print '\n\n', path_to_complete, '---', prefix, '\n\n'
 
     if path_to_complete == '':
         dir_to_complete = os.getcwd()
-    elif path_to_complete == '\\':
+    elif path_to_complete == path_sep:
         dir_to_complete = os.getcwd()[0:3]
     else:
-        dir_to_complete = expand_env_vars(path_to_complete) + '\\'
+        dir_to_complete = expand_env_vars(path_to_complete) + path_sep
 
     # This is the wildcard matcher used throughout the function
     matcher = wildcard_to_regex(prefix + '*')
@@ -308,11 +314,11 @@ def complete_wildcard(line):
         except OSError:
             # Cannot complete, probably access denied
             pass
-        
+
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + '\\' for elem in completions if os.path.isdir(dir_to_complete + '\\' + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + '\\' + elem)]
+    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
+    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
     completions = completions_dirs + completions_files
 
     if completions != []:
@@ -330,10 +336,10 @@ def complete_wildcard(line):
             
         if path_to_complete == '':
             completed_file = common_string
-        elif path_to_complete == '\\':
-            completed_file = '\\' + common_string
+        elif path_to_complete == path_sep:
+            completed_file = path_sep + common_string
         else:
-            completed_file = path_to_complete + '\\' + common_string
+            completed_file = path_to_complete + path_sep + common_string
 
 
         if expand_env_vars(completed_file).find(' ') >= 0 or \
@@ -359,9 +365,9 @@ def complete_wildcard(line):
             else:
                 end_quote = ''
                 
-            if result[-1] == '\\':
+            if result[-1] == path_sep:
                 # Directory -- we want the backslash (if any) AFTER the closing quote
-                result = result[ : -1] + end_quote + '\\'
+                result = result[ : -1] + end_quote + path_sep
             else:
                 # File -- add space if the completion is unique
                 result += end_quote

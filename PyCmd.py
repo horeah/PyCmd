@@ -416,9 +416,10 @@ def main():
                                     s = suggestions[line + column * num_lines]
                                     if has_wildcards(tokens[-1]):
                                         # Print wildcard matches in a different color
-                                        tokens = parse_line(completed.rstrip('\\'))
+                                        path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
+                                        tokens = parse_line(completed.rstrip(path_sep))
                                         token = tokens[-1].replace('"', '')
-                                        (_, _, prefix) = token.rpartition('\\')
+                                        (_, _, prefix) = token.rpartition(path_sep)
                                         match = wildcard_to_regex(prefix + '*').match(s)
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
