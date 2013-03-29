@@ -290,7 +290,7 @@ def full_executable_path(app_unicode):
     if ext != '':
         extensions_to_search = [ext]
     else:
-        extensions_to_search = ['.exe', '.com', '.bat', '.cmd']
+        extensions_to_search = ['.com', '.exe', '.bat', '.cmd']
 
     # Determine the possible locations
     if dir:
