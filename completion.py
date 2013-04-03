@@ -49,7 +49,9 @@ def complete_file_simple(line):
         tokens += ['']   # This saves us some checks later
     token = tokens[-1].replace('"', '')
 
-    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
+    pos_fwd = expand_env_vars(token).rfind('/')
+    pos_bck = expand_env_vars(token).rfind('\\')
+    path_sep = '\\' if pos_bck >= pos_fwd else '/'
     
     (path_to_complete, _, prefix) = token.rpartition(path_sep)
     if path_to_complete == '' and token != '' and token[0] == path_sep:
