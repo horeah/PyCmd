@@ -15,11 +15,12 @@ persistent history, etc.)
     - complete names of environment variables, including pseudo-variables
     - complete wildcards
     - expand values of environment variables when completing
+    - support both '/' and '\' as path separators
 
  b. Command history
     - the history is persistent across PyCmd sessions
-    - one can search through the history (type a few filter characters, then 
-      Up/Down)
+    - one can search through the history (type a few filter characters/words,
+      then Up/Down)
     - reordering is more intuitive than cmd's default strategy
 
  c. Command editing
@@ -32,6 +33,7 @@ persistent history, etc.)
  d. Other
     - show a highlighted prompt to make the buffer content more readable
     - smart prompt that abbreviates directory names to save screen space
+    - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
     - history of recently visited directories (Alt-Left/Right/D on empty line)
     - expand ~ as %HOME% or %USERPROFILE%

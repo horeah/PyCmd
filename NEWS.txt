@@ -1,3 +1,12 @@
+What's new in PyCmd 0.9?
+
+ * Configuration file (init.py) for customizing colors, prompt etc.
+ * Fuzzy history search
+ * Tab-completion now works with both '/' and '\' as separators
+ * Switch build from py2exe (no longer maintained) to cx_freeze
+ * Added 64-bit build
+ * Bugfixes in completion, line rendering
+
 What's new in PyCmd 0.8?
 
  * Treat .cmd files as executable (just like .bat)
