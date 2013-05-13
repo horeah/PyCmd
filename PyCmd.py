@@ -1,7 +1,7 @@
 import sys, os, tempfile, signal, time, traceback, codecs
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars
+from common import parse_line, unescape, sep_tokens, sep_chars, exec_extensions
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -519,7 +519,7 @@ def run_command(tokens):
             dir, name = os.path.split(cmd)
             ext = os.path.splitext(name)[1]
 
-            if ext in ['', '.exe', '.com', '.bat', '.cmd']:
+            if not ext or ext in exec_extensions:
                 # Executable given
                 app = cmd
             else:

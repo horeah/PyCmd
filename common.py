@@ -26,6 +26,9 @@ redir_file_tokens = redir_file_all + [d + c for d in digit_chars for c in redir_
 # All command splitting tokens
 sep_tokens = seq_tokens + redir_file_tokens
 
+# Executable extensions (all lowercase), as indicated by the PATHSPEC
+exec_extensions = os.environ['PATHEXT'].lower().split(os.pathsep)
+
 def parse_line(line):
     """Tokenize a command line based on whitespace while observing quotes"""
 
@@ -227,14 +230,9 @@ def abbrev_string(string):
 
     return string_abbrev
 
-
 def has_exec_extension(file_name):
-    """Check whether the specified file is executable, i.e. its extension is .exe, .com or .bat"""
-    return (file_name.endswith('.com') 
-            or file_name.endswith('.exe') 
-            or file_name.endswith('.bat')
-            or file_name.endswith('.cmd'))
-
+    """Check whether the specified file is executable, i.e. its extension is .exe, .com, .bat etc"""
+    return os.path.splitext(file_name)[1].lower() in exec_extensions
 
 def strip_extension(file_name):
     """Remove extension, if present"""
@@ -290,7 +288,7 @@ def full_executable_path(app_unicode):
     if ext != '':
         extensions_to_search = [ext]
     else:
-        extensions_to_search = ['.com', '.exe', '.bat', '.cmd']
+        extensions_to_search = exec_extensions
 
     # Determine the possible locations
     if dir:
