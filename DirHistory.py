@@ -44,6 +44,8 @@ class DirHistory:
         """Jump to the specified index (checks whether it's still valid)"""
         if index == 9:
             self.index = len(self.locations) - 1
+        elif index > len(self.locations):
+            pass
         else:
             self.index = index - 1
         return self._apply()
