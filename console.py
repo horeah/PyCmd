@@ -1,7 +1,7 @@
 #
 # Functions for manipulating the console using Microsoft's Console API
 #
-import ctypes, sys
+import ctypes, sys, locale
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
 from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY_EVENT
@@ -295,4 +295,10 @@ class ColorOutputStream:
         """Dispatch printing to our enhanced write function"""
         write_str(str)
 
+# Set default encoding to the system's locale; this needs to be done here,
+# before we install the custom output stream (since we reload(sys))
+reload(sys)
+sys.setdefaultencoding(locale.getdefaultlocale()[1])
+
+# Install our custom output stream
 sys.stdout = ColorOutputStream()
