@@ -30,6 +30,7 @@ class ActionCode:
     ACTION_REDO = 21
     ACTION_UNDO_EMACS = 22
     ACTION_EXPAND = 23
+    ACTION_TOGGLE_OVERWRITE = 24
 
 
 class InputState:
@@ -52,6 +53,9 @@ class InputState:
         self.prev_prompt = ''
         self.prev_before_cursor = ''
         self.prev_after_cursor = ''
+
+        # Typing overwrite mode
+        self.overwrite = False
 
         # Command history
         self.history = CommandHistory()
@@ -96,7 +100,8 @@ class InputState:
             ActionCode.ACTION_UNDO: self.key_undo,
             ActionCode.ACTION_REDO: self.key_redo,
             ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs, 
-            ActionCode.ACTION_EXPAND: self.key_expand, }
+            ActionCode.ACTION_EXPAND: self.key_expand,
+            ActionCode.ACTION_TOGGLE_OVERWRITE: self.key_toggle_overwrite, }
             
         # Action categories
         self.insert_actions = [ActionCode.ACTION_INSERT,
@@ -136,6 +141,7 @@ class InputState:
         self.prompt = prompt
         self.before_cursor = ''
         self.after_cursor = ''
+        self.overwrite = False
         self.reset_prev_line()
 
     def reset_prev_line(self):
@@ -381,6 +387,8 @@ class InputState:
             if self.get_selection() != '':
                 self.delete_selection()
             self.before_cursor = self.before_cursor + text
+            if self.overwrite:
+                self.after_cursor = self.after_cursor[len(text):]
             self.reset_selection()
         wclip.CloseClipboard()
         self.history.reset()
@@ -390,6 +398,8 @@ class InputState:
         self.history.reset()
         self.delete_selection()
         self.before_cursor += text
+        if self.overwrite:
+            self.after_cursor = self.after_cursor[len(text):]
         self.reset_selection()
 
     def key_complete(self, completed):
@@ -398,7 +408,10 @@ class InputState:
                 or (completed.endswith('\\') and self.after_cursor.startswith('\\')):
             # Avoid multiple blanks or backslashes after completing
             self.after_cursor = self.after_cursor[1:]
+        chars_added = len(completed) - len(self.before_cursor)
         self.before_cursor = completed
+        if self.overwrite:
+            self.after_cursor = self.after_cursor[chars_added:]
         self.reset_selection()
         self.history.reset()
 
@@ -473,11 +486,18 @@ class InputState:
             # print '\n\n', self.expand_matches, '\n\n'
 
         match = self.expand_matches[-1]
+        old_len_before_cursor = len(self.before_cursor)
         self.before_cursor = self.expand_line[:len(self.expand_line) 
                                                - len(self.expand_stub)] + match
+        if self.overwrite:
+            self.after_cursor = self.after_cursor[len(self.before_cursor) - old_len_before_cursor:]
         self.reset_selection()
         self.history.reset()
         del self.expand_matches[-1]
+
+    def key_toggle_overwrite(self):
+        """Toggle typing overwrite mode"""
+        self.overwrite = not self.overwrite
 
     def reset_selection(self):
         """Reset text selection"""

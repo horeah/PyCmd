@@ -91,9 +91,9 @@ def get_viewport():
     ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
     return (buffer_info.window.Left, buffer_info.window.Top, buffer_info.window.Right, buffer_info.window.Bottom)
 
-def set_cursor_visible(vis):
-    """Set the visibility of the cursor"""
-    cursor_info = CONSOLE_CURSOR_INFO(10, vis)
+def set_cursor_attributes(size, visibility):
+    """Set the cursor size and visibility"""
+    cursor_info = CONSOLE_CURSOR_INFO(size, visibility)
     ctypes.windll.kernel32.SetConsoleCursorInfo(stdout_handle, pointer(cursor_info))
 
 def cursor_backward(count):

@@ -9,7 +9,7 @@ from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
 from sys import stdout, stderr
-from console import move_cursor, get_cursor, cursor_backward, set_cursor_visible
+from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
@@ -154,7 +154,7 @@ def main():
 
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
-                set_cursor_visible(False)
+                set_cursor_attributes(50 if state.overwrite else 10, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 stdout.write('\r')
 
@@ -193,7 +193,7 @@ def main():
                     cursor_backward(to_erase)
 
                 # Move cursor to the correct position
-                set_cursor_visible(True)
+                set_cursor_attributes(50 if state.overwrite else 10, True)
                 cursor_backward(len(state.after_cursor))
 
             # Prepare new input state
@@ -206,7 +206,7 @@ def main():
             # Will be overriden if Shift-PgUp/Dn is pressed
             force_repaint = not is_control_only(rec)    
 
-            #print '\n\n', rec.keyDown, rec.char, rec.virtualKeyCode, rec.controlKeyState, '\n\n'
+            #print '\n\n', rec.KeyDown, rec.Char, rec.VirtualKeyCode, rec.ControlKeyState, '\n\n'
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.Char == chr(4):                  # Ctrl-D
                     if state.before_cursor + state.after_cursor == '':
@@ -352,6 +352,8 @@ def main():
                         state.handle(ActionCode.ACTION_NEXT)
                     elif rec.VirtualKeyCode == 46:      # Delete
                         state.handle(ActionCode.ACTION_DELETE)
+                    elif rec.VirtualKeyCode == 45:      # Insert
+                        state.handle(ActionCode.ACTION_TOGGLE_OVERWRITE)
                 elif rec.Char == chr(13):               # Enter
                     state.history.reset()
                     break
