@@ -46,6 +46,8 @@ persistent history, etc.)
     - pushd/popd are not supported
     - %ERRORLEVEL% is always 0 when executing commands interactively
     - DOSKEY macros are not supported
+    - can NOT be used to fully replace cmd.exe as default shell (e.g. via 
+      %COMSPEC%)
 
 
 4. Future plans
