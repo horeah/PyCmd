@@ -1,7 +1,7 @@
 import sys, os, tempfile, signal, time, traceback, codecs
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars, exec_extensions
+from common import parse_line, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -504,6 +504,12 @@ def internal_exit(message = ''):
 
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
+
+    # Cleanup environment
+    for var in pseudo_vars:
+        if var in os.environ.keys():
+            del os.environ[var]
+
     if tokens[0] == 'exit':
         internal_exit('Bye!')
     elif tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []:
@@ -552,8 +558,6 @@ def run_command(tokens):
             win32gui.FlashWindowEx(console_window, win32con.FLASHW_ALL, 3, 750)
 
 def run_in_cmd(tokens):
-    pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
-
     line_sanitized = ''
     for token in tokens:
         token_sane = expand_tilde(token)
@@ -576,11 +580,6 @@ def run_in_cmd(tokens):
         print
         os.system('echo |')
         return
-
-    # Cleanup environment
-    for var in pseudo_vars:
-        if var in os.environ.keys():
-            del os.environ[var]
 
     # Run command
     if line_sanitized != '':

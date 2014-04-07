@@ -29,6 +29,9 @@ sep_tokens = seq_tokens + redir_file_tokens
 # Executable extensions (all lowercase), as indicated by the PATHSPEC
 exec_extensions = os.environ['PATHEXT'].lower().split(os.pathsep)
 
+# Pseudo environment variables
+pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
+
 def parse_line(line):
     """Tokenize a command line based on whitespace while observing quotes"""
 
