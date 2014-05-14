@@ -278,14 +278,14 @@ def main():
                         state.handle(ActionCode.ACTION_REDO)
                     auto_select = False
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec):      # Alt-Something
-                if rec.VirtualKeyCode in [37, 39] + range(49, 59):      # Dir history 
-                    if state.before_cursor + state.after_cursor == '':
+                if rec.VirtualKeyCode in [37, 39] + range(49, 59):
+                    if state.before_cursor + state.after_cursor == '':  # Dir history
                         state.reset_prev_line()
                         if rec.VirtualKeyCode == 37:            # Alt-Left
                             changed = dir_hist.go_left()
                         elif rec.VirtualKeyCode == 39:          # Alt-Right     
                             changed = dir_hist.go_right()
-                        else:                                   # Alt-1..Alt-9        
+                        else:                                   # Alt-1..Alt-9
                             changed = dir_hist.jump(rec.VirtualKeyCode - 48)
                         if changed:
                             state.prev_prompt = state.prompt
@@ -301,6 +301,10 @@ def main():
                             state.handle(ActionCode.ACTION_LEFT_WORD, select)
                         elif rec.VirtualKeyCode == 39:          # Alt-Right
                             state.handle(ActionCode.ACTION_RIGHT_WORD, select)
+                elif rec.VirtualKeyCode == 38:          # Alt-Up
+                    os.chdir('..')
+                    dir_hist.visit_cwd()
+                    break
                 elif rec.VirtualKeyCode == 66:          # Alt-B
                     state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.VirtualKeyCode == 70:          # Alt-F
