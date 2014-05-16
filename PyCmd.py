@@ -371,8 +371,6 @@ def main():
                                      1000)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
-                    stdout.write(state.after_cursor)        # Move cursor to the end
-
                     tokens = parse_line(state.before_cursor)
                     if tokens == [] or state.before_cursor[-1] in sep_chars:
                         tokens.append('')   # This saves some checks later on
@@ -382,6 +380,10 @@ def main():
                         (completed, suggestions)  = complete_wildcard(state.before_cursor)
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
+
+                    cursor_backward(len(state.before_cursor))
+                    state.handle(ActionCode.ACTION_COMPLETE, completed)
+                    stdout.write(state.before_cursor + state.after_cursor)
 
                     # Show multiple completions if available
                     if len(suggestions) > 1:
@@ -447,7 +449,6 @@ def main():
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                             stdout.write('\n')
                         state.reset_prev_line()
-                    state.handle(ActionCode.ACTION_COMPLETE, completed)
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
