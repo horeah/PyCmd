@@ -413,6 +413,8 @@ def main():
                             stdout.write('\n' + ' ' * len(message))
                             move_cursor(c_x, console.get_buffer_size()[1] - offset_from_bottom)
                             if rec.Char != '\t':
+                                if not ord(rec.Char) in [0, 8, 13, 27]:
+                                    state.handle(ActionCode.ACTION_INSERT, rec.Char)
                                 continue
                             
                         stdout.write('\n')
