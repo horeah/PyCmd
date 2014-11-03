@@ -31,6 +31,8 @@ class ActionCode:
     ACTION_UNDO_EMACS = 22
     ACTION_EXPAND = 23
     ACTION_TOGGLE_OVERWRITE = 24
+    ACTION_SEARCH_RIGHT = 25
+    ACTION_SEARCH_LEFT = 26
 
 
 class InputState:
@@ -75,6 +77,10 @@ class InputState:
         self.undo_emacs_index = -1
         self.last_action = ActionCode.ACTION_none
 
+        # Search string
+        self.search_substr = None
+        self.search_rev = False
+
         # Action handlers
         self.handlers = {
             ActionCode.ACTION_none: None,
@@ -84,6 +90,8 @@ class InputState:
             ActionCode.ACTION_RIGHT_WORD: self.key_right_word,
             ActionCode.ACTION_HOME: self.key_home,
             ActionCode.ACTION_END: self.key_end,
+            ActionCode.ACTION_SEARCH_RIGHT: self.key_search_right,
+            ActionCode.ACTION_SEARCH_LEFT: self.key_search_left,
             ActionCode.ACTION_COPY: self.key_copy,
             ActionCode.ACTION_CUT: self.key_cut,
             ActionCode.ACTION_PASTE: self.key_paste,
@@ -117,7 +125,9 @@ class InputState:
                                  ActionCode.ACTION_RIGHT, 
                                  ActionCode.ACTION_RIGHT_WORD,
                                  ActionCode.ACTION_HOME, 
-                                 ActionCode.ACTION_END]
+                                 ActionCode.ACTION_END,
+                                 ActionCode.ACTION_SEARCH_RIGHT,
+                                 ActionCode.ACTION_SEARCH_LEFT]
         self.manip_actions = [ActionCode.ACTION_CUT, 
                               ActionCode.ACTION_COPY,
                               ActionCode.ACTION_PASTE,
@@ -200,6 +210,7 @@ class InputState:
         if not select:
             self.reset_selection()
         self.history.reset()
+        self.search_substr = None
 
     def key_right(self, select=False):
         """
@@ -212,6 +223,7 @@ class InputState:
         if not select:
             self.reset_selection()
         self.history.reset()
+        self.search_substr = None
 
     def key_home(self, select=False):
         """
@@ -223,6 +235,7 @@ class InputState:
         if not select:
             self.reset_selection()
         self.history.reset()
+        self.search_substr = None
 
     def key_end(self, select=False):
         """
@@ -234,7 +247,27 @@ class InputState:
         if not select:
             self.reset_selection()
         self.history.reset()
+        self.search_substr = None
 
+    def key_search_right(self, _):
+        """
+        Search for text to the right of the cursor
+        """
+        self.search_rev = False
+        if self.search_substr is None:
+            self.search_substr = ''
+        elif self.search_substr:
+            self.search_right_next()
+
+    def key_search_left(self, _):
+        """
+        Search for text to the left of the cursor
+        """
+        self.search_rev = True
+        if self.search_substr is None:
+            self.search_substr = ''
+        elif self.search_substr:
+            self.search_left_prev()
 
     def key_left_word(self, select=False):
         """Move backward one word (Ctrl-Left)"""
@@ -334,9 +367,10 @@ class InputState:
 
     def key_esc(self):
         """Esc key"""
-        if self.get_selection() != '':
-            # Reset selection, if any
-            self.reset_selection()
+        self.reset_selection()
+        if self.search_substr is not None:
+            # Reset text search
+            self.search_substr = None
         else:
             if self.history.filter != '':
                 # Reset search filter, if any
@@ -396,11 +430,22 @@ class InputState:
     def key_insert(self, text):
         """Insert text at the current cursor position"""
         self.history.reset()
-        self.delete_selection()
-        self.before_cursor += text
-        if self.overwrite:
-            self.after_cursor = self.after_cursor[len(text):]
-        self.reset_selection()
+
+        if self.search_substr is not None:
+            # Search mode
+            self.search_substr += text
+            if self.after_cursor.lower().startswith(text.lower()):
+                self.before_cursor += self.after_cursor[:len(text)]
+                self.after_cursor = self.after_cursor[len(text):]
+            else:
+                self.advance_search()
+        else:
+            # Typing mode
+            self.before_cursor += text
+            if self.overwrite:
+                self.after_cursor = self.after_cursor[len(text):]
+            self.reset_selection()
+            self.delete_selection()
 
     def key_complete(self, completed):
         """Update the text before cursor to match some completion"""
@@ -521,3 +566,27 @@ class InputState:
         """Return the current selected text"""
         start, end = self.get_selection_range()
         return (self.before_cursor + self.after_cursor)[start: end]
+
+    def advance_search(self):
+        if not self.search_rev:
+            self.search_right_next()
+        else:
+            self.search_left_prev()
+
+    def search_right_next(self):
+        pos = self.after_cursor.lower().find(self.search_substr.lower())
+        if pos == -1:
+            return
+        self.selection_start = len(self.before_cursor) + pos
+        pos += len(self.search_substr)
+        self.before_cursor += self.after_cursor[:pos]
+        self.after_cursor = self.after_cursor[pos:]
+
+    def search_left_prev(self):
+        pos = self.before_cursor.lower().rfind(self.search_substr.lower(), 0, -1)
+        if pos == -1:
+            return
+        self.selection_start = pos
+        pos += len(self.search_substr)
+        self.before_cursor, self.after_cursor = \
+            self.before_cursor[:pos], self.before_cursor[pos:] + self.after_cursor

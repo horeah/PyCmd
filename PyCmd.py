@@ -340,6 +340,8 @@ def main():
                 scroll_buffer(b - t - 2)
                 scrolling = True
                 force_repaint = False
+            elif is_shift_pressed(rec) and rec.VirtualKeyCode == 114:   # Shift-F3
+                state.handle(ActionCode.ACTION_SEARCH_LEFT)
             else:                                       # Clean key (no modifiers)
                 if rec.Char == chr(0):                  # Special key (arrows and such)
                     if rec.VirtualKeyCode == 37:        # Left arrow
@@ -358,9 +360,17 @@ def main():
                         state.handle(ActionCode.ACTION_DELETE)
                     elif rec.VirtualKeyCode == 45:      # Insert
                         state.handle(ActionCode.ACTION_TOGGLE_OVERWRITE)
+                    elif rec.VirtualKeyCode == 114:     # F3:
+                        state.handle(ActionCode.ACTION_SEARCH_RIGHT)
+
+
                 elif rec.Char == chr(13):               # Enter
-                    state.history.reset()
-                    break
+                    if state.search_substr is not None:
+                        state.search_substr = None
+                        state.reset_selection()
+                    else:
+                        state.history.reset()
+                        break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
                         scrolling = False
