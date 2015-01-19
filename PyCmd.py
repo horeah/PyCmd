@@ -193,7 +193,13 @@ def main():
                     cursor_backward(to_erase)
 
                 # Move cursor to the correct position
-                set_cursor_attributes(50 if state.overwrite else 10, True)
+                if state.search_substr is not None:
+                    cursor_height = 30
+                elif state.overwrite:
+                    cursor_height = 50
+                else:
+                    cursor_height = 10
+                set_cursor_attributes(cursor_height, True)
                 cursor_backward(len(state.after_cursor))
 
             # Prepare new input state
