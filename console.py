@@ -1,7 +1,7 @@
 #
 # Functions for manipulating the console using Microsoft's Console API
 #
-import ctypes, sys, locale
+import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
 from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY_EVENT
@@ -63,6 +63,30 @@ def get_text_attributes():
 def set_text_attributes(color):
     """Set foreground/background RGB components for the text to write"""
     ctypes.windll.kernel32.SetConsoleTextAttribute(stdout_handle, color)
+
+def get_buffer_attributes(x, y, n):
+    """Get the fg/bg/attributes for the n chars in the buffer starting at (x, y)"""
+    colors = (n * WORD)()
+    coord = COORD(x, y)
+    read = DWORD(0)
+    ctypes.windll.kernel32.ReadConsoleOutputAttribute(stdout_handle, colors, n, coord, pointer(read))
+    return colors
+
+def set_buffer_attributes(x, y, colors):
+    """Set the fg/bg attributes for the n chars in the the buffer starting at (x, y)"""
+    coord = COORD(x, y)
+    written = DWORD(0)
+    ctypes.windll.kernel32.WriteConsoleOutputAttribute(stdout_handle, colors, len(colors), coord, pointer(written))
+
+def visual_bell():
+    """Flash the screen for brief moment to notify the user"""
+    l, t, r, b = get_viewport()
+    count = (r - l + 1) * (b - t + 1)
+    colors = get_buffer_attributes(l, t, count)
+    reverted_colors = (count * WORD)(*tuple([c ^ BACKGROUND_BRIGHT for c in colors]))
+    set_buffer_attributes(l, t, reverted_colors)
+    time.sleep(0.15)
+    set_buffer_attributes(l, t, colors)
 
 def set_console_title(title):
     """Set the title of the current console"""

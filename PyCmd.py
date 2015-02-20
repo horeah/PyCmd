@@ -402,7 +402,11 @@ def main():
                     stdout.write(state.before_cursor + state.after_cursor)
 
                     # Show multiple completions if available
-                    if len(suggestions) > 1:
+                    if not suggestions:
+                        # No completion possible
+                        console.visual_bell()
+                    elif len(suggestions) > 1:
+                        # Multiple completions possible
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         column_width = max([len(s) for s in suggestions]) + 10
                         if column_width > console.get_buffer_size()[0] - 1:
