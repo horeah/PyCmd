@@ -367,10 +367,8 @@ class InputState:
 
     def key_esc(self):
         """Esc key"""
-        self.reset_selection()
-        if self.search_substr is not None:
-            # Reset text search
-            self.search_substr = None
+        if self.get_selection() != '' or self.search_substr is not None:
+            self.reset_selection()
         else:
             if self.history.filter != '':
                 # Reset search filter, if any
@@ -547,6 +545,7 @@ class InputState:
     def reset_selection(self):
         """Reset text selection"""
         self.selection_start = len(self.before_cursor)
+        self.search_substr = None
 
     def delete_selection(self):
         """Remove currently selected text"""
