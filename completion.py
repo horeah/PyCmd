@@ -426,7 +426,7 @@ def complete_env_var(line):
         
         if len(completions) == 1:
             result += '%' + quote
-            return (result, [])
+            return (result, [result])
         else:
             return (result, completions)
     else:
