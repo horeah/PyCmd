@@ -308,9 +308,10 @@ def main():
                         elif rec.VirtualKeyCode == 39:          # Alt-Right
                             state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.VirtualKeyCode == 38:          # Alt-Up
-                    os.chdir('..')
-                    dir_hist.visit_cwd()
-                    break
+                    if state.before_cursor + state.after_cursor == '':
+                        os.chdir('..')
+                        dir_hist.visit_cwd()
+                        break
                 elif rec.VirtualKeyCode == 66:          # Alt-B
                     state.handle(ActionCode.ACTION_LEFT_WORD, select)
                 elif rec.VirtualKeyCode == 70:          # Alt-F
