@@ -232,7 +232,7 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        save_history(state.history.list,
+                        update_history(state.history.list[-1],
                                      pycmd_data_dir + '\\history',
                                      1000)
                         auto_select = False
@@ -296,7 +296,7 @@ def main():
                         if changed:
                             state.prev_prompt = state.prompt
                             state.prompt = appearance.prompt()
-                        save_history(dir_hist.locations,
+                        update_history(dir_hist.locations[-1],
                                      pycmd_data_dir + '\\dir_history',
                                      dir_hist.max_len)
                         if dir_hist.shown:
@@ -383,7 +383,7 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        save_history(state.history.list,
+                        update_history(state.history.list[-1],
                                      pycmd_data_dir + '\\history',
                                      1000)
                         auto_select = False
@@ -491,14 +491,14 @@ def main():
 
         # Add to history
         state.history.add(line)
-        save_history(state.history.list,
+        update_history(state.history.list[-1],
                      pycmd_data_dir + '\\history',
                      1000)
 
 
         # Add to dir history
         dir_hist.visit_cwd()
-        save_history(dir_hist.locations,
+        update_history(dir_hist.locations[-1],
                      pycmd_data_dir + '\\dir_history',
                      dir_hist.max_len)
 
@@ -651,30 +651,31 @@ def signal_handler(signum, frame):
         write_input(67, 0x0008)
 
 
-def save_history(lines, filename, length):
+def update_history(line, filename, length):
     """
-    Save a list of unique lines into a history file and truncate the
-    result to the given maximum number of lines
+    Append a new line to a history file. If the line was already present in the
+    file, we move it to the end. The resulting file is then truncated to the 
+    specified number of lines.
+
     """
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
         history_file = codecs.open(filename, 'r', 'utf8', 'replace')
-        history_to_save = [line.rstrip(u'\n') for line in history_file.readlines()]
+        history_to_save = [l.rstrip(u'\n') for l in history_file.readlines()]
         history_file.close()
-        for line in lines:
-            if line in history_to_save:
-                history_to_save.remove(line)
-            history_to_save.append(line)
+        if line in history_to_save:
+            history_to_save.remove(line)
+        history_to_save.append(line)
     else:
         # No previous history, save current
-        history_to_save = lines
+        history_to_save = [line]
 
     if len(history_to_save) > length:
         history_to_save = history_to_save[-length :]    # Limit history file
 
     # Write merged history to history file
     history_file = codecs.open(filename, 'w', 'utf8')
-    history_file.writelines([line + u'\n' for line in history_to_save])
+    history_file.writelines([l + u'\n' for l in history_to_save])
     history_file.close()
 
 
