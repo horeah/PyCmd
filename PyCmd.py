@@ -202,6 +202,11 @@ def main():
                 set_cursor_attributes(cursor_height, True)
                 cursor_backward(len(state.after_cursor))
 
+            # Bell if a notification is pending
+            if state.bell:
+                console.visual_bell()
+                state.bell = False
+
             # Prepare new input state
             state.step_line()
 
@@ -404,8 +409,8 @@ def main():
 
                     # Show multiple completions if available
                     if not suggestions:
-                        # No completion possible
-                        console.visual_bell()
+                        # No completion possible, require notification
+                        state.bell = True
                     elif len(suggestions) > 1:
                         # Multiple completions possible
                         dir_hist.shown = False  # The displayed dirhist is no longer valid

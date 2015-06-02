@@ -56,6 +56,9 @@ class InputState:
         self.prev_before_cursor = ''
         self.prev_after_cursor = ''
 
+        # Some error needs to be notified with a bell
+        self.bell = False
+
         # Typing overwrite mode
         self.overwrite = False
 
@@ -343,7 +346,8 @@ class InputState:
         if not self.history.trail:
             # Start search
             self.history.start(self.before_cursor + self.after_cursor)
-        self.history.up()
+        if not self.history.up():
+            self.bell = True
         self.before_cursor = self.history.current()[0]
         self.after_cursor = ''
 
@@ -359,7 +363,8 @@ class InputState:
         self.undo = []
         self.redo = []
 
-        self.history.down()
+        if not self.history.down():
+            self.bell = True
         self.before_cursor = self.history.current()[0]
         self.after_cursor = ''
 
@@ -575,6 +580,7 @@ class InputState:
     def search_right_next(self):
         pos = self.after_cursor.lower().find(self.search_substr.lower())
         if pos == -1:
+            self.bell = True
             return
         self.selection_start = len(self.before_cursor) + pos
         pos += len(self.search_substr)
@@ -584,6 +590,7 @@ class InputState:
     def search_left_prev(self):
         pos = self.before_cursor.lower().rfind(self.search_substr.lower(), 0, -1)
         if pos == -1:
+            self.bell = True
             return
         self.selection_start = pos
         pos += len(self.search_substr)

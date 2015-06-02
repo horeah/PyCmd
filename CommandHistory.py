@@ -91,6 +91,9 @@ class CommandHistory:
         """
         if self.filtered_list:
             self.trail.append(self.filtered_list.pop())
+            return True
+        else:
+            return False
 
     def down(self):
         """
@@ -98,6 +101,9 @@ class CommandHistory:
         """
         if self.trail:
             self.filtered_list.append(self.trail.pop())
+            return True
+        else:
+            return False
 
     def reset(self):
         """Reset browsing through the history"""
