@@ -454,8 +454,10 @@ class InputState:
         """Update the text before cursor to match some completion"""
         if (completed.endswith(' ') and self.after_cursor.startswith(' ')) \
                 or (completed.endswith('\\') and self.after_cursor.startswith('\\')):
-            # Avoid multiple blanks or backslashes after completing
             self.after_cursor = self.after_cursor[1:]
+        if (completed.endswith('"\\') and self.after_cursor.startswith('"\\')
+            or completed.endswith('" ') and self.after_cursor.startswith('" ')) :
+            self.after_cursor = self.after_cursor[2:]
         chars_added = len(completed) - len(self.before_cursor)
         self.before_cursor = completed
         if self.overwrite:

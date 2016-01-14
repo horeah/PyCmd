@@ -7,7 +7,7 @@ import pycmd_public
 
 
 # Stop points when navigating one word at a time
-word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';']
+word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';', '"']
 
 # Command splitting characters
 sep_chars = [' ', '|', '&', '>', '<']
