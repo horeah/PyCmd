@@ -363,11 +363,11 @@ class InputState:
         self.undo = []
         self.redo = []
 
-        if not self.history.down():
+        if self.history.down():
+            self.before_cursor = self.history.current()[0]
+            self.after_cursor = ''
+        else:
             self.bell = True
-        self.before_cursor = self.history.current()[0]
-        self.after_cursor = ''
-
         self.reset_selection()
 
     def key_esc(self):
