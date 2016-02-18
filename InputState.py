@@ -33,6 +33,7 @@ class ActionCode:
     ACTION_TOGGLE_OVERWRITE = 24
     ACTION_SEARCH_RIGHT = 25
     ACTION_SEARCH_LEFT = 26
+    ACTION_SELECT_UP = 27
 
 
 class InputState:
@@ -44,7 +45,7 @@ class InputState:
         * the command history
         * dynamic expansion based on the input history
     """
-    
+
     def __init__(self):
         # Current state of the input line
         self.prompt = ''
@@ -84,6 +85,9 @@ class InputState:
         self.search_substr = None
         self.search_rev = False
 
+        # List of delimiters for the "extend-selection" feature
+        self.extend_separators = None
+
         # Action handlers
         self.handlers = {
             ActionCode.ACTION_none: None,
@@ -95,6 +99,7 @@ class InputState:
             ActionCode.ACTION_END: self.key_end,
             ActionCode.ACTION_SEARCH_RIGHT: self.key_search_right,
             ActionCode.ACTION_SEARCH_LEFT: self.key_search_left,
+            ActionCode.ACTION_SELECT_UP: self.key_extend_selection,
             ActionCode.ACTION_COPY: self.key_copy,
             ActionCode.ACTION_CUT: self.key_cut,
             ActionCode.ACTION_PASTE: self.key_paste,
@@ -110,28 +115,29 @@ class InputState:
             ActionCode.ACTION_ESCAPE: self.key_esc,
             ActionCode.ACTION_UNDO: self.key_undo,
             ActionCode.ACTION_REDO: self.key_redo,
-            ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs, 
+            ActionCode.ACTION_UNDO_EMACS: self.key_undo_emacs,
             ActionCode.ACTION_EXPAND: self.key_expand,
             ActionCode.ACTION_TOGGLE_OVERWRITE: self.key_toggle_overwrite, }
-            
+
         # Action categories
         self.insert_actions = [ActionCode.ACTION_INSERT,
                                ActionCode.ACTION_COMPLETE,
                                ActionCode.ACTION_EXPAND]
-        self.delete_actions = [ActionCode.ACTION_DELETE, 
-                               ActionCode.ACTION_DELETE_WORD, 
-                               ActionCode.ACTION_BACKSPACE, 
+        self.delete_actions = [ActionCode.ACTION_DELETE,
+                               ActionCode.ACTION_DELETE_WORD,
+                               ActionCode.ACTION_BACKSPACE,
                                ActionCode.ACTION_BACKSPACE_WORD,
                                ActionCode.ACTION_KILL_EOL]
         self.navigate_actions = [ActionCode.ACTION_LEFT,
                                  ActionCode.ACTION_LEFT_WORD,
-                                 ActionCode.ACTION_RIGHT, 
+                                 ActionCode.ACTION_RIGHT,
                                  ActionCode.ACTION_RIGHT_WORD,
-                                 ActionCode.ACTION_HOME, 
+                                 ActionCode.ACTION_HOME,
                                  ActionCode.ACTION_END,
                                  ActionCode.ACTION_SEARCH_RIGHT,
-                                 ActionCode.ACTION_SEARCH_LEFT]
-        self.manip_actions = [ActionCode.ACTION_CUT, 
+                                 ActionCode.ACTION_SEARCH_LEFT,
+                                 ActionCode.ACTION_SELECT_UP]
+        self.manip_actions = [ActionCode.ACTION_CUT,
                               ActionCode.ACTION_COPY,
                               ActionCode.ACTION_PASTE,
                               ActionCode.ACTION_ESCAPE]
@@ -186,14 +192,14 @@ class InputState:
         if self.changed():
             if action in self.batch_actions \
                     or (action in self.insert_actions + self.delete_actions \
-                            and action != self.last_action) \
-                            or action == ActionCode.ACTION_UNDO_EMACS:
+                                and action != self.last_action) \
+                    or action == ActionCode.ACTION_UNDO_EMACS:
                 self.undo.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.redo = []
             if action in self.batch_actions \
                     or (action in self.insert_actions + self.delete_actions \
-                            and action != self.last_action) \
-                            or action == ActionCode.ACTION_UNDO:
+                                and action != self.last_action) \
+                    or action == ActionCode.ACTION_UNDO:
                 self.undo_emacs.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.undo_emacs_index = -1
 
@@ -272,10 +278,15 @@ class InputState:
         elif self.search_substr:
             self.search_left_prev()
 
+    def key_extend_selection(self, _):
+        if not self.extend_separators:
+            self.extend_separators = ['.', ' ', '\\', '"', ';', "&", "|"]
+        self.extend_selection()
+
     def key_left_word(self, select=False):
         """Move backward one word (Ctrl-Left)"""
         # Skip spaces
-        while self.before_cursor != '' and self.before_cursor[-1] in  word_sep:
+        while self.before_cursor != '' and self.before_cursor[-1] in word_sep:
             self.key_left(select)
 
         # Jump over word
@@ -317,7 +328,7 @@ class InputState:
             # Jump over word
             while self.after_cursor != '' and not self.after_cursor[0] in word_sep:
                 self.key_del()
-            
+
     def key_del(self):
         """Delete character at cursor"""
         if self.get_selection() != '':
@@ -412,11 +423,11 @@ class InputState:
         wclip.OpenClipboard()
         if wclip.IsClipboardFormatAvailable(wclip.CF_TEXT):
             text = wclip.GetClipboardData()
-            
+
             # Purge garbage chars that some apps put in the clipboard
             if text.find('\0') >= 0:
                 text = text[:text.find('\0')]
-            
+
             # Convert newlines to blanks
             text = text.replace('\r', '').replace('\n', ' ')
 
@@ -519,7 +530,7 @@ class InputState:
                     word = line_words[i]
                     context = line_words[i - 1]
                     if (word.lower().startswith(expand_stub.lower())
-                        and word.lower() != expand_stub.lower()): 
+                        and word.lower() != expand_stub.lower()):
                         if context.lower() == expand_context.lower():
                             context_matches.append(word)
                         else:
@@ -529,7 +540,7 @@ class InputState:
 
             self.expand_stub = expand_stub
             matches_set = {}
-            self.expand_matches = [matches_set.setdefault(e, e) 
+            self.expand_matches = [matches_set.setdefault(e, e)
                                    for e in context_matches + no_context_matches
                                    if e not in matches_set] + [self.expand_stub]
             self.expand_matches.reverse()
@@ -537,7 +548,7 @@ class InputState:
 
         match = self.expand_matches[-1]
         old_len_before_cursor = len(self.before_cursor)
-        self.before_cursor = self.expand_line[:len(self.expand_line) 
+        self.before_cursor = self.expand_line[:len(self.expand_line)
                                                - len(self.expand_stub)] + match
         if self.overwrite:
             self.after_cursor = self.after_cursor[len(self.before_cursor) - old_len_before_cursor:]
@@ -553,6 +564,7 @@ class InputState:
         """Reset text selection"""
         self.selection_start = len(self.before_cursor)
         self.search_substr = None
+        self.extend_separators = None
 
     def delete_selection(self):
         """Remove currently selected text"""
@@ -598,3 +610,26 @@ class InputState:
         pos += len(self.search_substr)
         self.before_cursor, self.after_cursor = \
             self.before_cursor[:pos], self.before_cursor[pos:] + self.after_cursor
+
+    def extend_selection(self):
+        line = self.before_cursor + self.after_cursor
+        extend_begin = len(self.before_cursor)
+        extend_end = max(self.selection_start, extend_begin)
+        expanded = False
+
+        while not expanded and self.extend_separators != []:
+            while extend_begin >= 1 and not line[extend_begin - 1] in self.extend_separators:
+                extend_begin -= 1
+                expanded = True
+            while extend_end < len(line) and not line[extend_end] in self.extend_separators:
+                extend_end += 1
+                expanded = True
+            self.extend_separators.pop(0)
+
+        if expanded:
+            self.before_cursor = line[:extend_begin]
+            self.after_cursor = line[extend_begin:]
+            self.selection_start = extend_end
+        else:
+            self.bell = True
+
