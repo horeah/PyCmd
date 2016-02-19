@@ -284,6 +284,7 @@ class InputState:
 
     def key_extend_selection(self, _):
         if self.extend_separators is None:
+            self.reset_selection()
             if self.before_cursor.count('"') % 2 == 0:
                 self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
             else:
