@@ -2,6 +2,10 @@ from CommandHistory import CommandHistory
 from common import fuzzy_match, word_sep
 import win32clipboard as wclip
 
+EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
+    ['.', '-', '=', '\\', ';', ' ', '>', '<', '&', '|', '\0']
+EXTEND_SEPARATORS_INSIDE_QUOTES = ['.', ' ', '&', '|', '\\', '"']
+
 class ActionCode:
     """
     Enum-like class that defines codes for input manipulation actions
@@ -279,8 +283,11 @@ class InputState:
             self.search_left_prev()
 
     def key_extend_selection(self, _):
-        if not self.extend_separators:
-            self.extend_separators = ['.', ' ', '\\', '"', ';', "&", "|"]
+        if self.extend_separators is None:
+            if self.before_cursor.count('"') % 2 == 0:
+                self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
+            else:
+                self.extend_separators = list(EXTEND_SEPARATORS_INSIDE_QUOTES)
         self.extend_selection()
 
     def key_left_word(self, select=False):
@@ -625,6 +632,9 @@ class InputState:
                 extend_end += 1
                 expanded = True
             self.extend_separators.pop(0)
+
+        if self.extend_separators == [] and self.before_cursor.count('"') % 2 == 1:
+            self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
 
         if expanded:
             self.before_cursor = line[:extend_begin]
