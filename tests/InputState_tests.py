@@ -115,6 +115,28 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.after_cursor, 'cd "c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
 
+    def testExtendSelectionAmbiguous(self):
+        """Tests the extend/retract selection feature (Shift-Up/Dn)"""
+        self.state.before_cursor = 'make || cat l'
+        self.state.after_cursor = 'og | grep error'
+        self.state.reset_selection()
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'make || cat ')
+        self.assertEqual(self.state.after_cursor, 'log | grep error')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('log'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'make ||')
+        self.assertEqual(self.state.after_cursor, ' cat log | grep error')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' cat log '))
+
+        self.state.key_extend_selection(None)
+        # This fails, since our extension is approximate (no semantics)!
+        # self.assertEqual(self.state.before_cursor, 'make ||')
+        # self.assertEqual(self.state.after_cursor, ' cat log | grep error')
+        # self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' cat log | grep error'))
+
 def suite():
     suite = TestSuite()
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestInputState))

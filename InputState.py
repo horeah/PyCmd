@@ -633,8 +633,8 @@ class InputState:
                 expanded = True
             self.extend_separators.pop(0)
 
-        if self.extend_separators == [] and self.before_cursor.count('"') % 2 == 1:
-            self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
+            if self.extend_separators == [] and self.before_cursor.count('"') % 2 == 1:
+                self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
 
         if expanded:
             self.before_cursor = line[:extend_begin]
