@@ -630,8 +630,8 @@ def run_in_cmd(tokens):
     # Update environment and state
     new_environ = {}
     env_file = open(tmpfile, 'r')
-    for l in env_file.readlines():
-        [variable, value] = l.split('=', 1)
+    for line in [l for l in env_file.readlines() if not l.isspace()]:
+        [variable, value] = line.split('=', 1)
         value = value.rstrip('\n ')
         if variable in pseudo_vars:
             value = value.strip('"')
