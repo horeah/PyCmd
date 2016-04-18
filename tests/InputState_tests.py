@@ -76,7 +76,32 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.after_cursor, 'cd test && make clean > NUL')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
 
-    def testExtendSelectionInQuotes(self):
+    def testExtendSelection3(self):
+        self.state.before_cursor = 'python PyCmd.py -i dev-in'
+        self.state.after_cursor = 'it.py'
+        self.state.reset_selection()
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i dev-')
+        self.assertEqual(self.state.after_cursor, 'init.py')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('init'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i ')
+        self.assertEqual(self.state.after_cursor, 'dev-init.py')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('dev-init'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i ')
+        self.assertEqual(self.state.after_cursor, 'dev-init.py')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('dev-init.py'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '')
+        self.assertEqual(self.state.after_cursor, 'python PyCmd.py -i dev-init.py')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
+
+    def testExtendSelectionInQuotes1(self):
         """Tests the extend/retract selection feature (Shift-Up/Dn)"""
         self.state.before_cursor = 'cd "c:\\Program Files (x86)\\Sysinter'
         self.state.after_cursor = 'nals Suite" && ls -l'
@@ -114,6 +139,41 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd "c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
+
+    def testExtendSelectionInQuotes2(self):
+        self.state.before_cursor = '"d:\\Util\\KDE Mo'
+        self.state.after_cursor = 'ver-Sizer.exe"'
+        self.state.reset_selection()
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '"d:\\Util\\KDE ')
+        self.assertEqual(self.state.after_cursor, 'Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Mover'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '"d:\\Util\\KDE ')
+        self.assertEqual(self.state.after_cursor, 'Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Mover-Sizer'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '"d:\\Util\\')
+        self.assertEqual(self.state.after_cursor, 'KDE Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('KDE Mover-Sizer'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '"d:\\Util\\')
+        self.assertEqual(self.state.after_cursor, 'KDE Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('KDE Mover-Sizer.exe'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '"')
+        self.assertEqual(self.state.after_cursor, 'd:\\Util\\KDE Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('d:\\Util\\KDE Mover-Sizer.exe'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '')
+        self.assertEqual(self.state.after_cursor, '"d:\\Util\\KDE Mover-Sizer.exe"')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"d:\\Util\\KDE Mover-Sizer.exe"'))
 
     def testExtendSelectionAmbiguous(self):
         """Tests the extend/retract selection feature (Shift-Up/Dn)"""
