@@ -283,12 +283,29 @@ class InputState:
             self.search_left_prev()
 
     def key_extend_selection(self, _):
+        """
+        Extend the selection "lexically, i.e. select an increasingly larger chunk going
+        from: word -> filename/extension -> full filename + extension -> full file path ->
+        complete command -> entire line
+        """
         if self.extend_separators is None:
             self.reset_selection()
+
+            while ((self.before_cursor.endswith(' ') or self.before_cursor.endswith('\\'))
+                   and (self.after_cursor == '' or self.after_cursor.startswith(' '))):
+                self.key_left(False)
+
+            if self.before_cursor.count('"') % 2 == 0:
+                if self.before_cursor.endswith('"'):
+                    self.key_left(False)
+                elif self.after_cursor.startswith('"'):
+                    self.key_right(False)
+
             if self.before_cursor.count('"') % 2 == 0:
                 self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
             else:
                 self.extend_separators = list(EXTEND_SEPARATORS_INSIDE_QUOTES)
+
         self.extend_selection()
 
     def key_left_word(self, select=False):

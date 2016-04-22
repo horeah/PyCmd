@@ -175,6 +175,37 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.after_cursor, '"d:\\Util\\KDE Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"d:\\Util\\KDE Mover-Sizer.exe"'))
 
+    def testExtendSelectionAtEnd(self):
+        self.state.before_cursor = 'ls "c:\Program Files (x86)\scenview.py" '
+        self.state.after_cursor = ''
+        self.state.reset_selection()
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'ls "c:\\Program Files (x86)\\scenview.')
+        self.assertEqual(self.state.after_cursor, 'py" ')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('py'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'ls "c:\\Program Files (x86)\\')
+        self.assertEqual(self.state.after_cursor, 'scenview.py" ')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('scenview.py'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'ls "')
+        self.assertEqual(self.state.after_cursor, 'c:\\Program Files (x86)\\scenview.py" ')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('c:\\Program Files (x86)\\scenview.py'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, 'ls ')
+        self.assertEqual(self.state.after_cursor, '"c:\\Program Files (x86)\\scenview.py" ')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"c:\\Program Files (x86)\\scenview.py"'))
+
+        self.state.key_extend_selection(None)
+        self.assertEqual(self.state.before_cursor, '')
+        self.assertEqual(self.state.after_cursor, 'ls "c:\\Program Files (x86)\\scenview.py" ')
+        self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
+
+
     def testExtendSelectionAmbiguous(self):
         """Tests the extend/retract selection feature (Shift-Up/Dn)"""
         self.state.before_cursor = 'make || cat l'
