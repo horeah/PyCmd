@@ -266,6 +266,9 @@ class InputState:
         """
         Search for text to the right of the cursor
         """
+        if (self.before_cursor + self.after_cursor).strip() == '':
+            self.bell = True
+            return
         self.search_rev = False
         if self.search_substr is None:
             self.search_substr = ''
@@ -276,6 +279,9 @@ class InputState:
         """
         Search for text to the left of the cursor
         """
+        if (self.before_cursor + self.after_cursor).strip() == '':
+            self.bell = True
+            return
         self.search_rev = True
         if self.search_substr is None:
             self.search_substr = ''
