@@ -26,16 +26,21 @@ persistent history, etc.)
  c. Command editing
     - support emacs key bindings
     - Copy-Paste using the keyboard (Ctrl-C/X/V or Emacs-style)
-    - Undo/Redo with Ctrl-(Shift-)Z (regular style) or Ctrl-_ (Emacs-style)
+    - Undo/Redo with Ctrl-[Shift-]Z (regular style) or Ctrl-_ (Emacs-style)
     - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
+    - search string ([Shift-]F3)
     - smart word-by-word navigation
+    - lexical selection (Shift-Up)
 
- d. Other
+ d. Navigation
+    - history of recently visited directories (Alt-Left/Right/D on empty line)
+    - cd to parent (Alt-Up)
+
+ e. Other
     - show a highlighted prompt to make the buffer content more readable
     - smart prompt that abbreviates directory names to save screen space
     - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
-    - history of recently visited directories (Alt-Left/Right/D on empty line)
     - expand ~ as %HOME% or %USERPROFILE%
     - Ctrl-D on an empty line closes PyCmd
     - show the current working directory in the window title
@@ -52,7 +57,6 @@ persistent history, etc.)
 
 4. Future plans
 ---------------
-    - add some sort of a configuration mechanism (config file)
     - custom TAB-completion for the arguments of common commands
     - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
       of hacky)
