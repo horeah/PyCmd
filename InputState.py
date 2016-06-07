@@ -297,8 +297,19 @@ class InputState:
         if self.extend_separators is None:
             self.reset_selection()
 
-            while ((self.before_cursor.endswith(' ') or self.before_cursor.endswith('\\'))
-                   and (self.after_cursor == '' or self.after_cursor.startswith(' '))):
+            # stick to the closest word to the left or right
+            whitespace_left = len(self.before_cursor) - len(self.before_cursor.rstrip(' '))
+            whitespace_right = len(self.after_cursor) - len(self.after_cursor.lstrip(' '))
+            if whitespace_left == len(self.before_cursor) or whitespace_left >= whitespace_right > 0:
+                for _ in range(whitespace_right):
+                    self.key_right(False)
+            elif whitespace_right == len(self.after_cursor) or whitespace_right >= whitespace_left > 0:
+                for _ in range(whitespace_left):
+                    self.key_left(False)
+
+            # skip over trailing backslashes
+            while (self.before_cursor.endswith('\\') and
+                (self.after_cursor == '' or self.after_cursor.startswith(' '))):
                 self.key_left(False)
 
             if self.before_cursor.count('"') % 2 == 0:
