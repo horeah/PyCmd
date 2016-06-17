@@ -296,6 +296,7 @@ class InputState:
         """
         if self.extend_separators is None:
             self.reset_selection()
+            self.history.reset()
 
             # stick to the closest word to the left or right
             whitespace_left = len(self.before_cursor) - len(self.before_cursor.rstrip(' '))
