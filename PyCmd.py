@@ -444,6 +444,17 @@ def main():
                                 if not ord(rec.Char) in [0, 8, 13, 27]:
                                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
                                 continue
+
+                        if has_wildcards(tokens[-1]):
+                            # Substring matching wildcards will be printed in a different color
+                            path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
+                            tokens = parse_line(completed.rstrip(path_sep))
+                            token = tokens[-1].replace('"', '')
+                            (_, _, prefix) = token.rpartition(path_sep)
+                            match = wildcard_to_regex(prefix + '*').match(s)
+                        else:
+                            # Length of the common prefix will be printed in a different color
+                            common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
                             
                         stdout.write('\n')
                         for line in range(0, num_lines):
@@ -454,11 +465,6 @@ def main():
                                     s = suggestions[line + column * num_lines]
                                     if has_wildcards(tokens[-1]):
                                         # Print wildcard matches in a different color
-                                        path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
-                                        tokens = parse_line(completed.rstrip(path_sep))
-                                        token = tokens[-1].replace('"', '')
-                                        (_, _, prefix) = token.rpartition(path_sep)
-                                        match = wildcard_to_regex(prefix + '*').match(s)
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
                                             stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
@@ -470,7 +476,6 @@ def main():
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                                     else:
                                         # Print the common part in a different color
-                                        common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
                                                      appearance.colors.completion_match +
                                                      s[:common_prefix_len] +
