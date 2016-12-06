@@ -172,6 +172,22 @@ def write_str(s):
     Output s to stdout (after encoding it with stdout encoding to
     avoid conversion errors with non ASCII characters)
     """
+    def write_with_sane_cursor(s):
+        """
+        Under Win10, write() no longer advances the cursor to the next line after writing in the last column; so we
+        use a custom function to restore that behavior when needed
+        """
+        buffer_width = get_buffer_size()[0]
+        cursor_before = get_cursor()[0]
+        sys.__stdout__.write(s)
+        cursor_after = get_cursor()[0]
+        if (buffer_width > 0
+            and (cursor_before + len(s)) % buffer_width == 0
+            and cursor_after > 0):
+            # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
+            # ourselves
+            sys.__stdout__.write(' \r')
+
     if sys.__stdout__.encoding:
         encoded_str = s.encode(sys.__stdout__.encoding, 'replace')
     else:
@@ -185,7 +201,7 @@ def write_str(s):
             if buf:
                 # We have some characters, apply attributes and write them out
                 set_text_attributes(attr)
-                sys.__stdout__.write(buf)
+                write_with_sane_cursor(buf)
                 buf = ''
 
             # Process color commands to compute and set new attributes
@@ -234,7 +250,7 @@ def write_str(s):
     # Apply the last attributes and write the remaining chars (if any)
     set_text_attributes(attr)
     if buf:
-        sys.__stdout__.write(buf)
+        write_with_sane_cursor(buf)
 
 def remove_escape_sequences(s):
     """
