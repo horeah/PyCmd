@@ -451,7 +451,7 @@ def main():
                             tokens = parse_line(completed.rstrip(path_sep))
                             token = tokens[-1].replace('"', '')
                             (_, _, prefix) = token.rpartition(path_sep)
-                            match = wildcard_to_regex(prefix + '*').match(s)
+                            pattern = wildcard_to_regex(prefix + '*')
                         else:
                             # Length of the common prefix will be printed in a different color
                             common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
@@ -465,6 +465,7 @@ def main():
                                     s = suggestions[line + column * num_lines]
                                     if has_wildcards(tokens[-1]):
                                         # Print wildcard matches in a different color
+                                        match = pattern.match(s)
                                         current_index = 0
                                         for i in range(1, match.lastindex + 1):
                                             stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
