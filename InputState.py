@@ -38,6 +38,7 @@ class ActionCode:
     ACTION_SEARCH_RIGHT = 25
     ACTION_SEARCH_LEFT = 26
     ACTION_SELECT_UP = 27
+    ACTION_SELECT_DOWN = 28
 
 
 class InputState:
@@ -85,6 +86,9 @@ class InputState:
         self.undo_emacs_index = -1
         self.last_action = ActionCode.ACTION_none
 
+        # Selection history for extend/shrink selection (before_cursor, after_cursor, selection_start, extend_separators) tuple
+        self.selection_history = []
+
         # Search string
         self.search_substr = None
         self.search_rev = False
@@ -104,6 +108,7 @@ class InputState:
             ActionCode.ACTION_SEARCH_RIGHT: self.key_search_right,
             ActionCode.ACTION_SEARCH_LEFT: self.key_search_left,
             ActionCode.ACTION_SELECT_UP: self.key_extend_selection,
+            ActionCode.ACTION_SELECT_DOWN: self.key_shrink_selection,
             ActionCode.ACTION_COPY: self.key_copy,
             ActionCode.ACTION_CUT: self.key_cut,
             ActionCode.ACTION_PASTE: self.key_paste,
@@ -325,6 +330,15 @@ class InputState:
                 self.extend_separators = list(EXTEND_SEPARATORS_INSIDE_QUOTES)
 
         self.extend_selection()
+
+    def key_shrink_selection(self):
+        if self.selection_history:
+            self.before_cursor, self.after_cursor, self.selection_start, self.extend_separators = self.selection_history.pop()
+            if not self.selection_history:
+                self.reset_selection()
+        else:
+            self.bell = True
+
 
     def key_left_word(self, select=False):
         """Move backward one word (Ctrl-Left)"""
@@ -608,6 +622,7 @@ class InputState:
         self.selection_start = len(self.before_cursor)
         self.search_substr = None
         self.extend_separators = None
+        self.selection_history = []
 
     def delete_selection(self):
         """Remove currently selected text"""
@@ -673,9 +688,9 @@ class InputState:
                 self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
 
         if expanded:
+            self.selection_history.append((self.before_cursor, self.after_cursor, self.selection_start, self.extend_separators))
             self.before_cursor = line[:extend_begin]
             self.after_cursor = line[extend_begin:]
             self.selection_start = extend_end
         else:
             self.bell = True
-

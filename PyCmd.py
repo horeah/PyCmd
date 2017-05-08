@@ -356,6 +356,8 @@ def main():
                 state.handle(ActionCode.ACTION_SEARCH_LEFT)
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 38:    # Shift-Up
                 state.handle(ActionCode.ACTION_SELECT_UP)
+            elif is_shift_pressed(rec) and rec.VirtualKeyCode == 40:    # Shift-Down
+                state.handle(ActionCode.ACTION_SELECT_DOWN)
             else:                                       # Clean key (no modifiers)
                 if rec.Char == chr(0):                  # Special key (arrows and such)
                     if rec.VirtualKeyCode == 37:        # Left arrow
