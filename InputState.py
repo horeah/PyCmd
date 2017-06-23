@@ -673,24 +673,26 @@ class InputState:
         line = self.before_cursor + self.after_cursor
         extend_begin = len(self.before_cursor)
         extend_end = max(self.selection_start, extend_begin)
+        separators = list(self.extend_separators)
         expanded = False
 
-        while not expanded and self.extend_separators != []:
-            while extend_begin >= 1 and not line[extend_begin - 1] in self.extend_separators:
+        while not expanded and separators != []:
+            while extend_begin >= 1 and not line[extend_begin - 1] in separators:
                 extend_begin -= 1
                 expanded = True
-            while extend_end < len(line) and not line[extend_end] in self.extend_separators:
+            while extend_end < len(line) and not line[extend_end] in separators:
                 extend_end += 1
                 expanded = True
-            self.extend_separators.pop(0)
+            separators.pop(0)
 
-            if self.extend_separators == [] and self.before_cursor.count('"') % 2 == 1:
-                self.extend_separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
+            if separators == [] and self.before_cursor.count('"') % 2 == 1:
+                separators = list(EXTEND_SEPARATORS_OUTSIDE_QUOTES)
 
         if expanded:
             self.selection_history.append((self.before_cursor, self.after_cursor, self.selection_start, self.extend_separators))
             self.before_cursor = line[:extend_begin]
             self.after_cursor = line[extend_begin:]
             self.selection_start = extend_end
+            self.extend_separators = separators
         else:
             self.bell = True
