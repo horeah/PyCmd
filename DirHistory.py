@@ -25,6 +25,7 @@ class DirHistory:
         """Create an empty directory history"""
         self.locations = []
         self.index = -1
+        self.keep = True
 
     def go_left(self):
         """Go to the previous location (checks whether it's still valid)"""
@@ -55,6 +56,7 @@ class DirHistory:
         try:
             os.chdir(self.locations[self.index])
             changed = True
+            self.keep = True  # keep saved entries even if no command is executed
         except OSError, error:
             stdout.write('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
@@ -67,19 +69,36 @@ class DirHistory:
 
     def visit_cwd(self):
         """Add the current directory to the history of visited locations"""
-        self.locations.insert(self.index + 1, os.getcwd().decode(sys.getfilesystemencoding()))
-        self.index += 1
-        to_remove = [i for i in range(len(self.locations)) 
-                     if self.locations[i].lower() == self.locations[self.index].lower()]
-        to_remove.remove(self.index)
-        self.index -= len(filter(lambda x: x < self.index, to_remove))
-        map(lambda x: self.locations.pop(x), to_remove)
-        while len(self.locations) > self.max_len:
-            # Unusable if it gets too long
-            to_remove = (self.index + 8) % len(self.locations)
-            self.locations.pop(to_remove)
-            if to_remove < self.index:
-                self.index -= 1
+        cwd = os.getcwd().decode(sys.getfilesystemencoding())
+        if cwd == self.locations[self.index]:
+            return
+
+        if self.keep:
+            # some command has actually executed here, keep this location
+            self.locations.insert(self.index + 1, cwd)
+            self.index += 1
+        else:
+            # discard current location, we were just passing by
+            self.locations[self.index] = cwd
+
+        # by default we don't keep a new location, if a command is executed here at
+        # a later time the flag will be marked True then
+        self.keep = False
+
+        # remove duplicates
+        self.locations = ([l for l in self.locations[:self.index] if l.lower() != cwd.lower()]
+                          + [cwd]
+                          + [l for l in self.locations[self.index + 1:] if l.lower() != cwd.lower()])
+        self.index = self.locations.index(cwd)
+
+        # rotate the history so that the current directory is last
+        self.locations = self.locations[self.index + 1:] + self.locations[:self.index + 1]
+
+        # shorten
+        self.locations = self.locations[-self.max_len:]
+        self.index = len(self.locations) - 1
+
+
 
     def display(self):
         """

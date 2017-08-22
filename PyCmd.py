@@ -502,6 +502,8 @@ def main():
             continue
         else:
             print
+            if not is_pure_cd(tokens):
+                dir_hist.keep = True
             run_command(tokens)
 
         # Add to history
@@ -555,7 +557,7 @@ def run_command(tokens):
 
     if tokens[0] == 'exit':
         internal_exit('Bye!')
-    elif tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []:
+    elif is_pure_cd(tokens):
         # This is a single CD command -- use our custom, more handy CD
         internal_cd([unescape(t) for t in tokens[1:]])
     else:
@@ -597,8 +599,13 @@ def run_command(tokens):
         run_in_cmd(tokens)
         console_window = win32console.GetConsoleWindow()
         if win32gui.GetForegroundWindow() != console_window and time.time() - start_time > 15:
-            # If the window is inactive, flash after long tasks
+            # If the window is inactive, flash after long t1asks
             win32gui.FlashWindowEx(console_window, win32con.FLASHW_ALL, 3, 750)
+
+
+def is_pure_cd(tokens):
+    return tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []
+
 
 def run_in_cmd(tokens):
     line_sanitized = ''
