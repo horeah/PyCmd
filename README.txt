@@ -30,7 +30,7 @@ persistent history, etc.)
     - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
     - search string ([Shift-]F3)
     - smart word-by-word navigation
-    - lexical selection (Shift-Up)
+    - lexical selection (Shift-Up/Down)
 
  d. Navigation
     - history of recently visited directories (Alt-Left/Right/D on empty line)
