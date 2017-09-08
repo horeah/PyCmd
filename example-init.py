@@ -124,10 +124,11 @@ appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
 # Custom prompt function, see below for comments on appearance.prompt
 def git_prompt():
     """
-    Custom prompt that displays the name of the current git branch in addition
-    to the typical "abbreviated current path" PyCmd prompt.
+    Custom prompt that displays the name of the current git branch plus a 
+    "dirty" indicator in addition to the typical "abbreviated current path" 
+    PyCmd prompt.
 
-    Requires git & grep to be present in the PATH.
+    Requires git to be present in the PATH.
     """
     # Many common modules (sys, os, subprocess, time, re, ...) are readily
     # shipped with PyCmd, you can directly import them for use in your
@@ -138,17 +139,28 @@ def git_prompt():
     import subprocess
 
     stdout = subprocess.Popen(
-        'git branch | grep "^*"', 
+        'git status -b --porcelain -uno',
         shell=True,
         stdout=subprocess.PIPE,
         stderr=-1).communicate()[0]
-    branch_name = stdout.strip(' \n\r*')
+    lines = stdout.split('\n')
+    branch_name = lines[0].split('...')[0].strip('# ')
+    dirty_files = lines[1:-1]
     path = abbrev_path()
 
     # The current color setting is defined by appearance.colors.prompt
     prompt = ''
     if branch_name != '':
-        prompt += color.Fore.TOGGLE_BLUE + '[' + branch_name + ']' + color.Fore.TOGGLE_BLUE + ' '
+        mark = ''
+        dirty = any(line[1] in ['M', 'D'] for line in dirty_files)
+        staged = any(line[0] in ['A', 'M', 'D'] for line in dirty_files)
+        if staged:
+            mark = color.Fore.TOGGLE_RED + '*' + color.Fore.TOGGLE_RED
+        if dirty:
+            mark = color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
+        prompt += (color.Fore.TOGGLE_BLUE
+                   + '[' + branch_name + mark + ']'
+                   + color.Fore.TOGGLE_BLUE + ' ')
     prompt += path + '> '
 
     return prompt
