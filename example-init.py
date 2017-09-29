@@ -154,15 +154,16 @@ def git_prompt():
         mark = ''
         dirty = any(line[1] in ['M', 'D'] for line in dirty_files)
         staged = any(line[0] in ['A', 'M', 'D'] for line in dirty_files)
-        if staged:
-            mark = color.Fore.TOGGLE_RED + '*' + color.Fore.TOGGLE_RED
         if dirty:
             mark = color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
-        prompt += (color.Fore.TOGGLE_BLUE
-                   + '[' + branch_name + mark + ']'
-                   + color.Fore.TOGGLE_BLUE + ' ')
+        if staged:
+            mark = color.Fore.TOGGLE_RED + '*' + color.Fore.TOGGLE_RED
+        prompt += (color.Fore.TOGGLE_BLUE +
+                   '[' + branch_name + mark + ']' +
+                   color.Fore.TOGGLE_BLUE +
+                   ' ')
     prompt += path + '> '
-
+    
     return prompt
 
 # Define a custom prompt function.
