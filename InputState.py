@@ -512,11 +512,12 @@ class InputState:
                 self.advance_search()
         else:
             # Typing mode
+            if self.get_selection() != '':
+                self.delete_selection()
             self.before_cursor += text
             if self.overwrite:
                 self.after_cursor = self.after_cursor[len(text):]
             self.reset_selection()
-            self.delete_selection()
 
     def key_complete(self, completed):
         """Update the text before cursor to match some completion"""
