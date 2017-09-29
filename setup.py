@@ -4,7 +4,7 @@ import lib2to3
 
 setup(
     name = 'PyCmd',
-    version = '0.8',
+    version = '0.9',
     description = 'Smart windows shell',
     executables = [Executable(script='PyCmd.py',
                               icon='PyCmd.ico')],
