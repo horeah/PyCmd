@@ -10,9 +10,9 @@ setup(
                               icon='PyCmd.ico')],
     options = {
         'build_exe': {
-          'include_files': ['example-init.py',
-                            'pycmd_public.html',
-                            (dirname(lib2to3.__file__), 'lib2to3')],
-          'excludes': ['lib2to3'],
+            'include_files': ['example-init.py',
+                              'pycmd_public.html',
+                              (dirname(lib2to3.__file__), 'lib2to3')],
+            'excludes': ['lib2to3', 'Tkinter', 'Tk', 'Tcl', 'test'],
         }
     })

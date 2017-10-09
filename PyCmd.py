@@ -731,6 +731,10 @@ def print_usage():
     print 'Note that you can use \'/\' instead of \'-\', uppercase instead of '
     print 'lowercase and \'/?\' instead of \'-h\''
 
+    
+# cx_freeze sometimes messes this (no idea why...)
+if __name__ == 'pycmd__main__':
+    __name__ = '__main__'
 
 # Entry point
 if __name__ == '__main__':

@@ -9,8 +9,6 @@ from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
 from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
 from win32con import SHIFT_PRESSED
 
-import pywintypes       # Unneeded import to trick cx_freeze into including the DLL
-
 global FOREGROUND_RED
 global FOREGROUND_GREEN
 global FOREGROUND_BLUE
@@ -106,18 +104,12 @@ def get_cursor():
 def get_buffer_size():
     """Get the size of the text buffer"""
     buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    # On Win64, GetConsoleScreenBufferInfo randomly fails with code 6 (invalid handle?!)
-    # Calling this invisible stdout.write seems to avoid the problem
-    sys.stdout.write('')
     ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
     return (buffer_info.size.X, buffer_info.size.Y)
 
 def get_viewport():
     """Get the current viewport position"""
     buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    # On Win64, GetConsoleScreenBufferInfo randomly fails with code 6 (invalid handle?!)
-    # Calling this invisible stdout.write seems to avoid the problem
-    sys.stdout.write('')
     ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
     return (buffer_info.window.Left, buffer_info.window.Top, buffer_info.window.Right, buffer_info.window.Bottom)
 
