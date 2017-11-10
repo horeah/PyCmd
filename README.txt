@@ -37,8 +37,11 @@ persistent history, etc.)
     - cd to parent (Alt-Up)
 
  e. Other
-    - show a highlighted prompt to make the buffer content more readable
-    - smart prompt that abbreviates directory names to save screen space
+    - smart prompt:
+      - highlighted for readability
+      - abbreviates path to save space
+      - displays git and svn status
+      - customizable
     - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
     - expand ~ as %HOME% or %USERPROFILE%

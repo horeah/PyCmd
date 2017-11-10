@@ -42,7 +42,26 @@ def abbrev_path(path = None):
     return path_abbrev + '\\' + path.split('\\')[-1]
 
 
-def abbrev_path_prompt():
+def find_updir(name, path=None):
+    """
+    Look for a file/directory named "name" in a given directory and all the
+    ancestor directories. 
+    If no starting directory is provided, the CWD is assumed.
+    """
+    if not path:
+        path = os.getcwd()
+
+    found = None
+    while len(path) > 3:
+        if os.path.exists(os.path.join(path, name)):
+            found = os.path.join(path, name)
+            break
+        path = os.path.dirname(path)
+        
+    return found
+
+
+def simple_prompt():
     """
     Return a prompt containg the current path (abbreviated)
 
@@ -50,6 +69,106 @@ def abbrev_path_prompt():
     obtain the shortened path and appends the typical '> '.
     """
     return abbrev_path() + u'> '
+
+
+def git_prompt():
+    """
+    Custom prompt for git repositories.
+
+    This prompt displays:
+      * the name of the current git branch
+      * "dirty" indicator 
+      * count of unpushed/unpulled commits
+    in addition to the typical "abbreviated current path" PyCmd prompt.
+
+    Requires git to be present in the PATH.
+    """
+    # Many common modules (sys, os, subprocess, time, re, ...) are readily
+    # shipped with PyCmd, you can directly import them for use in your
+    # configuration script. If you need extra modules that are not bundled,
+    # manipulate the sys.path so that they can be found (just make sure that the
+    # version is compatible with the one used to build PyCmd -- check
+    # README.txt)
+    import subprocess, re
+
+    # The current color setting is defined by appearance.colors.prompt
+    prompt = ''
+    path = abbrev_path()
+
+    stdout = subprocess.Popen(
+        'git status -b --porcelain -uno',
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=-1).communicate()[0]
+    lines = stdout.split('\n')
+    match_branch = re.match('## (.+)\.\.\.(.+)?.*', lines[0])
+
+    if match_branch:
+        branch_name = match_branch.group(1)
+        ahead = behind = None
+        match_ahead_behind = re.match('## .* \[(ahead (\d+))?(, )?(behind (\d+))?\]', lines[0])
+        if match_ahead_behind:
+            ahead = match_ahead_behind.group(2)
+            behind = match_ahead_behind.group(5)
+        dirty_files = lines[1:-1]
+        mark = ''
+        dirty = any(line[1] in ['M', 'D'] for line in dirty_files)
+        staged = any(line[0] in ['A', 'M', 'D'] for line in dirty_files)
+        if dirty:
+            mark = color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
+        if staged:
+            mark = color.Fore.TOGGLE_RED + '*' + color.Fore.TOGGLE_RED
+        ahead = color.Fore.TOGGLE_RED + '+' + ahead + color.Fore.TOGGLE_RED if ahead else ''
+        behind = color.Fore.TOGGLE_GREEN + '-' + behind + color.Fore.TOGGLE_GREEN if behind else ''
+        prompt += (color.Fore.TOGGLE_BLUE +
+                   '[' + mark + branch_name + ahead + behind + ']' +
+                   color.Fore.TOGGLE_BLUE +
+               ' ')
+        
+    prompt += path + '> '
+    return prompt
+
+
+def svn_prompt():
+    """Custom prompt function for a SVN repository
+
+    This prompt displays a dirty indicator if the current directory is under SVN
+    control and the working copy is dirty.
+
+    Requires svn to be present in the PATH.
+
+    """
+    import subprocess, os
+
+    prompt = ''
+    path = abbrev_path()
+    stdout = subprocess.Popen('svn stat -q', shell=True,
+                              stdout=subprocess.PIPE, stderr=-1).communicate()[0]
+    dirty = any(line[0] in ['M', 'D'] for line in stdout)
+    prompt += color.Fore.TOGGLE_BLUE + '['
+    if dirty:
+        prompt += color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
+    else:
+        prompt += color.Fore.TOGGLE_RED + '=' + color.Fore.TOGGLE_RED
+    prompt += ']' + color.Fore.TOGGLE_BLUE + ' '
+
+    prompt += path + '> '
+    return prompt
+
+
+def universal_prompt():
+    """
+    Universal prompt function
+
+    This function selects the appropriate prompt sub-function (simple prompt,
+    git prompt, svn prompt) based on the current directory.
+    """
+    if find_updir('.git'):
+        return appearance.git_prompt()
+    elif find_updir('.svn'):
+        return appearance.svn_prompt()
+    else:
+        return appearance.simple_prompt()
 
 
 class color(object):
@@ -172,7 +291,12 @@ class _Appearance(_Settings):
 
     def __init__(self):
         # Prompt function (should return a string)
-        self.prompt = abbrev_path_prompt
+        self.prompt = universal_prompt
+
+        # Some predefined prompts
+        self.simple_prompt = simple_prompt
+        self.git_prompt = git_prompt
+        self.svn_prompt = svn_prompt
 
         # Color configuration
         self.colors = self._ColorSettings()
@@ -180,7 +304,7 @@ class _Appearance(_Settings):
     def sanitize(self):
         if not callable(self.prompt):
             print 'Prompt function doesn\'t look like a callable; reverting to PyCmd\'s default prompt'
-            self.prompt = abbrev_path_prompt
+            self.prompt = simple_prompt
 
 
 class Behavior(_Settings):
