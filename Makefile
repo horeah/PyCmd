@@ -40,14 +40,16 @@ dist_w32: clean $(SRC) doc
 	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W32) setup.py build
 	$(MV) build\exe.win32-2.7 PyCmd
-	$(CP) NEWS.txt README.txt PyCmd
+	$(CP) README.txt PyCmd
+	(echo Release $(BUILD_INFO): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_INFO)-w32.zip PyCmd
 
 dist_w64: clean $(SRC) doc
 	echo build_info = '$(BUILD_INFO)' > buildinfo.py
 	$(PYTHON_W64) setup.py build
 	$(MV) build\exe.win-amd64-2.7 PyCmd
-	$(CP) NEWS.txt README.txt PyCmd
+	$(CP) README.txt PyCmd
+	(echo Release $(BUILD_INFO): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_INFO)-w64.zip PyCmd
 
 .PHONY: clean

@@ -1,3 +1,10 @@
+ * Default prompt displays git and svn status
+ * Command history increased from 1000 to 2000
+ * Lexical text selection (Shift-Up/Down)
+ * Search text in the current input line (F3, Shift-F3)
+ * Alt-Up to go to the parent directory
+ * Overwrite mode (Ins)
+ 
 What's new in PyCmd 0.9?
 
  * Configuration file (init.py) for customizing colors, prompt etc.
