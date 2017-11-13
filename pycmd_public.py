@@ -68,7 +68,8 @@ def simple_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the typical '> '.
     """
-    return abbrev_path() + u'> '
+    # When this is called, the current color is appearance.color.prompt
+    return abbrev_path() + '>' + color.Fore.DEFAULT + color.Back.DEFAULT + ' '
 
 
 def git_prompt():
@@ -125,7 +126,7 @@ def git_prompt():
                    color.Fore.TOGGLE_BLUE +
                ' ')
         
-    prompt += path + '> '
+    prompt += appearance.simple_prompt()
     return prompt
 
 
@@ -152,7 +153,7 @@ def svn_prompt():
         prompt += color.Fore.TOGGLE_RED + '=' + color.Fore.TOGGLE_RED
     prompt += ']' + color.Fore.TOGGLE_BLUE + ' '
 
-    prompt += path + '> '
+    prompt += appearance.simple_prompt()
     return prompt
 
 
