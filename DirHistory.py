@@ -70,7 +70,7 @@ class DirHistory:
     def visit_cwd(self):
         """Add the current directory to the history of visited locations"""
         cwd = os.getcwd().decode(sys.getfilesystemencoding())
-        if cwd == self.locations[self.index]:
+        if self.locations and cwd == self.locations[self.index]:
             return
 
         if self.keep:
