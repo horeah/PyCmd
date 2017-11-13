@@ -68,7 +68,7 @@ def simple_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the typical '> '.
     """
-    # When this is called, the current color is appearance.color.prompt
+    # When this is called, the current color is appearance.colors.prompt
     return abbrev_path() + '>' + color.Fore.DEFAULT + color.Back.DEFAULT + ' '
 
 
@@ -92,9 +92,7 @@ def git_prompt():
     # README.txt)
     import subprocess, re
 
-    # The current color setting is defined by appearance.colors.prompt
     prompt = ''
-    path = abbrev_path()
 
     stdout = subprocess.Popen(
         'git status -b --porcelain -uno',
@@ -106,7 +104,7 @@ def git_prompt():
 
     if match_branch:
         branch_name = match_branch.group(1)
-        ahead = behind = None
+        ahead = behind = ''
         match_ahead_behind = re.match('## .* \[(ahead (\d+))?(, )?(behind (\d+))?\]', lines[0])
         if match_ahead_behind:
             ahead = match_ahead_behind.group(2)
@@ -116,17 +114,20 @@ def git_prompt():
         dirty = any(line[1] in ['M', 'D'] for line in dirty_files)
         staged = any(line[0] in ['A', 'M', 'D'] for line in dirty_files)
         if dirty:
-            mark = color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
+            mark = color.Fore.RED + '*'
         if staged:
-            mark = color.Fore.TOGGLE_RED + '*' + color.Fore.TOGGLE_RED
-        ahead = color.Fore.TOGGLE_RED + '+' + ahead + color.Fore.TOGGLE_RED if ahead else ''
-        behind = color.Fore.TOGGLE_GREEN + '-' + behind + color.Fore.TOGGLE_GREEN if behind else ''
-        prompt += (color.Fore.TOGGLE_BLUE +
-                   '[' + mark + branch_name + ahead + behind + ']' +
-                   color.Fore.TOGGLE_BLUE +
-               ' ')
+            mark = color.Fore.GREEN + '*'
+        ahead = '+' + ahead if ahead else ''
+        behind = '-' + behind if behind else ''
+        prompt += (color.Fore.YELLOW + '[' +
+                   mark +
+                   color.Fore.YELLOW + branch_name +
+                   color.Fore.GREEN + ahead +
+                   color.Fore.RED + behind +
+                   color.Fore.YELLOW + ']' +
+                   ' ')
         
-    prompt += appearance.simple_prompt()
+    prompt += color.Fore.DEFAULT + appearance.colors.prompt + appearance.simple_prompt()
     return prompt
 
 
@@ -146,14 +147,14 @@ def svn_prompt():
     stdout = subprocess.Popen('svn stat -q', shell=True,
                               stdout=subprocess.PIPE, stderr=-1).communicate()[0]
     dirty = any(line[0] in ['M', 'D'] for line in stdout)
-    prompt += color.Fore.TOGGLE_BLUE + '['
+    prompt += color.Fore.YELLOW + '['
     if dirty:
-        prompt += color.Fore.TOGGLE_GREEN + '*' + color.Fore.TOGGLE_GREEN
+        prompt += color.Fore.RED + '*'
     else:
-        prompt += color.Fore.TOGGLE_RED + '=' + color.Fore.TOGGLE_RED
-    prompt += ']' + color.Fore.TOGGLE_BLUE + ' '
+        prompt += color.Fore.GREEN + '=' 
+    prompt += color.Fore.YELLOW + ']' + ' '
 
-    prompt += appearance.simple_prompt()
+    prompt += color.Fore.DEFAULT + appearance.colors.prompt + appearance.simple_prompt()
     return prompt
 
 
