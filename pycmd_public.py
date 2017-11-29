@@ -101,6 +101,9 @@ def git_prompt():
         stderr=-1).communicate()[0]
     lines = stdout.split('\n')
     match_branch = re.match('## (.+)\.\.\.(.+)?.*', lines[0])
+    if not match_branch:
+        # Maybe this is not a tracking branch, fallback
+        match_branch = re.match('## (.+)', lines[0])
 
     if match_branch:
         branch_name = match_branch.group(1)
