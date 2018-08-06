@@ -22,8 +22,8 @@ PYTHONHOME_W64 = C:\Python27-amd64
 PYTHON_W32 = (set PYTHONHOME=$(PYTHONHOME_W32)) && "$(PYTHONHOME_W32)\python.exe"
 PYTHON_W64 = (set PYTHONHOME=$(PYTHONHOME_W64)) && "$(PYTHONHOME_W64)\python.exe"
 
-ifndef BUILD_INFO
-	BUILD_INFO = $(shell WMIC os GET LocalDateTime | grep -v Local | cut -c 1-8)
+ifndef BUILD_DATE
+	BUILD_DATE = $(shell WMIC os GET LocalDateTime | grep -v Local | cut -c 1-8)
 endif
 
 .PHONY: all
@@ -37,22 +37,22 @@ doc: pycmd_public.py
 	$(PYTHON_W32) -c "import pycmd_public, pydoc; pydoc.writedoc('pycmd_public')"
 
 dist_w32: clean $(SRC) doc
-	echo build_info = '$(BUILD_INFO)' > buildinfo.py
+	echo build_date = '$(BUILD_DATE)' > buildinfo.py
 	$(PYTHON_W32) setup.py build
 	$(MV) build\exe.win32-2.7 PyCmd
 	$(CP) README.txt PyCmd
-	(echo Release $(BUILD_INFO): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_INFO)-w32.zip PyCmd
+	(echo Release $(BUILD_DATE): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r PyCmd-$(BUILD_DATE)-w32.zip PyCmd
 
 dist_w64: clean $(SRC) doc
-	echo build_info = '$(BUILD_INFO)' > buildinfo.py
+	echo build_date = '$(BUILD_DATE)' > buildinfo.py
 	$(PYTHON_W64) setup.py build
 	$(MV) build\exe.win-amd64-2.7 PyCmd
 	$(CP) README.txt PyCmd
 # cx_freeze on Py64 fails to include pywintypes27.dll:
 	$(CP) $(PYTHONHOME_W64)\Lib\site-packages\pywin32_system32\pywintypes27.dll PyCmd
-	(echo Release $(BUILD_INFO): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_INFO)-w64.zip PyCmd
+	(echo Release $(BUILD_DATE): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
 .PHONY: clean
 clean:

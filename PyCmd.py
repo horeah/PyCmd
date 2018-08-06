@@ -1,4 +1,4 @@
-import sys, os, tempfile, signal, time, traceback, codecs
+import sys, os, tempfile, signal, time, traceback, codecs, platform
 import win32console, win32gui, win32con
 
 from common import parse_line, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
@@ -124,13 +124,14 @@ def main():
 
     if not behavior.quiet_mode:
         # Print some splash text
+        arch_names = { '32bit': 'x86', '64bit': 'x64' }
+        bits = platform.architecture()[0]
         try:
-            from buildinfo import build_info
+            from buildinfo import build_date
         except ImportError, ie:
-            build_info = '<no build info>'
-
+            build_date = '<no build date>'
         print
-        print 'Welcome to PyCmd %s!' % build_info
+        print 'Welcome to PyCmd %s-%s!' % (build_date, arch_names[bits])
         print
 
     # Run an empty command to initialize environment
