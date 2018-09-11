@@ -447,6 +447,7 @@ def main():
                             if rec.Char != '\t':
                                 if not ord(rec.Char) in [0, 8, 13, 27]:
                                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
+                                state.reset_prev_line()
                                 continue
 
                         if has_wildcards(tokens[-1]):
