@@ -130,6 +130,9 @@ def cursor_backward(count):
         count -= 1
     move_cursor(x, y)
 
+def count_chars(start, end):
+    return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
+
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
     global scroll_mark

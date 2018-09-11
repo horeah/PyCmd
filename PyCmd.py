@@ -145,6 +145,7 @@ def main():
         auto_select = False
         force_repaint = True
         dir_hist.shown = False
+        after_completions = None
         print
 
         while True:
@@ -204,6 +205,13 @@ def main():
                 set_cursor_attributes(cursor_height, True)
                 cursor_backward(len(state.after_cursor))
 
+            # Erase completions
+            if state.changed() and after_completions is not None and not completions_valid:
+                to_erase = console.count_chars(get_cursor(), after_completions)
+                stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
+                cursor_backward(to_erase)
+                after_completions = None
+
             # Bell if a notification is pending
             if state.bell:
                 console.visual_bell()
@@ -216,8 +224,11 @@ def main():
             rec = read_input()
             select = auto_select or is_shift_pressed(rec)
 
-            # Will be overriden if Shift-PgUp/Dn is pressed
-            force_repaint = not is_control_only(rec)    
+            # Will be overridden if Shift-PgUp/Dn is pressed
+            force_repaint = not is_control_only(rec)
+
+            # Will be set to true when showing completions
+            completions_valid = False
 
             #print '\n\n', rec.KeyDown, rec.Char, rec.VirtualKeyCode, rec.ControlKeyState, '\n\n'
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
@@ -399,6 +410,7 @@ def main():
                                        save_history_limit)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
+                    before_completions = get_cursor()
                     tokens = parse_line(state.before_cursor)
                     if tokens == [] or state.before_cursor[-1] in sep_chars:
                         tokens.append('')   # This saves some checks later on
@@ -459,7 +471,7 @@ def main():
                         else:
                             # Length of the common prefix will be printed in a different color
                             common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
-                            
+
                         stdout.write('\n')
                         for line in range(0, num_lines):
                             # Print one line
@@ -488,7 +500,9 @@ def main():
                                                      s[common_prefix_len : ])
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                             stdout.write('\n')
-                        state.reset_prev_line()
+                        after_completions = get_cursor()
+                        completions_valid = True
+                        move_cursor(before_completions[0], before_completions[1])
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
