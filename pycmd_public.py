@@ -319,11 +319,11 @@ class Behavior(_Settings):
         # This can be also overriden with the '-Q' command line argument'
         self.quiet_mode = False
 
-        # Select the completion mode; currently supported: 'bash'
+        # Select the completion mode; currently supported: 'bash' and 'zsh'
         self.completion_mode = 'bash'
 
     def sanitize(self):
-        if not self.completion_mode in ['bash']:
+        if not self.completion_mode in ['bash', 'zsh']:
             print 'Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "bash"'
             self.completion_mode = 'bash'
 

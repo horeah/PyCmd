@@ -9,7 +9,7 @@ from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
 from sys import stdout, stderr
-from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
+from console import move_cursor, get_cursor, cursor_backward, erase_to, set_cursor_attributes
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
 from console import scroll_buffer, get_viewport
@@ -159,6 +159,11 @@ def main():
             console.set_console_title(title_prefix + curdir + ' - PyCmd')
             os.environ['CD'] = curdir
 
+            if (behavior.completion_mode == 'zsh' and
+                state.changed() and after_completions is not None and not completions_valid):
+                erase_to(after_completions)
+                after_completions = None
+
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
                 set_cursor_attributes(50 if state.overwrite else 10, False)
@@ -208,13 +213,6 @@ def main():
                     cursor_height = 10
                 set_cursor_attributes(cursor_height, True)
                 cursor_backward(len(state.after_cursor))
-
-            # Erase completions
-            if state.changed() and after_completions is not None and not completions_valid:
-                to_erase = console.count_chars(get_cursor(), after_completions)
-                stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
-                cursor_backward(to_erase)
-                after_completions = None
 
             # Bell if a notification is pending
             if state.bell:
@@ -507,7 +505,11 @@ def main():
                             stdout.write('\n')
                         after_completions = get_cursor()
                         completions_valid = True
-                        move_cursor(before_completions[0], before_completions[1])
+                        if behavior.completion_mode == 'zsh':
+                            move_cursor(before_completions[0], before_completions[1])
+                        else:
+                            state.reset_prev_line()
+
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
@@ -516,7 +518,9 @@ def main():
 
         # Done reading line, now execute
         stdout.write(state.after_cursor)        # Move cursor to the end
-        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT)
+        if behavior.completion_mode == 'zsh' and after_completions is not None:
+            erase_to(after_completions)
+            after_completions = None
         line = (state.before_cursor + state.after_cursor).strip()
         tokens = parse_line(line)
         if tokens == [] or tokens[0] == '':

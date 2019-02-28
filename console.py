@@ -101,6 +101,15 @@ def get_cursor():
     ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
     return (buffer_info.cursorPosition.X, buffer_info.cursorPosition.Y)
 
+def count_chars(start, end):
+    return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
+
+def erase_to(end):
+    from pycmd_public import color
+    to_erase = count_chars(get_cursor(), end)
+    sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
+    cursor_backward(to_erase)
+
 def get_buffer_size():
     """Get the size of the text buffer"""
     buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
@@ -129,9 +138,6 @@ def cursor_backward(count):
             x -= 1
         count -= 1
     move_cursor(x, y)
-
-def count_chars(start, end):
-    return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
