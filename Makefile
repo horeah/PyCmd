@@ -49,8 +49,8 @@ dist_w64: clean $(SRC) doc
 	$(PYTHON_W64) setup.py build
 	$(MV) build\exe.win-amd64-2.7 PyCmd
 	$(CP) README.txt PyCmd
-# cx_freeze on Py64 fails to include pywintypes27.dll:
-	$(CP) $(PYTHONHOME_W64)\Lib\site-packages\pywin32_system32\pywintypes27.dll PyCmd
+# cx_freeze on Py64 copies the wrong pywintypes27.dll, overwrite it here:
+	$(CP) $(PYTHONHOME_W64)\Lib\site-packages\pywin32_system32\pywintypes27.dll PyCmd\lib
 	(echo Release $(BUILD_DATE): && echo. && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
