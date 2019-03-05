@@ -122,6 +122,10 @@ def main():
             internal_exit()
         arg += 1
 
+    # Re-scan console colors in case the -k command has changed them
+    color.Fore.DEFAULT = console.get_current_foreground()
+    color.Back.DEFAULT = console.get_current_background()
+
     if not behavior.quiet_mode:
         # Print some splash text
         arch_names = { '32bit': 'x86', '64bit': 'x64' }
