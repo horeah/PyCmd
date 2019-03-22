@@ -150,6 +150,7 @@ def main():
         force_repaint = True
         dir_hist.shown = False
         after_completions = None
+        auto_completions = False
         print
 
         while True:
@@ -423,6 +424,10 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
+                    if auto_completions:
+                        completed_offset = len(completed.strip('"')) - len(state.before_cursor.strip('"'))
+                        completed = state.before_cursor
+
                     cursor_backward(len(state.before_cursor))
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                     stdout.write(state.before_cursor + state.after_cursor)
@@ -431,7 +436,7 @@ def main():
                     if not suggestions:
                         # No completion possible, require notification
                         state.bell = True
-                    elif len(suggestions) > 1:
+                    elif auto_completions or len(suggestions) > 1:
                         # Multiple completions possible
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         column_width = max([len(s) for s in suggestions]) + 10
@@ -448,7 +453,7 @@ def main():
                             num_lines += 1
 
                         num_screens = 1.0 * num_lines / (get_viewport()[3] - get_viewport()[1])
-                        if num_screens >= 0.9:
+                        if behavior.completion_mode == 'bash' and num_screens >= 0.9:
                             # We ask for confirmation before displaying many completions
                             (c_x, c_y) = get_cursor()
                             offset_from_bottom = console.get_buffer_size()[1] - c_y
@@ -474,7 +479,10 @@ def main():
                         else:
                             # Length of the common prefix will be printed in a different color
                             common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
+                            if auto_completions:
+                                common_prefix_len -= completed_offset
 
+                        set_cursor_attributes(cursor_height, False)
                         stdout.write('\n')
                         for line in range(0, num_lines):
                             # Print one line
@@ -503,17 +511,24 @@ def main():
                                                      s[common_prefix_len : ])
                                         stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
                             stdout.write('\n')
+
                         after_completions = get_cursor()
                         completions_valid = True
                         if behavior.completion_mode == 'zsh':
                             move_cursor(before_completions[0], before_completions[1])
                         else:
                             state.reset_prev_line()
+                        set_cursor_attributes(cursor_height, True)
+                        
+                    auto_completions = False
 
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
+                    if behavior.completion_mode == 'zsh' and after_completions is not None:
+                        auto_completions = True
+                        write_input(9, u'\t', 0)  # Emulate Tab press to update completions
 
 
         # Done reading line, now execute
@@ -695,7 +710,7 @@ def signal_handler(signum, frame):
     """
     if signum == signal.SIGINT:
         # Emulate a Ctrl-C press
-        write_input(67, 0x0008)
+        write_input(67, u'c', 0x0008)
 
 
 def update_history(line, filename, length):

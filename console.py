@@ -160,11 +160,12 @@ def read_input():
         if record.EventType == KEY_EVENT and record.KeyDown:
             return record
 
-def write_input(key_code, control_state):
+def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
     record = PyINPUT_RECORDType(KEY_EVENT)
     record.KeyDown = True
     record.VirtualKeyCode = key_code
+    record.Char = char
     record.ControlKeyState = control_state
     stdin_handle.WriteConsoleInput([record])
 
