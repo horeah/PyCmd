@@ -153,6 +153,13 @@ def scroll_buffer(lines):
         info = SMALL_RECT(l, t + lines, r, b + lines)
         ctypes.windll.kernel32.SetConsoleWindowInfo(stdout_handle, True, byref(info))
 
+def scroll_to_quarter(line):
+    """Scroll up so that the specified line is at least 25% of the screen deep"""
+    lines = line - get_viewport()[1]
+    viewport_height = get_viewport()[3] - get_viewport()[1]
+    if lines < viewport_height / 4:
+        scroll_buffer(lines - viewport_height / 4)
+
 def read_input():
     """Read one input event from the console input buffer"""
     while True:

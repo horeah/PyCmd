@@ -12,7 +12,7 @@ from sys import stdout, stderr
 from console import move_cursor, get_cursor, cursor_backward, erase_to, set_cursor_attributes
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-from console import scroll_buffer, get_viewport
+from console import scroll_buffer, get_viewport, scroll_to_quarter
 from console import remove_escape_sequences
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
@@ -163,6 +163,7 @@ def main():
             if (behavior.completion_mode == 'zsh' and
                 state.changed() and after_completions is not None and not completions_valid):
                 erase_to(after_completions)
+                scroll_to_quarter(before_completions[1])
                 after_completions = None
 
             if state.changed() or force_repaint:
@@ -515,6 +516,7 @@ def main():
                         after_completions = get_cursor()
                         completions_valid = True
                         if behavior.completion_mode == 'zsh':
+                            scroll_to_quarter(before_completions[1])
                             move_cursor(before_completions[0], before_completions[1])
                         else:
                             state.reset_prev_line()
