@@ -527,8 +527,12 @@ def main():
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
+                    tokens_before = parse_line(state.before_cursor)
                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
-                    if behavior.completion_mode == 'zsh' and after_completions is not None:
+                    tokens_after = parse_line(state.before_cursor)
+                    if (behavior.completion_mode == 'zsh'
+                        and after_completions is not None
+                        and tokens_before != tokens_after):
                         auto_completions = True
                         write_input(9, u'\t', 0)  # Emulate Tab press to update completions
 
