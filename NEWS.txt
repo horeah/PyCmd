@@ -1,3 +1,6 @@
+ * zsh-style completions (displayed below prompt)
+ 
+Snapshot 20171215:
  * Default prompt displays git and svn status
  * Command history increased from 1000 to 2000
  * Lexical text selection (Shift-Up/Down)
