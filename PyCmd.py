@@ -162,8 +162,10 @@ def main():
 
             if (behavior.completion_mode == 'zsh' and
                 state.changed() and after_completions is not None and not completions_valid):
+                set_cursor_attributes(cursor_height, False)
                 erase_to(after_completions)
                 scroll_to_quarter(before_completions[1])
+                set_cursor_attributes(cursor_height, True)
                 after_completions = None
 
             if state.changed() or force_repaint:
