@@ -5,7 +5,7 @@
 #
 
 import sys, os, re
-from common import parse_line, expand_env_vars, has_exec_extension, strip_extension
+from common import tokenize, expand_env_vars, has_exec_extension, strip_extension
 from common import contains_special_char, starts_with_special_char
 from common import sep_chars, seq_tokens
 
@@ -44,9 +44,7 @@ def complete_file_simple(line):
         completions
       - the list of all possible completions (first dirs, then files)
     """
-    tokens = parse_line(line)
-    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
-        tokens += ['']   # This saves us some checks later
+    tokens = tokenize(line)
     token = tokens[-1].replace('"', '')
 
     pos_fwd = expand_env_vars(token).rfind('/')
@@ -198,9 +196,7 @@ def complete_file_alternate(line):
         completions
       - the list of all possible completions (first dirs, then files)
     """
-    tokens = parse_line(line)
-    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
-        tokens += ['']   # This saves us some checks later
+    tokens = tokenize(line)
     (last_token_prefix, equal_char, last_token) = tokens[-1].replace('"', '').rpartition('=')
     last_token_prefix += equal_char
         
@@ -286,9 +282,7 @@ def complete_wildcard(line):
         completions
       - the list of all possible completions (first dirs, then files)
     """
-    tokens = parse_line(line)
-    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
-        tokens += ['']   # This saves us some checks later
+    tokens = tokenize(line)
     token = tokens[-1].replace('"', '')
 
     path_sep = '/' if '/' in expand_env_vars(token) else '\\'
@@ -392,9 +386,7 @@ def complete_env_var(line):
         completions
       - the list of all possible completions
     """
-    tokens = parse_line(line)
-    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
-        tokens += ['']   # This saves some checks later
+    tokens = tokenize(line)
 
     # Account for the VAR=VALUE syntax
     (token_prefix, equals, token_orig) = tokens[-1].rpartition('=')

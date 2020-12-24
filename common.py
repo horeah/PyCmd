@@ -117,6 +117,17 @@ def parse_line(line):
 
     return f.memory
 
+
+def tokenize(line):
+    """
+    Wrapper for parse_line that appends an empty token if it detects a new token is beginning
+    """
+    tokens = parse_line(line)
+    if tokens == [] or (line[-1] in sep_chars and parse_line(line) == parse_line(line + ' ')):
+        tokens += ['']   # This saves us some checks later
+    return tokens
+
+
 def unescape(string):
     """Unescape string from ^ escaping. ^ inside double quotes is ignored"""
     if (string == None):

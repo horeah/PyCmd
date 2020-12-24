@@ -43,6 +43,8 @@ class TestFindCommonPrefix(TestCase):
         ('Prog', ['Program', 'Program2', 'Programme'], 'Program'),
         ('prog', ['PrOgram', 'Program2', 'PrOgramme'], 'PrOgram'),
         ('prog', ['PROGRAM', 'Program2', 'programme'], 'program'),
+        ('sys', ['System', 'System32', 'system.ini'], 'system'),
+        ('C:\\Windows\\sys',  ['System', 'System32', 'system.ini'], 'System'),
         ]
 
     def test_find_common_prefix(self):

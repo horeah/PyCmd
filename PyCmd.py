@@ -1,19 +1,21 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
 import win32console, win32gui, win32con
 
-from common import parse_line, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
+import re
 from sys import stdout, stderr
 from console import move_cursor, get_cursor, cursor_backward, erase_to, set_cursor_attributes
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-from console import scroll_buffer, get_viewport, scroll_to_quarter
+from console import scroll_buffer, get_viewport, scroll_to_quarter, get_buffer_size
 from console import remove_escape_sequences
+from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
 
@@ -149,8 +151,6 @@ def main():
         auto_select = False
         force_repaint = True
         dir_hist.shown = False
-        after_completions = None
-        auto_completions = False
         print
 
         while True:
@@ -159,14 +159,6 @@ def main():
             curdir = curdir[0].upper() + curdir[1:]
             console.set_console_title(title_prefix + curdir + ' - PyCmd')
             os.environ['CD'] = curdir
-
-            if (behavior.completion_mode == 'zsh' and
-                state.changed() and after_completions is not None and not completions_valid):
-                set_cursor_attributes(cursor_height, False)
-                erase_to(after_completions)
-                scroll_to_quarter(before_completions[1])
-                set_cursor_attributes(cursor_height, True)
-                after_completions = None
 
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
@@ -232,9 +224,6 @@ def main():
 
             # Will be overridden if Shift-PgUp/Dn is pressed
             force_repaint = not is_control_only(rec)
-
-            # Will be set to true when showing completions
-            completions_valid = False
 
             #print '\n\n', rec.KeyDown, rec.Char, rec.VirtualKeyCode, rec.ControlKeyState, '\n\n'
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
@@ -417,9 +406,7 @@ def main():
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
                     before_completions = get_cursor()
-                    tokens = parse_line(state.before_cursor)
-                    if tokens == [] or state.before_cursor[-1] in sep_chars:
-                        tokens.append('')   # This saves some checks later on
+                    tokens = tokenize(state.before_cursor)
                     if tokens[-1].strip('"').count('%') % 2 == 1:
                         (completed, suggestions) = complete_env_var(state.before_cursor)
                     elif has_wildcards(tokens[-1]):
@@ -427,125 +414,97 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
-                    if auto_completions:
-                        completed_offset = len(completed.strip('"')) - len(state.before_cursor.strip('"'))
-                        completed = state.before_cursor
-
                     cursor_backward(len(state.before_cursor))
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                     stdout.write(state.before_cursor + state.after_cursor)
+                    cursor_backward(len(state.after_cursor))
+                    state.step_line()
 
                     # Show multiple completions if available
                     if not suggestions:
                         # No completion possible, require notification
                         state.bell = True
-                    elif auto_completions or len(suggestions) > 1:
+                    elif len(suggestions) > 1:
                         # Multiple completions possible
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
-                        column_width = max([len(s) for s in suggestions]) + 10
-                        if column_width > console.get_buffer_size()[0] - 1:
-                            column_width = console.get_buffer_size()[0] - 1
-                        if len(suggestions) > (get_viewport()[3] - get_viewport()[1]) / 4:
-                            # We print multiple columns to save space
-                            num_columns = (console.get_buffer_size()[0] - 1) / column_width
-                        else:
-                            # We print a single column for clarity
-                            num_columns = 1
-                        num_lines = len(suggestions) / num_columns
-                        if len(suggestions) % num_columns != 0:
-                            num_lines += 1
-
-                        num_screens = 1.0 * num_lines / (get_viewport()[3] - get_viewport()[1])
-                        if behavior.completion_mode == 'bash' and num_screens >= 0.9:
-                            # We ask for confirmation before displaying many completions
-                            (c_x, c_y) = get_cursor()
-                            offset_from_bottom = console.get_buffer_size()[1] - c_y
-                            message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
-                            stdout.write('\n' + message)
-                            rec = read_input()
-                            move_cursor(c_x, console.get_buffer_size()[1] - offset_from_bottom)
-                            stdout.write('\n' + ' ' * len(message))
-                            move_cursor(c_x, console.get_buffer_size()[1] - offset_from_bottom)
-                            if rec.Char != '\t':
-                                if not ord(rec.Char) in [0, 8, 13, 27]:
-                                    state.handle(ActionCode.ACTION_INSERT, rec.Char)
-                                state.reset_prev_line()
-                                continue
+                        path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
+                        tokens = tokenize(completed.rstrip(' ').rstrip(path_sep))
+                        token = tokens[-1].replace('"', '')
 
                         if has_wildcards(tokens[-1]):
                             # Substring matching wildcards will be printed in a different color
-                            path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
-                            tokens = parse_line(completed.rstrip(path_sep))
-                            token = tokens[-1].replace('"', '')
                             (_, _, prefix) = token.rpartition(path_sep)
-                            pattern = wildcard_to_regex(prefix + '*')
                         else:
                             # Length of the common prefix will be printed in a different color
-                            common_prefix_len = len(find_common_prefix(state.before_cursor, suggestions))
-                            if auto_completions:
-                                common_prefix_len -= completed_offset
+                            prefix = find_common_prefix(state.before_cursor, suggestions)
+                        pattern = wildcard_to_regex(prefix + '*')
 
-                        set_cursor_attributes(cursor_height, False)
-                        stdout.write('\n')
-                        for line in range(0, num_lines):
-                            # Print one line
-                            stdout.write('\r')
-                            for column in range(0, num_columns):
-                                if line + column * num_lines < len(suggestions):
-                                    s = suggestions[line + column * num_lines]
-                                    if has_wildcards(tokens[-1]):
-                                        # Print wildcard matches in a different color
-                                        match = pattern.match(s)
-                                        current_index = 0
-                                        for i in range(1, match.lastindex + 1):
-                                            stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                         appearance.colors.completion_match +
-                                                         s[current_index : match.start(i)] +
-                                                         color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                         s[match.start(i) : match.end(i)])
-                                            current_index = match.end(i)
-                                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
-                                    else:
-                                        # Print the common part in a different color
-                                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                     appearance.colors.completion_match +
-                                                     s[:common_prefix_len] +
-                                                     color.Fore.DEFAULT + color.Back.DEFAULT +
-                                                     s[common_prefix_len : ])
-                                        stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (column_width - len(s)))
-                            stdout.write('\n')
-
-                        after_completions = get_cursor()
-                        completions_valid = True
-                        if behavior.completion_mode == 'zsh':
-                            scroll_to_quarter(before_completions[1])
-                            move_cursor(before_completions[0], before_completions[1])
-                        else:
+                        if behavior.completion_mode == 'bash':
+                            w = Window(suggestions, pattern)
+                            num_screens = 1.0 * w.height / (get_viewport()[3] - get_viewport()[1])
+                            if num_screens >= 0.9:
+                                # We ask for confirmation before displaying many completions
+                                (c_x, c_y) = get_cursor()
+                                offset_from_bottom = get_buffer_size()[1] - c_y
+                                message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
+                                stdout.write('\n' + message)
+                                rec = read_input()
+                                move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                                stdout.write('\n' + ' ' * len(message))
+                                move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
+                                if rec.Char != '\t':
+                                    if not ord(rec.Char) in [0, 8, 13, 27]:
+                                        state.handle(ActionCode.ACTION_INSERT, rec.Char)
+                                    state.reset_prev_line()
+                                    continue
+                            w.display()
                             state.reset_prev_line()
-                        set_cursor_attributes(cursor_height, True)
-                        
-                    auto_completions = False
+                        else:
+                            w = Window(suggestions, pattern, height=10)
+                            w.display()
+                            w.reset_cursor()
+                            r = read_input()
+                            if r.Char == chr(0) and r.VirtualKeyCode == 40:
+                                selection = w.interact()
+                                if selection:
+                                    orig_last_token = tokenize(state.before_cursor)[-1]
 
+                                    # Replace initial completion prefix with selection,
+                                    # add quotes and slashes as needed
+                                    pos = state.before_cursor.lower().rfind(prefix.lower())
+                                    state.before_cursor = (state.before_cursor[:pos]
+                                                           + selection
+                                                           + state.before_cursor[pos + len(prefix):])
+
+                                    # Ensure proper terminating (%, quotes, whitespaces)
+                                    if orig_last_token.count('%') % 2 == 1:
+                                        state.before_cursor += '%'
+                                    if orig_last_token.startswith('"'):
+                                        state.before_cursor += '"'
+                                    elif ' ' in selection:
+                                        pos = state.before_cursor.rfind(orig_last_token)
+                                        state.before_cursor = state.before_cursor[:pos] + '"' + state.before_cursor[pos:] + '"'
+                                    if (not selection.endswith(path_sep)
+                                        and not orig_last_token.count('%') % 2 == 1
+                                        and not completed.endswith(' ')):
+                                        state.before_cursor += ' '
+                                    state.reset_selection()
+                            else:
+                                write_input(r.VirtualKeyCode, r.Char, 0)
+                                w.erase()
+                                continue
+                        set_cursor_attributes(cursor_height, True)
                 elif rec.Char == chr(8):                # Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE)
                 else:                                   # Regular character
-                    tokens_before = parse_line(state.before_cursor)
+                    tokens_before = tokenize(state.before_cursor)
                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
-                    tokens_after = parse_line(state.before_cursor)
-                    if (behavior.completion_mode == 'zsh'
-                        and after_completions is not None
-                        and tokens_before != tokens_after):
-                        auto_completions = True
-                        write_input(9, u'\t', 0)  # Emulate Tab press to update completions
-
+                    tokens_after = tokenize(state.before_cursor)
 
         # Done reading line, now execute
         stdout.write(state.after_cursor)        # Move cursor to the end
-        if behavior.completion_mode == 'zsh' and after_completions is not None:
-            erase_to(after_completions)
-            after_completions = None
         line = (state.before_cursor + state.after_cursor).strip()
-        tokens = parse_line(line)
+        tokens = tokenize(line)
         if tokens == [] or tokens[0] == '':
             continue
         else:
