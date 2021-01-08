@@ -1,5 +1,6 @@
 from console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes, read_input, erase_to
 from pycmd_public import color, appearance
+from math import log10, ceil
 from sys import stdout
 
 class Window(object):
@@ -11,7 +12,7 @@ class Window(object):
         self.offset = 0
         self.selected_line = -1
         self.selected_column = -1
-        self.orig_cursor = get_cursor()
+        self.orig_cursor = self.final_cursor = get_cursor()
 
         self.column_width = max([len(e) for e in self.entries]) + 10
         if self.column_width > get_buffer_size()[0] - 1:
@@ -56,6 +57,16 @@ class Window(object):
                             current_index = match.end(i)
                     stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (self.column_width - len(s)))
             stdout.write('\n')
+
+        if self.height < self.num_lines:
+            format_width = int(ceil(log10(self.num_lines)))
+            default_color = color.Fore.DEFAULT + color.Back.DEFAULT
+            match_color = appearance.colors.completion_match
+            stdout.write('  -- %*d to %-*d of %*d rows --' % (format_width, self.offset + 1,
+                                                             format_width, self.offset + self.height,
+                                                             format_width, self.num_lines))
+            
+        self.final_cursor = get_cursor()
         set_cursor_attributes(10, True)
 
 
@@ -65,7 +76,7 @@ class Window(object):
 
     def erase(self):
         self.reset_cursor()
-        erase_to((get_buffer_size()[0], self.top + self.height - 1))
+        erase_to(self.final_cursor)
         self.reset_cursor()
 
             
