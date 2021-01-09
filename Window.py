@@ -56,6 +56,8 @@ class Window(object):
                                          s[match.start(i) : match.end(i)])
                             current_index = match.end(i)
                     stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (self.column_width - len(s)))
+                else:
+                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (self.column_width))                    
             stdout.write('\n')
 
         if self.height < self.num_lines:
@@ -89,25 +91,38 @@ class Window(object):
             move_cursor(self.orig_cursor[0], self.orig_cursor[1])
             rec = read_input()
             if rec.Char == chr(0):
-                if rec.VirtualKeyCode == 37 and self.selected_column > 0:
+                if rec.VirtualKeyCode == 37:
                     self.selected_column -= 1
-                elif rec.VirtualKeyCode == 39 and self.selected_column < self.num_columns - 1:
+                elif rec.VirtualKeyCode == 39:
                     self.selected_column += 1
-                elif rec.VirtualKeyCode == 40 and self.selected_line < self.num_lines - 1:
+                elif rec.VirtualKeyCode == 40:
                     self.selected_line += 1
-                    if self.selected_line >= self.offset + self.height:
-                        self.offset += 1
-                elif rec.VirtualKeyCode == 38 and self.selected_line > 0:
+                elif rec.VirtualKeyCode == 38:
                     self.selected_line -= 1
-                    if self.selected_line < self.offset:
-                        self.offset -=1
-            elif rec.Char == chr(13):
+                elif rec.VirtualKeyCode == 34:
+                    self.selected_line += self.height
+                elif rec.VirtualKeyCode == 33:
+                    self.selected_line -= self.height
+                elif rec.VirtualKeyCode == 36:
+                    self.selected_column = 0
+                elif rec.VirtualKeyCode == 35:
+                    self.selected_column = self.num_columns
+
+                self.selected_line = Window._bound(self.selected_line, 0, self.num_lines - 1)
+                num_columns_current_row = self.num_columns
+                if self.selected_line + (self.num_columns - 1) * self.num_lines >=  len(self.entries):
+                    num_columns_current_row -= 1
+                self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
+                self.offset = Window._bound(self.offset, self.selected_line - self.height + 1, self.selected_line)
+                
+            elif rec.Char == chr(13) or rec.Char == '\t':
                 self.erase()
                 return self.entries[self.selected_line + self.selected_column * self.num_lines]
             elif rec.Char == chr(27):
                 self.erase()
                 return None
-        
-        
 
+    @staticmethod
+    def _bound(value, lower, upper):
+        return max(min(value, upper), lower)
             
