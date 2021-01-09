@@ -32,6 +32,7 @@ class Window(object):
 
 
     def display(self):
+        default_color = color.Fore.DEFAULT + color.Back.DEFAULT
         stdout.write('\n')
         set_cursor_attributes(10, False)
         self.top = get_cursor()[1]
@@ -43,27 +44,25 @@ class Window(object):
                     s = self.entries[line + column * self.num_lines]
                     if self.selected_line == line and self.selected_column == column:
                         # Highlight selected line
-                        stdout.write(appearance.colors.selection + s + color.Fore.DEFAULT + color.Back.DEFAULT)
+                        stdout.write(appearance.colors.selection + s + default_color)
                     else:
                         # Print wildcard matches in a different color
                         match = self.pattern.match(s)
                         current_index = 0
                         for i in range(1, match.lastindex + 1):
-                            stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT +
+                            stdout.write(default_color +
                                          appearance.colors.completion_match +
                                          s[current_index : match.start(i)] +
-                                         color.Fore.DEFAULT + color.Back.DEFAULT +
+                                         default_color +
                                          s[match.start(i) : match.end(i)])
                             current_index = match.end(i)
-                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (self.column_width - len(s)))
+                    stdout.write(default_color + ' ' * (self.column_width - len(s)))
                 else:
-                    stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * (self.column_width))                    
+                    stdout.write(default_color + ' ' * (self.column_width))                    
             stdout.write('\n')
 
         if self.height < self.num_lines:
             format_width = int(ceil(log10(self.num_lines)))
-            default_color = color.Fore.DEFAULT + color.Back.DEFAULT
-            match_color = appearance.colors.completion_match
             stdout.write('  -- %*d to %-*d of %*d rows --' % (format_width, self.offset + 1,
                                                              format_width, self.offset + self.height,
                                                              format_width, self.num_lines))
