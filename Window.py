@@ -17,7 +17,8 @@ class Window(object):
         self.column_width = max([len(e) for e in self.entries]) + 10
         if self.column_width > get_buffer_size()[0] - 1:
             self.column_width = get_buffer_size()[0] - 1
-        if len(self.entries) > (get_viewport()[3] - get_viewport()[1]) / 4:
+        if (len(self.entries) > self.height
+            and len(self.entries) > (get_viewport()[3] - get_viewport()[1]) / 4):
             # We print multiple columns to save space
             self.num_columns = (get_buffer_size()[0] - 1) / self.column_width
         else:

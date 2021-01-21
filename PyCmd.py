@@ -460,7 +460,10 @@ def main():
                             w.display()
                             state.reset_prev_line()
                         else:
-                            w = Window(suggestions, pattern, height=10)
+                            window_height = get_viewport()[3] - get_cursor()[1] - 1
+                            if window_height < (get_viewport()[3] - get_viewport()[1]) / 3:
+                                window_height = (get_viewport()[3] - get_viewport()[1]) / 3
+                            w = Window(suggestions, pattern, height=window_height)
                             w.display()
                             w.reset_cursor()
                             r = read_input()
