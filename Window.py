@@ -69,6 +69,8 @@ class Window(object):
                                                              format_width, self.num_lines))
             
         self.final_cursor = get_cursor()
+        # correct orig cursor if we have overflown the buffer height
+        self.orig_cursor = (self.orig_cursor[0], self.final_cursor[1] - self.height - 1)
         set_cursor_attributes(10, True)
 
 
