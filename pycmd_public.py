@@ -320,12 +320,12 @@ class Behavior(_Settings):
         self.quiet_mode = False
 
         # Select the completion mode; currently supported: 'bash' and 'zsh'
-        self.completion_mode = 'bash'
+        self.completion_mode = 'zsh'
 
     def sanitize(self):
         if not self.completion_mode in ['bash', 'zsh']:
-            print 'Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "bash"'
-            self.completion_mode = 'bash'
+            print 'Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "zsh"'
+            self.completion_mode = 'zsh'
 
 
 # Initialize global configuration instances with default values

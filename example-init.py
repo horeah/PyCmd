@@ -157,10 +157,10 @@ behavior.quiet_mode = False
 # Change the way PyCmd handles Tab-completion
 #
 # Accepted values:
-#   'bash' (default): display completions, then redisplay prompt
-#   'zsh': display completions below prompt
+#   'zsh' (default): display completions below prompt
+#   'bash': display completions, then redisplay prompt
 #
-behavior.completion_mode = 'bash'
+behavior.completion_mode = 'zsh'
 
 
 # Remember, you can do whatever you want in this Python script!
