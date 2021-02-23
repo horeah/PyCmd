@@ -8,8 +8,8 @@ persistent history, etc.)
 2. What are some important features?
 ------------------------------------
  a. Tab completion 
-    - when several completions are possible, list them (bash- or zsh-style)
-      instead of cycling through them
+    - when several completions are possible, list them (plain/bash- or
+      interactive/zsh-style)
     - insert/remove quotes as needed
     - complete executables from the PATH and internal CMD.exe commands
     - complete names of environment variables, including pseudo-variables
