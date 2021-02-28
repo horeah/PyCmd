@@ -6,11 +6,11 @@ from common import fuzzy_match
 
 
 class Window(object):
-    def __init__(self, entries, pattern, height=0):
+    def __init__(self, entries, pattern, width=0, height=0):
         self.all_entries = entries
         self.pattern = pattern
+        self.width = width if width else get_buffer_size()[0]
         self.height = height
-        self.width = get_buffer_size()[0]
         self.offset = 0
         self.interactive = False
         self.selected_line = None
