@@ -19,6 +19,7 @@ from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
 
+
 pycmd_data_dir = None
 pycmd_install_dir = None
 state = None
@@ -405,7 +406,6 @@ def main():
                                        save_history_limit)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
-                    before_completions = get_cursor()
                     tokens = tokenize(state.before_cursor)
                     if tokens[-1].strip('"').count('%') % 2 == 1:
                         (completed, suggestions) = complete_env_var(state.before_cursor)
@@ -428,7 +428,9 @@ def main():
                         # Multiple completions possible
                         dir_hist.shown = False  # The displayed dirhist is no longer valid
                         path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
-                        tokens = tokenize(completed.rstrip(' ').rstrip(path_sep))
+                        if tokens[-1]:
+                            # Tokenize again in case the original line has been appended to
+                            tokens = tokenize(completed.rstrip(' ').rstrip(path_sep))
                         token = tokens[-1].replace('"', '')
 
                         if has_wildcards(tokens[-1]):
