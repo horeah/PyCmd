@@ -100,8 +100,8 @@ class Window(object):
 
         if (get_cursor()[1], get_cursor()[0]) > (self.final_cursor[1], self.final_cursor[0]):
             self.final_cursor = get_cursor()
-            # correct orig cursor if we have overflown the buffer height
-            self.orig_cursor = (self.orig_cursor[0], self.final_cursor[1] - self.height - 1)
+        # correct orig cursor if we have overflown the buffer height
+        self.orig_cursor = (self.orig_cursor[0], self.final_cursor[1] - self.height - 1)
             
         set_cursor_attributes(10, True)
 
