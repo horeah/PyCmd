@@ -319,6 +319,12 @@ class Behavior(_Settings):
         # This can be also overriden with the '-Q' command line argument'
         self.quiet_mode = False
 
+        # Enable delayed expansion of environment variables (this is
+        # required for proper handling of ERRORLEVEL and should only
+        # be disabled for compatibility reasons
+        # Can be overridden with the '-V:OFF' command line argument
+        self.delayed_expansion = True
+
         # Select the completion mode; currently supported: 'bash' and 'zsh'
         self.completion_mode = 'zsh'
 

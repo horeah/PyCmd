@@ -118,6 +118,12 @@ def main():
         elif switch in ['/Q', '-Q']:
             # Quiet mode: suppress messages
             behavior.quiet_mode = True
+        elif switch in ['/V:ON', '-V:ON']:
+            # Enable delayed expansion (already on by default)
+            behavior.delayed_expansion = True
+        elif switch in ['/V:OFF', '-V:OFF']:
+            # Disable delayed expansion
+            behavior.delayed_expansion = False
         else:
             # Invalid command line switch
             stderr.write('PyCmd: unrecognized option `' + sys.argv[arg] + '\'\n')
@@ -648,11 +654,17 @@ def run_in_cmd(tokens):
         command = u'"'
         command += line_sanitized
         command += u' &set > "' + tmpfile + u'"'
-        for var in pseudo_vars:
-            command += u' & echo ' + var + u'="%' + var + u'%" >> "' + tmpfile + '"'
-        command += u'& <nul (set /p xxx=CD=) >>"' + tmpfile + u'" & cd >>"' + tmpfile + '"'
-        command += u'"'
-        os.system(command.encode(sys.getfilesystemencoding()))
+        if behavior.delayed_expansion:
+            for var in pseudo_vars:
+                command += u' & echo ' + var + u'="!' + var + u'!" >> "' + tmpfile + '"'
+            command += u'"'
+            os.system(u'cmd.exe /V:ON /c ' + command.encode(sys.getfilesystemencoding()))
+        else:
+            for var in pseudo_vars:
+                command += u' & echo ' + var + u'="%' + var + u'%" >> "' + tmpfile + '"'
+            command += u'& <nul (set /p xxx=CD=) >>"' + tmpfile + u'" & cd >>"' + tmpfile + '"'
+            command += u'"'
+            os.system(command.encode(sys.getfilesystemencoding()))
 
     # Update environment and state
     new_environ = {}
