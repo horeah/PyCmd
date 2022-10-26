@@ -63,13 +63,19 @@ def find_updir(name, path=None):
 
 def simple_prompt():
     """
-    Return a prompt containg the current path (abbreviated)
+    Return a prompt containg the current path (abbreviated) plus the ERRORLEVEL
+    of the previous command.
 
     This is the default PyCmd prompt. It uses the abbrev_path() function to
-    obtain the shortened path and appends the typical '> '.
+    obtain the shortened path and appends the ERRORLEVEL plus the typical '> '.
     """
+    if os.environ['ERRORLEVEL'] != '0':
+        errorlevel = (color.Fore.TOGGLE_BRIGHT + ':' + color.Fore.TOGGLE_BRIGHT
+                      + color.Back.TOGGLE_RED + '' + os.environ['ERRORLEVEL'] + color.Back.TOGGLE_RED)
+    else:
+        errorlevel = ''
     # When this is called, the current color is appearance.colors.prompt
-    return abbrev_path() + '>' + color.Fore.DEFAULT + color.Back.DEFAULT + ' '
+    return abbrev_path() + errorlevel + '>' + color.Fore.DEFAULT + color.Back.DEFAULT + ' '
 
 
 def git_prompt():

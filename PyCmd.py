@@ -79,6 +79,10 @@ def main():
     apply_settings(pycmd_data_dir + '\\init.py')
     sanitize_settings()
 
+    # Run an empty command to initialize environment
+    os.environ['ERRORLEVEL'] = '0'
+    run_command(['echo', '>', 'NUL'])
+
     # Parse arguments
     arg = 1
     while arg < len(sys.argv):
@@ -146,9 +150,6 @@ def main():
         print
         print 'Welcome to PyCmd %s-%s!' % (build_date, arch_names[bits])
         print
-
-    # Run an empty command to initialize environment
-    run_command(['echo', '>', 'NUL'])
 
     # Main loop
     while True:
@@ -552,8 +553,10 @@ def internal_cd(args):
                 target = target.rstrip(u'\\')
             target = expand_env_vars(target.strip(u'"').strip(u' '))
             os.chdir(target.encode(sys.getfilesystemencoding()))
+            os.environ['ERRORLEVEL'] = '0'
     except OSError, error:
-        stdout.write(u'\n' + str(error).replace('\\\\', '\\').decode(sys.getfilesystemencoding()))
+        stdout.write(str(error).replace('\\\\', '\\').decode(sys.getfilesystemencoding()) + u'\n')
+        os.environ['ERRORLEVEL'] = '1'
     os.environ['CD'] = os.getcwd()
 
 
@@ -567,6 +570,10 @@ def internal_exit(message = ''):
 
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
+
+    # Inline %ERRORLEVEL%
+    if behavior.delayed_expansion:
+        tokens = [t.replace('%ERRORLEVEL%', os.environ['ERRORLEVEL']) for t in tokens]
 
     # Cleanup environment
     for var in pseudo_vars:
@@ -610,6 +617,7 @@ def run_command(tokens):
                         import subprocess
                         s = u' '.join([expand_tilde(t) for t in tokens])
                         subprocess.Popen(s.encode(sys.getfilesystemencoding()), shell=True)
+                        os.environ['ERRORLEVEL'] = '0'
                         return
 
         # Regular (external) command

@@ -132,7 +132,7 @@ appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
 #
 # The default is a "universal" prompt that atomatically selects between the
 # following predefined prompts:
-#   * appearance.simple_prompt (by default returns the abbreviated path)
+#   * appearance.simple_prompt (by default returns the abbreviated path + the ERRORLEVEL)
 #   * appearance.git_prompt (returns condensed git status info + simple_prompt)
 #   * appearance.svn_prompt (returns svn dirty indicator + simple_prompt)
 #
