@@ -69,7 +69,13 @@ def simple_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the ERRORLEVEL plus the typical '> '.
     """
-    if os.environ['ERRORLEVEL'] != '0':
+    if os.environ['ERRORLEVEL'] != '0' and os.environ['ERRORLEVEL'] != '141':
+        # 141 is not usually an actual error, as it is returned when a
+        # SIGPIPE occurs with a command whose output is piped into a
+        # pager (such as less). A common example is `git log`, see
+        # e.g. https://lore.kernel.org/git/YAG%2FvzctP4JwSp5x@zira.vinc17.org/
+        # Note that other shells (e.g. fish) also hide this particular
+        # exit value!
         errorlevel = (color.Fore.TOGGLE_BRIGHT + ':' + color.Fore.TOGGLE_BRIGHT
                       + color.Back.TOGGLE_RED + '' + os.environ['ERRORLEVEL'] + color.Back.TOGGLE_RED)
     else:
