@@ -69,6 +69,7 @@ def simple_prompt():
     This is the default PyCmd prompt. It uses the abbrev_path() function to
     obtain the shortened path and appends the ERRORLEVEL plus the typical '> '.
     """
+    # When this is called, the current color is DEFAULT + appearance.colors.prompt
     if os.environ['ERRORLEVEL'] != '0' and os.environ['ERRORLEVEL'] != '141':
         # 141 is not usually an actual error, as it is returned when a
         # SIGPIPE occurs with a command whose output is piped into a
@@ -77,10 +78,12 @@ def simple_prompt():
         # Note that other shells (e.g. fish) also hide this particular
         # exit value!
         errorlevel = (color.Fore.TOGGLE_BRIGHT + ':' + color.Fore.TOGGLE_BRIGHT
-                      + color.Back.TOGGLE_RED + '' + os.environ['ERRORLEVEL'] + color.Back.TOGGLE_RED)
+                      + color.Back.RED + color.Back.TOGGLE_BRIGHT
+                      + color.Fore.WHITE + color.Fore.SET_BRIGHT
+                      + os.environ['ERRORLEVEL']
+                      + color.Back.DEFAULT + color.Fore.DEFAULT + appearance.colors.prompt)
     else:
         errorlevel = ''
-    # When this is called, the current color is appearance.colors.prompt
     return abbrev_path() + errorlevel + '>' + color.Fore.DEFAULT + color.Back.DEFAULT + ' '
 
 
