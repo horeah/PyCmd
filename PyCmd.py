@@ -666,7 +666,7 @@ def run_in_cmd(tokens):
             for var in pseudo_vars:
                 command += u' & echo ' + var + u'="!' + var + u'!" >> "' + tmpfile + '"'
             command += u'"'
-            os.system(u'cmd.exe /V:ON /c ' + command.encode(sys.getfilesystemencoding()))
+            os.system(u'%COMSPEC% /V:ON /c ' + command.encode(sys.getfilesystemencoding()))
         else:
             for var in pseudo_vars:
                 command += u' & echo ' + var + u'="%' + var + u'%" >> "' + tmpfile + '"'

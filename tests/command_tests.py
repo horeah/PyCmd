@@ -9,11 +9,12 @@ import os
 test_dir = os.path.split(__file__)[0]
 orig_cwd = os.getcwd()
 PyCmd.tmpfile = os.path.join(test_dir, 'tmpfile')
-os.environ['ERRORLEVEL'] = '0'
+prev_path = os.environ['PATH']
 
 class TestDelayedExpansion(TestCase):
     def setUp(self):
         PyCmd.behavior.delayed_expansion = True
+        os.environ['ERRORLEVEL'] = '0'
         
     def testExternalCommand(self):
         PyCmd.run_command(['ipconfig', '>NUL'])
@@ -42,50 +43,61 @@ class TestDelayedExpansion(TestCase):
         PyCmd.run_command(['cd', 'inexistent_dir', '2>', 'NUL'])
         self.assertEqual(os.environ['CD'], orig_cwd)
         self.assertEqual(os.environ['ERRORLEVEL'], '1')
+
+    def testBrokenPath(self):
+        os.environ['PATH'] = 'Wrong stuff'
+        PyCmd.run_command(['dir', '>NUL'])
+        self.assertEqual(os.environ['ERRORLEVEL'], '0')
+        PyCmd.run_command(['ipconfig', '2>NUL'])
+        self.assertEqual(os.environ['ERRORLEVEL'], '9009')
         
     def tearDown(self):
         os.chdir(orig_cwd)
         if os.path.isfile(PyCmd.tmpfile):
             os.remove(PyCmd.tmpfile)
+        os.environ['PATH'] = prev_path
+        del os.environ['ERRORLEVEL']
 
 
 class TestNoDelayedExpansion(TestCase):
     def setUp(self):
         PyCmd.behavior.delayed_expansion = False
-        del os.environ['ERRORLEVEL']
+        if 'ERRORLEVEL' in os.environ:
+            del os.environ['ERRORLEVEL']
         
     def testExternalCommand(self):
         PyCmd.run_command(['ipconfig', '>NUL'])
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
 
     def testInternalCommand(self):
         PyCmd.run_command(['dir', '>NUL'])
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
 
     def testInexistentCommand(self):
         PyCmd.run_command(['inexistent_command.exe', '2>NUL'])
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
 
     def testInternalCd(self):
         PyCmd.run_command(['cd', '..'])
         self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
         os.chdir(orig_cwd)
 
     def testExternalCd(self):
         PyCmd.run_command(['cd', '..', '&&', 'echo Hi', '>NUL'])
         self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
 
     def testExternalCdInexistent(self):
         PyCmd.run_command(['cd', 'inexistent_dir', '2>', 'NUL'])
         self.assertEqual(os.environ['CD'], orig_cwd)
-        self.assertEqual(os.environ['ERRORLEVEL'], '0')
+
+    def testBrokenPath(self):
+        os.environ['PATH'] = 'Wrong stuff'
+        PyCmd.run_command(['dir', '>NUL'])
+        PyCmd.run_command(['ipconfig', '2>NUL'])
+
 
     def tearDown(self):
         os.chdir(orig_cwd)
         if os.path.isfile(PyCmd.tmpfile):
             os.remove(PyCmd.tmpfile)
+        os.environ['PATH'] = prev_path
 
 
 def suite():
