@@ -553,7 +553,7 @@ def internal_cd(args):
                 target = target.rstrip(u'\\')
             target = expand_env_vars(target.strip(u'"').strip(u' '))
             os.chdir(target.encode(sys.getfilesystemencoding()))
-            os.environ['ERRORLEVEL'] = '0'
+        os.environ['ERRORLEVEL'] = '0'
     except OSError, error:
         stdout.write(str(error).replace('\\\\', '\\').decode(sys.getfilesystemencoding()) + u'\n')
         os.environ['ERRORLEVEL'] = '1'
