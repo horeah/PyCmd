@@ -41,6 +41,7 @@ persistent history, etc.)
       - highlighted for readability
       - abbreviates path to save space
       - displays git and svn status
+      - displays ERRORLEVEL (if > 0)
       - customizable
     - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
@@ -52,7 +53,8 @@ persistent history, etc.)
 3. Known problems
 -----------------
     - pushd/popd are not supported
-    - %ERRORLEVEL% is always 0 when executing commands interactively
+    - when DelayedExpansion is disabled (PyCmd.exe /V:OFF), %ERRORLEVEL% is not
+      properly processed
     - DOSKEY macros are not supported
     - can NOT be used to fully replace cmd.exe as default shell (e.g. via 
       %COMSPEC%)

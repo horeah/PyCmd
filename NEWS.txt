@@ -1,3 +1,8 @@
+ * DelayedExpansion is now ON by default (can be overriden with /V:OFF)
+ * %ERRORLEVEL% is now processed correctly
+ * ERRORLEVEL is shown in the default prompt (if != 0)
+
+Release 20200310:
  * zsh-style completions (displayed below prompt)
  
 Snapshot 20171215:
