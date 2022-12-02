@@ -4,7 +4,7 @@
 
 from unittest import TestCase, TestSuite, defaultTestLoader
 import PyCmd
-import os
+import os, time
 
 test_dir = os.path.split(__file__)[0]
 orig_cwd = os.getcwd()
@@ -27,6 +27,11 @@ class TestDelayedExpansion(TestCase):
     def testInexistentCommand(self):
         PyCmd.run_command(['inexistent_command.exe', '2>NUL'])
         self.assertEqual(os.environ['ERRORLEVEL'], '9009')
+
+    def testGuiApplication(self):
+        PyCmd.run_command(['msg.exe', '/TIME:1', '*', 'waiting one second'])
+        self.assertEqual(os.environ['ERRORLEVEL'], '0')
+        time.sleep(3)
 
     def testInternalCd(self):
         PyCmd.run_command(['cd', '..'])
@@ -73,6 +78,10 @@ class TestNoDelayedExpansion(TestCase):
 
     def testInexistentCommand(self):
         PyCmd.run_command(['inexistent_command.exe', '2>NUL'])
+
+    def testGuiApplication(self):
+        PyCmd.run_command(['msg.exe', '/TIME:1', '*', 'waiting one second'])
+        time.sleep(3)
 
     def testInternalCd(self):
         PyCmd.run_command(['cd', '..'])

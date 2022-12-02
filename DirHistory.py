@@ -57,7 +57,7 @@ class DirHistory:
             os.chdir(self.locations[self.index])
             changed = True
             self.keep = True  # keep saved entries even if no command is executed
-        except OSError, error:
+        except OSError as error:
             stdout.write('\n  ' + str(error) + '\n')
             self.locations.pop(self.index) 
             self.index -= 1
@@ -69,7 +69,7 @@ class DirHistory:
 
     def visit_cwd(self):
         """Add the current directory to the history of visited locations"""
-        cwd = os.getcwd().decode(sys.getfilesystemencoding())
+        cwd = os.getcwd()
         if self.locations and cwd == self.locations[self.index]:
             return
 

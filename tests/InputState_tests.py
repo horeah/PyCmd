@@ -23,8 +23,8 @@ class TestInputState(TestCase):
         self.state.before_cursor = '"c:\\Program Files (x86)\\Sysinternals Suite'
         self.state.after_cursor = '"\\'
         self.state.key_complete('"c:\\Program Files (x86)\\Sysinternals Suite"\\')
-        self.assertEquals(self.state.before_cursor, '"c:\\Program Files (x86)\\Sysinternals Suite"\\')
-        self.assertEquals(self.state.after_cursor, '')
+        self.assertEqual(self.state.before_cursor, '"c:\\Program Files (x86)\\Sysinternals Suite"\\')
+        self.assertEqual(self.state.after_cursor, '')
 
     def testExtendSelection1(self):
         self.state.before_cursor = 'cd d:\\Work\\bui'
