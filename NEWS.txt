@@ -1,3 +1,4 @@
+Release 20221113:
  * DelayedExpansion is now ON by default (can be overriden with /V:OFF)
  * %ERRORLEVEL% is now processed correctly
  * ERRORLEVEL is shown in the default prompt (if != 0)
