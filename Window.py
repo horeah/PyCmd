@@ -21,7 +21,6 @@ class Window(object):
         if self.height == 0 or self.height > self.num_lines:
             self.height = self.num_lines
 
-
         
     @property
     def filter(self):
@@ -37,20 +36,20 @@ class Window(object):
         if self.column_width > self.width - 1:
             self.column_width = self.width - 1
         if (len(self.entries) > self.height
-            and len(self.entries) > (get_viewport()[3] - get_viewport()[1]) / 4):
+            and len(self.entries) > (get_viewport()[3] - get_viewport()[1]) // 4):
             # We print multiple columns to save space
-            self.num_columns = (self.width - 1) / self.column_width
+            self.num_columns = (self.width - 1) // self.column_width
         else:
             # We print a single column for clarity
             self.num_columns = 1
             self.column_width = self.width - 1
-        self.num_lines = len(self.entries) / self.num_columns
+        self.num_lines = len(self.entries) // self.num_columns
         if len(self.entries) % self.num_columns != 0:
             self.num_lines += 1
         if self.num_lines > self.max_lines:
             self.max_lines = self.num_lines
 
-        if self.selected_line >= 0 and self.selected_column >= 0:
+        if self.selected_line is not None and self.selected_column is not None:
             self.selected_line = self.selected_column = 0
             self.offset = 0
 

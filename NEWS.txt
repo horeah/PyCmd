@@ -1,3 +1,7 @@
+ * The PyCmd source code has been ported to Python3 (thanks github.com/UFO for
+   the help). WARNING: this means that your custom init.py files might need
+   to be adapted!
+
 Release 20221113:
  * DelayedExpansion is now ON by default (can be overriden with /V:OFF)
  * %ERRORLEVEL% is now processed correctly

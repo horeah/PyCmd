@@ -79,15 +79,12 @@ persistent history, etc.)
     then start PyCmd.py in Python or run 'make' to build the binary 
     distribution.
     You will need:
-        - Python 2.7 from
-                 http://www.python.org/download/releases/2.7/
-        - Python for Windows extensions from 
-                 https://sourceforge.net/projects/pywin32/
-        - pefile from   
-                 http://code.google.com/p/pefile/
+        - Python 3.10 from
+                 http://www.python.org/download/
+        - The pywin32 package (pip install pywin32)
+        - The pefile package (pip install pefile)
     If you want to build (make), you'll also need:
-        - cx_freeze from 
-                 http://cx-freeze.sourceforge.net/
+        - cx_freeze (pip install cx_freeze)
         - MinGW from
                  http://www.mingw.org/ 
 

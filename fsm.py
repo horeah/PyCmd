@@ -87,7 +87,7 @@ class ExceptionFSM(Exception):
         self.value = value
 
     def __str__(self):
-        return `self.value`
+        return self.value
 
 class FSM:
 
@@ -231,11 +231,11 @@ class FSM:
         4. No transition was defined. If we get here then raise an exception.
         """
 
-        if self.state_transitions.has_key((input_symbol, state)):
+        if (input_symbol, state) in self.state_transitions:
             return self.state_transitions[(input_symbol, state)]
-        elif self.state_transitions_any.has_key (state):
+        elif state in self.state_transitions_any:
             return self.state_transitions_any[state]
-        elif self.state_empty_transitions.has_key(state):
+        elif state in self.state_empty_transitions:
             (action, next_state) = self.state_empty_transitions[state]
             if action is not None:
                 action(self)
