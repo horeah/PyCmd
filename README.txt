@@ -99,7 +99,7 @@ When reporting crashes, please try to locate and attach a crash log (look in
 7. Credits
 ----------
    - The fish shell is an endless source of good ideas:
-            http://fishshell.org/index.php
+            https://fishshell.com/
    - fsm.py is a nice package for implementing a Finite State Machine:
             http://code.activestate.com/recipes/146262
 
