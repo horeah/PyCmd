@@ -158,7 +158,6 @@ def main():
         scrolling = False
         auto_select = False
         force_repaint = True
-        dir_hist.shown = False
         print()
 
         while True:
@@ -173,12 +172,6 @@ def main():
                 set_cursor_attributes(50 if state.overwrite else 10, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 stdout.write('\r')
-
-                # Update the offset of the directory history in case of overflow
-                # Note that if the history display is marked as 'dirty'
-                # (dir_hist.shown == False) the result of this action can be
-                # ignored
-                dir_hist.check_overflow(remove_escape_sequences(state.prompt))
 
                 # Write current line
                 stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt +
@@ -309,20 +302,12 @@ def main():
                     if state.before_cursor + state.after_cursor == '':  # Dir history
                         state.reset_prev_line()
                         if rec.VirtualKeyCode == 37:            # Alt-Left
-                            changed = dir_hist.go_left()
+                            dir_hist.go_left()
                         elif rec.VirtualKeyCode == 39:          # Alt-Right     
-                            changed = dir_hist.go_right()
-                        else:                                   # Alt-1..Alt-9
-                            changed = dir_hist.jump(rec.VirtualKeyCode - 48)
-                        if changed:
-                            state.prev_prompt = state.prompt
-                            state.prompt = appearance.prompt()
-                        update_history(dir_hist.locations[-1],
-                                     pycmd_data_dir + '\\dir_history',
-                                     dir_hist.max_len)
-                        if dir_hist.shown:
-                            dir_hist.display()
-                            stdout.write(state.prev_prompt)
+                            dir_hist.go_right()
+                        state.prev_prompt = state.prompt
+                        state.prompt = appearance.prompt()
+                        update_dir_history()
                     else:
                         if rec.VirtualKeyCode == 37:            # Alt-Left
                             state.handle(ActionCode.ACTION_LEFT_WORD, select)
@@ -343,9 +328,17 @@ def main():
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.VirtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
-                        dir_hist.display()
-                        dir_hist.check_overflow(remove_escape_sequences(state.prev_prompt))
-                        stdout.write(state.prev_prompt)
+                        window_height = get_viewport()[3] - get_cursor()[1] - 1
+                        if window_height < (get_viewport()[3] - get_viewport()[1]) // 3:
+                            window_height = (get_viewport()[3] - get_viewport()[1]) // 3
+                        w = Window(dir_hist.locations, pattern=re.compile('(.*)$'), height=window_height)
+                        w.display()
+                        selection = w.interact(initial_index=dir_hist.index)
+                        if selection:
+                            dir_hist.jump(selection)
+                            state.prev_prompt = state.prompt
+                            state.prompt = appearance.prompt()
+                            update_dir_history()
                     else:
                         state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.VirtualKeyCode == 87:          # Alt-W
@@ -433,7 +426,6 @@ def main():
                         state.bell = True
                     elif len(suggestions) > 1:
                         # Multiple completions possible
-                        dir_hist.shown = False  # The displayed dirhist is no longer valid
                         path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
                         if tokens[-1]:
                             # Tokenize again in case the original line has been appended to
@@ -534,9 +526,7 @@ def main():
 
         # Add to dir history
         dir_hist.visit_cwd()
-        update_history(dir_hist.locations[-1],
-                     pycmd_data_dir + '\\dir_history',
-                     dir_hist.max_len)
+        update_dir_history()
 
         # Update default color
         color.update()
@@ -751,6 +741,12 @@ def read_history(filename):
         print('Warning: Can\'t open ' + os.path.basename(filename) + '!')
         history = []
     return history
+
+
+def update_dir_history():
+    update_history(dir_hist.locations[-1],
+                   pycmd_data_dir + '\\dir_history',
+                   dir_hist.max_len)
 
 
 def print_usage():
