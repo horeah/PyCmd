@@ -115,10 +115,11 @@ class Window(object):
         self.reset_cursor()
 
             
-    def interact(self):
+    def interact(self, initial_index=0):
         self.interactive = True
-        self.selected_line = 0
-        self.selected_column = 0
+        self.selected_column = initial_index // self.num_lines
+        self.selected_line = initial_index % self.num_lines
+        self._center_on_selection()
         while True:
             set_cursor_attributes(10, False)
             self.reset_cursor()
@@ -147,9 +148,9 @@ class Window(object):
                 if self.selected_line + (self.num_columns - 1) * self.num_lines >=  len(self.entries):
                     num_columns_current_row -= 1
                 self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
-                self.offset = Window._bound(self.offset, self.selected_line - self.height + 1, self.selected_line)
+                self._center_on_selection()
                 
-            elif rec.Char == chr(13) or rec.Char == '\t':
+            elif (rec.Char == chr(13) or rec.Char == '\t') and self.entries:
                 self.erase()
                 return self.entries[self.selected_line + self.selected_column * self.num_lines]
             elif rec.Char == chr(27):
@@ -164,7 +165,15 @@ class Window(object):
                 self.filter = self.filter[:-1]
 
                 
+    def _center_on_selection(self):
+        self.offset = Window._bound(self.offset,
+                                    self.selected_line - self.height * 3 // 4,
+                                    self.selected_line - self.height // 4)
+        self.offset = Window._bound(self.offset, 0, self.num_lines - self.height)
+
+                
     @staticmethod
     def _bound(value, lower, upper):
         return max(min(value, upper), lower)
+
             
