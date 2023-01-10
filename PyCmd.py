@@ -549,13 +549,19 @@ def internal_cd(args):
             os.chdir(expand_env_vars('~'))
         else:
             target = args[0]
-            if target != u'\\' and target[1:] != u':\\':
-                target = target.rstrip(u'\\')
-            target = expand_env_vars(target.strip(u'"').strip(u' '))
-            os.chdir(target.encode(sys.getfilesystemencoding()))
+            if target != '\\' and target[1:] != ':\\':
+                target = target.rstrip('\\')
+            target = expand_env_vars(target.strip('"').strip(' '))
+            os.chdir(target)
         os.environ['ERRORLEVEL'] = '0'
+    except FileNotFoundError as error:
+        stderr.write(f'The system cannot find the path specified: {error.filename}\n')
+        os.environ['ERRORLEVEL'] = '1'
+    except PermissionError as error:
+        stderr.write(f'Access is denied: {error.filename}\n')
+        os.environ['ERRORLEVEL'] = '1'
     except OSError as error:
-        stdout.write(str(error).replace('\\\\', '\\').decode(sys.getfilesystemencoding()) + u'\n')
+        stderr.write(str(error).replace('\\\\', '\\') + '\n')
         os.environ['ERRORLEVEL'] = '1'
     os.environ['CD'] = os.getcwd()
 
