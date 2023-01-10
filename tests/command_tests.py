@@ -39,6 +39,11 @@ class TestDelayedExpansion(TestCase):
         self.assertEqual(os.environ['ERRORLEVEL'], '0')
         os.chdir(orig_cwd)
 
+    def testInternalCdInexistent(self):
+        PyCmd.run_command(['cd', 'inexistent_dir'])
+        self.assertEqual(os.environ['CD'], orig_cwd)
+        self.assertEqual(os.environ['ERRORLEVEL'], '1')
+
     def testExternalCd(self):
         PyCmd.run_command(['cd', '..', '&&', 'echo Hi', '>NUL'])
         self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
@@ -87,6 +92,10 @@ class TestNoDelayedExpansion(TestCase):
         PyCmd.run_command(['cd', '..'])
         self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
         os.chdir(orig_cwd)
+
+    def testInternalCdInexistent(self):
+        PyCmd.run_command(['cd', 'inexistent_dir'])
+        self.assertEqual(os.environ['CD'], orig_cwd)
 
     def testExternalCd(self):
         PyCmd.run_command(['cd', '..', '&&', 'echo Hi', '>NUL'])
