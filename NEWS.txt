@@ -1,3 +1,7 @@
+Release 20230114:
+* Fixed crash when cd-ing to inexistent directory
+
+Release 20230107:
  * The PyCmd source code has been ported to Python3 (thanks github.com/UFO for
    the help). WARNING: this means that your custom init.py files might need
    to be adapted!
