@@ -29,7 +29,9 @@ class Window(object):
     
     @filter.setter
     def filter(self, value):
-        self._filter = value
+        self._filter =  ' '.join(''.join(c if c.isalnum() else ' ' for c in value).split())
+        if value.endswith(' '):
+            self._filter += ' '
         self.entries = [e for e in self.all_entries if fuzzy_match(self.filter, e)]
         
         self.column_width = max([len(e) for e in self.entries]) + 10 if self.entries else 1
@@ -50,11 +52,20 @@ class Window(object):
             self.max_lines = self.num_lines
 
         if self.selected_line is not None and self.selected_column is not None:
-            self.selected_line = self.selected_column = 0
-            self.offset = 0
+            if self._default_selection_last:
+                self.selected_column = self.num_columns - 1
+                self.selected_line = self.num_lines - (self.num_lines * self.num_columns - len(self.entries)) - 1
+            else:
+                self.selected_line = self.selected_column = 0
+                self.offset = 0
+            self._center_on_selection()
 
 
     def display(self):
+        def shorten(s):
+            half_len = self.width // 2 - 2
+            return s if len(s) <= self.width else s[0:half_len] + '\u00b7' * 3 + s[len(s) - half_len:]
+
         default_color = color.Fore.DEFAULT + color.Back.DEFAULT
         stdout.write('\n')
         set_cursor_attributes(10, False)
@@ -63,7 +74,7 @@ class Window(object):
             stdout.write('\r')
             for column in range(0, self.num_columns):
                 if line < self.num_lines and line + column * self.num_lines < len(self.entries):
-                    s = self.entries[line + column * self.num_lines]
+                    s = shorten(self.entries[line + column * self.num_lines])
                     if self.selected_line == line and self.selected_column == column:
                         # Highlight selected line
                         stdout.write(appearance.colors.selection + s + default_color)
@@ -115,7 +126,10 @@ class Window(object):
         self.reset_cursor()
 
             
-    def interact(self, initial_index=0):
+    def interact(self, initial_index=None, default_selection_last=False):
+        self._default_selection_last = default_selection_last
+        if initial_index is None:
+            initial_index = len(self.entries) - 1 if default_selection_last else 0
         self.interactive = True
         self.selected_column = initial_index // self.num_lines
         self.selected_line = initial_index % self.num_lines

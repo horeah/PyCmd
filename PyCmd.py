@@ -250,6 +250,17 @@ def main():
                                      pycmd_data_dir + '\\history',
                                        save_history_limit)
                         auto_select = False
+                elif rec.VirtualKeyCode == 82:          # Ctrl-R
+                    w = Window(state.history.list, pattern=re.compile('(.*)$'),
+                               height=optimal_window_height())
+                    w.display()
+                    w.filter = state.history.filter if state.history.filter else state.before_cursor + state.after_cursor
+                    selection = w.interact(default_selection_last=True)
+                    if selection:
+                        state.before_cursor = selection
+                        state.after_cursor = ''
+                        state.reset_selection()
+                        state.history.reset()
                 elif rec.VirtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.VirtualKeyCode == 69:          # Ctrl-E
@@ -328,10 +339,8 @@ def main():
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.VirtualKeyCode == 68:          # Alt-D
                     if state.before_cursor + state.after_cursor == '':
-                        window_height = get_viewport()[3] - get_cursor()[1] - 1
-                        if window_height < (get_viewport()[3] - get_viewport()[1]) // 3:
-                            window_height = (get_viewport()[3] - get_viewport()[1]) // 3
-                        w = Window(dir_hist.locations, pattern=re.compile('(.*)$'), height=window_height)
+                        w = Window(dir_hist.locations, pattern=re.compile('(.*)$'),
+                                   height=optimal_window_height())
                         w.display()
                         selection = w.interact(initial_index=dir_hist.index)
                         if selection:
@@ -461,10 +470,7 @@ def main():
                             w.display()
                             state.reset_prev_line()
                         else:
-                            window_height = get_viewport()[3] - get_cursor()[1] - 1
-                            if window_height < (get_viewport()[3] - get_viewport()[1]) // 3:
-                                window_height = (get_viewport()[3] - get_viewport()[1]) // 3
-                            w = Window(suggestions, pattern, height=window_height)
+                            w = Window(suggestions, pattern, height=optimal_window_height())
                             w.display()
                             w.reset_cursor()
                             r = read_input()
@@ -699,6 +705,13 @@ def signal_handler(signum, frame):
     if signum == signal.SIGINT:
         # Emulate a Ctrl-C press
         write_input(67, u'c', 0x0008)
+
+def optimal_window_height():
+    _, viewport_top, _, viewport_bottom  = get_viewport()
+    window_height = viewport_bottom - get_cursor()[1] - 1
+    if window_height < (viewport_bottom - viewport_top) // 3:
+        window_height = (viewport_bottom - viewport_top) // 3
+    return window_height
 
 
 def update_history(line, filename, length):
