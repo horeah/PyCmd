@@ -1,64 +1,28 @@
 #
-# Functions for manipulating the console using Microsoft's Console API
+# Functions for manipulating the console using ANSI terminal sequences
 #
 from itertools import chain
 from functools import reduce
+from dataclasses import dataclass
 import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
-from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY_EVENT
-from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
-from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
-from win32con import SHIFT_PRESSED
+from .console_common import *
 
-global FOREGROUND_RED
-global FOREGROUND_GREEN
-global FOREGROUND_BLUE
-global FOREGROUND_WHITE
-global FOREGROUND_BRIGHT
+# These are taken from the win32console
+LEFT_ALT_PRESSED = 0x0002
+LEFT_CTRL_PRESSED = 0x0008
+RIGHT_ALT_PRESSED = 0x0001
+RIGHT_CTRL_PRESSED = 0x0004
+SHIFT_PRESSED = 0x0010
 
-global BACKGROUND_RED
-global BACKGROUND_GREEN
-global BACKGROUND_BLUE
-global BACKGROUND_BRIGHT
+@dataclass
+class PyINPUT_RECORDType:
+    KeyDown: bool = False
+    VirtualKeyCode: int = 0
+    Char: str = '\0'
+    ControlKeyState: int = 0
 
-global stdout_handle
-global stdin_handle
-
-class COORD(Structure):
-    _fields_ = [('X', c_short),
-                ('Y', c_short)]
-
-class SMALL_RECT(Structure):
-    _fields_ = [('Left', c_short),
-                ('Top', c_short),
-                ('Right', c_short),
-                ('Bottom', c_short)]
-
-class CONSOLE_CURSOR_INFO(Structure):
-    _fields_ = [('size', c_int),
-                ('visible', c_int)]
-
-class CONSOLE_SCREEN_BUFFER_INFO(Structure):
-    _fields_ = [('size', COORD),
-                ('cursorPosition', COORD),
-                ('attributes', WORD),
-                ('window', SMALL_RECT),
-                ('maxWindowSize', COORD)]
-
-class KEY_EVENT_RECORD(Structure):
-    _fields_ = [('keyDown', BOOL),
-                ('repeatCount', WORD),
-                ('virtualKeyCode', WORD),
-                ('virtualScanCode', WORD),
-                ('char', c_char),
-                ('controlKeyState', DWORD)]
-    
-def get_text_attributes():
-    """Get the current foreground/background RGB components"""
-    buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
-    return buffer_info.attributes
 
 def set_text_attributes(color):
     """Set foreground/background RGB components for the text to write"""
@@ -91,7 +55,7 @@ def visual_bell():
 
 def set_console_title(title):
     """Set the title of the current console"""
-    ctypes.windll.kernel32.SetConsoleTitleA(title.encode(sys.stdout.encoding))
+    pass
 
 def move_cursor(x, y):
     """Move the cursor to the specified location"""
@@ -127,20 +91,12 @@ def get_viewport():
 
 def set_cursor_attributes(size, visibility):
     """Set the cursor size and visibility"""
-    cursor_info = CONSOLE_CURSOR_INFO(size, visibility)
-    ctypes.windll.kernel32.SetConsoleCursorInfo(stdout_handle, pointer(cursor_info))
+    pass
 
 def cursor_backward(count):
     """Move cursor backward with the given number of positions"""
-    (x, y) = get_cursor()
-    while count > 0:
-        x -= 1
-        if x < 0:
-            y -= 1
-            (x, _) = get_buffer_size()
-            x -= 1
-        count -= 1
-    move_cursor(x, y)
+    for i in range(count):
+        sys.__stdout__.write('\b')
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
@@ -164,11 +120,17 @@ def scroll_to_quarter(line):
         scroll_buffer(lines - viewport_height / 4)
 
 def read_input():
-    """Read one input event from the console input buffer"""
-    while True:
-        record = stdin_handle.ReadConsoleInput(1)[0]
-        if record.EventType == KEY_EVENT and record.KeyDown:
-            return record
+    """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
+    ch = sys.stdin.read(1)
+    match ch:
+        case c if c == '\x04':  # Ctrl-D
+            return PyINPUT_RECORDType(True, 0, c, LEFT_CTRL_PRESSED)
+        case c if c == '\x7F':  # Backspace
+            return PyINPUT_RECORDType(True, 0, chr(8), 0)
+        case c if c == '\x0A':  # Enter
+            return PyINPUT_RECORDType(True, 0, '\x0D', 0)
+        case other:
+            return PyINPUT_RECORDType(True, 0, ch, 0)
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
@@ -183,82 +145,15 @@ def write_str(s):
     """
     Output s to stdout, while processing the color sequences
     """
-    def write_with_sane_cursor(s):
-        """
-        Under Win10, write() no longer advances the cursor to the next line after writing in the last column; so we
-        use a custom function to restore that behavior when needed
-        """
-        buffer_width = get_buffer_size()[0]
-        cursor_before = get_cursor()[0]
-        sys.__stdout__.write(s)
-        sys.__stdout__.flush()
-        cursor_after = get_cursor()[0]
-        if (buffer_width > 0
-            and (cursor_before + len(s)) % buffer_width == 0
-            and cursor_after > 0):
-            # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
-            # ourselves
-            sys.__stdout__.write(' \r')
+    sys.__stdout__.write(remove_escape_sequences(s))
+    sys.__stdout__.flush()
 
-    i = 0
-    buf = ''
-    attr = get_text_attributes()
-    while i < len(s):
-        c = s[i]
-        if c == chr(27):
-            if buf:
-                # We have some characters, apply attributes and write them out
-                set_text_attributes(attr)
-                write_with_sane_cursor(buf)
-                buf = ''
 
-            # Process color commands to compute and set new attributes
-            target = s[i + 1]
-            command = s[i + 2]
-            component = s[i + 3]
-            i += 3
+def get_current_foreground():
+    return ''
 
-            # Escape sequence format is [ESC][TGT][OP][COMP], where:
-            #  * ESC is the Escape character: chr(27)
-            #  * TGT is the target: 'F' for foreground, 'B' for background
-            #  * OP is the operation: 'S' (set), 'C' (clear), 'T' (toggle) a component
-            #  * COMP is the color component: 'R', 'G', 'B' or 'X' (bright)
-            if target == 'F':
-                name_prefix = 'FOREGROUND'
-            else:
-                name_prefix = 'BACKGROUND'
-
-            if component == 'R':
-                name_suffix = 'RED'
-            elif component == 'G':
-                name_suffix = 'GREEN'
-            elif component == 'B':
-                name_suffix = 'BLUE'
-            else:
-                name_suffix = 'BRIGHT'
-
-            if command == 'S':
-                operator = lambda x, y: x | y
-            elif command == 'C':
-                operator = lambda x, y: x & ~y
-            else:
-                operator = lambda x, y: x ^ y
-
-            import console
-            # We use the bit masks defined at the end of console.py by computing
-            # the name and accessing the module's dictionary (FOREGROUND_RED,
-            # BACKGROUND_BRIGHT etc)
-            bit_mask = console.__dict__[name_prefix + '_' + name_suffix]
-            attr = operator(attr, bit_mask)
-        else:
-            # Regular character, just append to the buffer
-            buf += c
-        i += 1
-
-    # Apply the last attributes and write the remaining chars (if any)
-    set_text_attributes(attr)
-    if buf:
-        write_with_sane_cursor(buf)
+def get_current_background():
+    return ''
 
 def remove_escape_sequences(s):
     """
@@ -272,34 +167,6 @@ def remove_escape_sequences(s):
     return reduce(lambda x, y: x.replace(y, ''), 
                   escape_sequences_fore,
                   s)
-
-def get_current_foreground():
-    """Get the current foreground setting as a color string"""
-    color = ''
-    attr = get_text_attributes()
-    letters = ['B', 'G', 'R', 'X']
-
-    for i in range(4):
-        if attr & 1 << i:
-            color += chr(27) + 'FS' + letters[i]
-        else:
-            color += chr(27) + 'FC' + letters[i]
-
-    return color
-
-def get_current_background():
-    """Get the current background setting as a color string"""
-    color = ''
-    attr = get_text_attributes()
-    letters = ['B', 'G', 'R', 'X']
-
-    for i in range(4):
-        if attr & 1 << (i + 4):
-            color += chr(27) + 'BS' + letters[i]
-        else:
-            color += chr(27) + 'BC' + letters[i]
-
-    return color
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""
@@ -332,9 +199,6 @@ BACKGROUND_RED = 0x40
 BACKGROUND_BRIGHT = 0x80
 BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
 
-stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
-stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
-
 class ColorOutputStream:
     """
     We install a custom sys.stdout that handles our color sequences
@@ -351,3 +215,7 @@ class ColorOutputStream:
 
 # Install our custom output stream
 sys.stdout = ColorOutputStream()
+
+# Direct character processing
+import tty
+tty.setcbreak(sys.stdin)
