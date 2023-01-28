@@ -1,6 +1,5 @@
 from CommandHistory import CommandHistory
 from common import word_sep
-import win32clipboard as wclip
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
     ['-', '.', '=', '\\', ';', ' ', '>', '<', '&', '|', '\0']
@@ -463,6 +462,7 @@ class InputState:
 
     def key_copy(self):
         """Copy selection to clipboard"""
+        import win32clipboard as wclip
         wclip.OpenClipboard()
         wclip.EmptyClipboard()
         wclip.SetClipboardText(self.get_selection())
