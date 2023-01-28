@@ -234,7 +234,7 @@ def fuzzy_match(substr, str, prefix_only = False):
     """
     #print('\n\nMatch "' + substr + '" in "' + str + '"\n\n')
     words = substr.split(' ')
-    pattern = [('\\b' if prefix_only else '') + '(' + word + ').*' for word in words]
+    pattern = [('\\b' if prefix_only else '') + '(' + re.escape(word) + ').*' for word in words]
     # print('\n\n', pattern, '\n\n')
     pattern = ''.join(pattern)
     matches = re.search(pattern, str, re.IGNORECASE)

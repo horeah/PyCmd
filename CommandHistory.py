@@ -1,5 +1,4 @@
 import re
-from common import fuzzy_match
 
 class CommandHistory:
     """

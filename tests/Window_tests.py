@@ -38,15 +38,22 @@ class TestWindow(TestCase):
     def testFilter(self):
         self.window_small.filter = 'a b'
         self.assertEqual(self.window_small.num_lines, 1)
+
         self.window_small.filter = 'xx'
         self.assertEqual(self.window_small.num_lines, 0)
         self.assertEqual(self.window_small.column_width, 39)
+
+        self.window_small.filter = 'b.'
+        self.assertEqual(self.window_small.num_lines, 1)
+        self.assertEqual(self.window_small.column_width, 39)
+        self.assertEqual(self.window_large.num_columns, 3)
 
         self.window_large.filter = '1'
         self.assertEqual(len(self.window_large.entries), 11)
         self.assertEqual(self.window_large.column_width, 25)
         self.assertEqual(self.window_large.num_columns, 3)
         self.assertEqual(self.window_large.num_lines, 4)
+
         self.window_large.filter = '0 19'
         self.assertEqual(len(self.window_large.entries), 1)
         self.assertEqual(self.window_large.column_width, 79)

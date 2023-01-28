@@ -1,5 +1,5 @@
 from CommandHistory import CommandHistory
-from common import fuzzy_match, word_sep
+from common import word_sep
 import win32clipboard as wclip
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \

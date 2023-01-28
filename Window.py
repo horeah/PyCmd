@@ -1,4 +1,5 @@
-from console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes, read_input, erase_to
+from console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes
+from console import read_input, erase_to, is_ctrl_pressed
 from pycmd_public import color, appearance
 from math import log10, ceil
 from sys import stdout
@@ -29,7 +30,7 @@ class Window(object):
     
     @filter.setter
     def filter(self, value):
-        self._filter =  ' '.join(''.join(c if c.isalnum() else ' ' for c in value).split())
+        self._filter =  ' '.join(value.split())
         if value.endswith(' '):
             self._filter += ' '
         self.entries = [e for e in self.all_entries if fuzzy_match(self.filter, e)]
@@ -163,7 +164,6 @@ class Window(object):
                     num_columns_current_row -= 1
                 self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
                 self._center_on_selection()
-                
             elif (rec.Char == chr(13) or rec.Char == '\t') and self.entries:
                 self.erase()
                 return self.entries[self.selected_line + self.selected_column * self.num_lines]
@@ -173,10 +173,11 @@ class Window(object):
                 else:
                     self.erase()
                     return None
-            elif rec.Char.isalnum() or rec.Char == ' ':
-                self.filter += rec.Char
-            elif rec.Char == '\b':
-                self.filter = self.filter[:-1]
+            elif not is_ctrl_pressed(rec):
+                if rec.Char == '\b':
+                    self.filter = self.filter[:-1]
+                else:            
+                    self.filter += rec.Char
 
                 
     def _center_on_selection(self):
