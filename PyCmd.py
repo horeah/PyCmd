@@ -1,7 +1,5 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
-import win32console, win32gui, win32con, win32api
-
-from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -29,19 +27,22 @@ tmpfile = None
 save_history_limit = 2000
 
 def init():
-    # %APPDATA% is not always defined (e.g. when using runas.exe)
-    if 'APPDATA' in os.environ.keys():
-        APPDATA = '%APPDATA%'
-    else:
-        APPDATA = '%USERPROFILE%\\Application Data'
     global pycmd_data_dir
-    pycmd_data_dir = expand_env_vars(APPDATA + '\\PyCmd')
+    if sys.platform == 'win32':
+        # %APPDATA% is not always defined (e.g. when using runas.exe)
+        if 'APPDATA' in os.environ.keys():
+            APPDATA = '%APPDATA%'
+        else:
+            APPDATA = '%USERPROFILE%\\Application Data'
+        pycmd_data_dir = expand_env_vars(APPDATA + '\\PyCmd')
+    else:
+        pycmd_data_dir = os.path.expanduser('~/.PyCmd')
 
     # Create app data directory structure if not present
     if not os.path.isdir(pycmd_data_dir):
         os.mkdir(pycmd_data_dir)
-    if not os.path.isdir(pycmd_data_dir + '\\tmp'):
-        os.mkdir(pycmd_data_dir + '\\tmp')
+    if not os.path.isdir(pycmd_data_dir + '/tmp'):
+        os.mkdir(pycmd_data_dir + '/tmp')
 
     # Determine the "installation" directory
     global pycmd_install_dir
@@ -52,18 +53,18 @@ def init():
     state = InputState()
 
     # Read/initialize command history
-    state.history.list = read_history(pycmd_data_dir + '\\history')
+    state.history.list = read_history(pycmd_data_dir + '/history')
 
     # Read/initialize directory history
     global dir_hist
     dir_hist = DirHistory()
-    dir_hist.locations = read_history(pycmd_data_dir + '\\dir_history')
+    dir_hist.locations = read_history(pycmd_data_dir + '/dir_history')
     dir_hist.index = len(dir_hist.locations) - 1
     dir_hist.visit_cwd()
 
     # Create temporary file
     global tmpfile
-    (handle, tmpfile) = tempfile.mkstemp(dir = pycmd_data_dir + '\\tmp')
+    (handle, tmpfile) = tempfile.mkstemp(dir = pycmd_data_dir + '/tmp')
     os.close(handle)
 
     # Catch SIGINT to emulate Ctrl-C key combo
@@ -76,8 +77,8 @@ def main():
     title_prefix = ""
 
     # Apply global and user configurations
-    apply_settings(pycmd_install_dir + '\\init.py')
-    apply_settings(pycmd_data_dir + '\\init.py')
+    apply_settings(pycmd_install_dir + '/init.py')
+    apply_settings(pycmd_data_dir + '/init.py')
     sanitize_settings()
 
     # Run an empty command to initialize environment
@@ -251,7 +252,8 @@ def main():
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
                         update_history('add', state.history.list[-1],
-                                       pycmd_data_dir + '\\history', save_history_limit)
+                                       pycmd_data_dir + '/history',
+                                       save_history_limit)
                         auto_select = False
                 elif rec.VirtualKeyCode == 82:          # Ctrl-R
                     w = Window(state.history.list, pattern=re.compile('(.*)$'),
@@ -546,7 +548,8 @@ def main():
         # Add to history
         state.history.add(line)
         update_history('add', state.history.list[-1],
-                       pycmd_data_dir + '\\history', save_history_limit)
+                       pycmd_data_dir + '/history',
+                       save_history_limit)
 
         # Add to dir history
         dir_hist.visit_cwd()
@@ -596,7 +599,11 @@ def internal_exit(message = ''):
 
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
-
+    if sys.platform == 'linux':
+        print(f'Running {tokens}')
+        return
+    import win32console, win32gui, win32con
+    
     # Inline %ERRORLEVEL%
     if behavior.delayed_expansion:
         tokens = [t.replace('%ERRORLEVEL%', os.environ['ERRORLEVEL']) for t in tokens]
@@ -824,8 +831,10 @@ def read_history(filename):
 
 
 def update_dir_history():
-    update_history('add', dir_hist.locations[-1],
-                   pycmd_data_dir + '\\dir_history', dir_hist.max_len)
+    update_history('add',
+                   dir_hist.locations[-1],
+                   pycmd_data_dir + '/dir_history',
+                   dir_hist.max_len)
 
 
 def print_usage():

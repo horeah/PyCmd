@@ -1,7 +1,7 @@
 #
 # Common utility functions
 #
-import os, string, fsm, winreg, pefile, mmap, sys, traceback
+import os, string, fsm, mmap, sys, traceback
 from console import get_cursor, move_cursor, get_viewport
 import re
 import pycmd_public
@@ -45,7 +45,7 @@ redir_file_tokens = redir_file_all + [d + c for d in digit_chars for c in redir_
 sep_tokens = seq_tokens + redir_file_tokens
 
 # Executable extensions (all lowercase), as indicated by the PATHSPEC
-exec_extensions = os.environ['PATHEXT'].lower().split(os.pathsep)
+exec_extensions = os.environ['PATHEXT'].lower().split(os.pathsep) if sys.platform == 'win32' else []
 
 # Pseudo environment variables
 pseudo_vars = ['CD', 'DATE', 'ERRORLEVEL', 'RANDOM', 'TIME']
@@ -315,6 +315,7 @@ def associated_application(ext):
     extension.
     """
     try:
+        import winreg
         file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, ext) or ext
         action = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, file_class + '\\shell') or 'open'
         assoc_key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, 
@@ -377,6 +378,7 @@ def is_gui_application(executable):
         m = mmap.mmap(fd, 0, access = mmap.ACCESS_READ)
         
         try:
+            import pefile
             pe = pefile.PE(data = m, fast_load=True)
             if pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem] == 'IMAGE_SUBSYSTEM_WINDOWS_GUI':
                 # We only return true if all went well
