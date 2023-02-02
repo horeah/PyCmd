@@ -1,5 +1,9 @@
+ * Ctrl-R for incrementally searching the command history
+ * Alt-D now opens the directory history in an interactive, searchable
+   Window
+
 Release 20230114:
-* Fixed crash when cd-ing to inexistent directory
+ * Fixed crash when cd-ing to inexistent directory
 
 Release 20230107:
  * The PyCmd source code has been ported to Python3 (thanks github.com/UFO for

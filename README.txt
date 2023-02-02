@@ -19,9 +19,9 @@ persistent history, etc.)
 
  b. Command history
     - the history is persistent across PyCmd sessions
-    - one can search through the history (type a few filter characters/words,
-      then Up/Down)
-    - reordering is more intuitive than cmd's default strategy
+    - direct history search (type a few filter characters/words, then Up/Down)
+    - incremental history search (Ctrl-R)
+    - history ordering is more intuitive than cmd's default strategy
 
  c. Command editing
     - support emacs key bindings
