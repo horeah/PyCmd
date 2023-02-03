@@ -1,4 +1,6 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
+if sys.platform == 'linux':
+    import pty, threading
 from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
@@ -81,10 +83,62 @@ def main():
     apply_settings(pycmd_data_dir + '/init.py')
     sanitize_settings()
 
-    # Run an empty command to initialize environment
     os.environ['ERRORLEVEL'] = '0'
-    run_command(['echo', '>', 'NUL'])
 
+    if sys.platform == 'win32':
+        # Run an empty command to initialize environment
+        run_command(['echo', '>', 'NUL'])
+    else:
+        # Start a bash instance and control its pty
+        global command_to_run, pass_through, marker_buffer
+        command_to_run = None
+        pass_through = False
+
+        def read_stdin(fd):
+            global pass_through
+            ch = os.read(fd, 1)
+            if pass_through:
+                return ch
+            else:
+                global input_processed
+                input_processed = False
+                console.console_linux.input_buffer.append(ch[0])
+                while not input_processed:
+                    time.sleep(0.1)
+                if command_to_run:
+                    return bytearray(command_to_run, 'utf-8')
+                else:
+                    return bytearray(chr(0), 'utf-8')
+
+        def read_shell(fd):
+            global command_to_run, pass_through, marker_buffer
+            if command_to_run:
+                os.read(fd, len(command_to_run) - 1)
+                command_to_run = None
+                return bytearray(chr(0), 'utf-8')
+            else:
+                ch = os.read(fd, 1)
+                if pass_through:
+                    discarded = marker_buffer[0:1]
+                    marker_buffer.pop(0)
+                    marker_buffer += ch
+                    if ''.join(marker_buffer.decode('utf-8')) == MARKER:
+                        pass_through = False
+                        marker_buffer = bytearray(len(MARKER))
+                    return discarded
+                else:
+                    return ch
+                
+        MARKER = 'MARKER'
+        os.environ['PS1'] = MARKER
+        marker_buffer = bytearray(len(MARKER))
+        pass_through = True
+        t = threading.Thread(group=None,
+                             target=(lambda: pty.spawn(['/bin/bash', '--norc'],
+                                                   master_read=read_shell,
+                                                   stdin_read=read_stdin)))
+        t.start()
+        
     # Parse arguments
     arg = 1
     while arg < len(sys.argv):
@@ -163,6 +217,10 @@ def main():
         print()
 
         while True:
+            # Signal console to process next character
+            global input_processed
+            input_processed = True
+
             # Update console title and environment
             curdir = os.getcwd()
             curdir = curdir[0].upper() + curdir[1:]
@@ -594,14 +652,24 @@ def internal_exit(message = ''):
     deinit()
     if ((not behavior.quiet_mode) and message != ''):
         print(message)
+    if sys.platform == 'linux':
+        run_command(['exit'])
     sys.exit()
 
 
 def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if sys.platform == 'linux':
-        print(f'Running {tokens}')
+        #print('Running', tokens)
+        global command_to_run, pass_through, input_processed
+        command_to_run = ' '.join(tokens) + '\n'
+        input_processed = True
+        pass_through = True
+        if tokens != ['exit']:
+            while pass_through:
+                time.sleep(0.1)
         return
+    
     import win32console, win32gui, win32con
     
     # Inline %ERRORLEVEL%
@@ -864,7 +932,7 @@ if __name__ == '__main__':
         main()
     except Exception as e:        
         report_file_name = (pycmd_data_dir
-                            + '\\crash-' 
+                            + '/crash-' 
                             + time.strftime('%Y%m%d_%H%M%S') 
                             + '.log')
         print('\n')

@@ -121,16 +121,19 @@ def scroll_to_quarter(line):
 
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
-    ch = sys.stdin.read(1)
+    while len(input_buffer) == 0:
+        time.sleep(0.1)
+    ch = input_buffer.pop()
+    # print(ch, chr(ch))
     match ch:
-        case c if c == '\x04':  # Ctrl-D
-            return PyINPUT_RECORDType(True, 0, c, LEFT_CTRL_PRESSED)
-        case c if c == '\x7F':  # Backspace
+        case c if c == 0x04:  # Ctrl-D
+            return PyINPUT_RECORDType(True, 0, chr(c), LEFT_CTRL_PRESSED)
+        case c if c == 0x7F:  # Backspace
             return PyINPUT_RECORDType(True, 0, chr(8), 0)
-        case c if c == '\x0A':  # Enter
+        case c if c == 0x0A:  # Enter
             return PyINPUT_RECORDType(True, 0, '\x0D', 0)
         case other:
-            return PyINPUT_RECORDType(True, 0, ch, 0)
+            return PyINPUT_RECORDType(True, 0, chr(ch), 0)
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
@@ -219,3 +222,6 @@ sys.stdout = ColorOutputStream()
 # Direct character processing
 import tty
 tty.setcbreak(sys.stdin)
+
+# Buffer that is filled in by the pty callbacks
+input_buffer = []
