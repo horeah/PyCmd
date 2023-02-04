@@ -111,7 +111,7 @@ def main():
                     return bytearray(chr(0), 'utf-8')
 
         def read_shell(fd):
-            global command_to_run, pass_through, marker_buffer
+            global command_to_run, pass_through, marker_buffer, captured_prompt
             if command_to_run:
                 os.read(fd, len(command_to_run) - 1)
                 command_to_run = None
@@ -123,6 +123,10 @@ def main():
                     marker_buffer.pop(0)
                     marker_buffer += ch
                     if ''.join(marker_buffer.decode('utf-8')) == MARKER:
+                        captured_prompt = ''
+                        while not captured_prompt.endswith(MARKER):
+                            captured_prompt += os.read(fd, 1).decode('utf-8')
+                        captured_prompt = captured_prompt[:-len(MARKER)]
                         pass_through = False
                         marker_buffer = bytearray(len(MARKER))
                     return discarded
@@ -130,7 +134,7 @@ def main():
                     return ch
                 
         MARKER = 'MARKER'
-        os.environ['PS1'] = MARKER
+        os.environ['PS1'] = MARKER + r'$PWD|$?' + MARKER
         marker_buffer = bytearray(len(MARKER))
         pass_through = True
         t = threading.Thread(group=None,
@@ -661,13 +665,16 @@ def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if sys.platform == 'linux':
         #print('Running', tokens)
-        global command_to_run, pass_through, input_processed
+        global command_to_run, pass_through, input_processed, captured_prompt
         command_to_run = ' '.join(tokens) + '\n'
         input_processed = True
         pass_through = True
         if tokens != ['exit']:
             while pass_through:
                 time.sleep(0.1)
+        # print(f'Captured[{captured_prompt}]')
+        curdir, exit_code = captured_prompt.split('|')
+        os.chdir(curdir)
         return
     
     import win32console, win32gui, win32con
