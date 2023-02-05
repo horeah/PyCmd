@@ -124,7 +124,7 @@ def scroll_to_quarter(line):
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
     while len(pty_control.input_buffer) == 0:
-        time.sleep(0.1)
+        time.sleep(0)
     ch = pty_control.input_buffer.pop()
     #print('\n\rC1=0x%02X' % ch)
     match ch:
@@ -137,13 +137,13 @@ def read_input():
         case c if c == 0x1B:  # Escape
             pty_control.input_processed = True
             while len(pty_control.input_buffer) == 0:
-                time.sleep(0.1)
+                time.sleep(0)
             ch = pty_control.input_buffer.pop()
             #print('\n\rC2=0x%02X' % ch)
             if ch == 0x5B:
                 pty_control.input_processed = True
                 while len(pty_control.input_buffer) == 0:
-                    time.sleep(0.1)
+                    time.sleep(0)
                 ch = pty_control.input_buffer.pop()
                 #print('\n\rC3=0x%02X' % ch)
                 if ch == 0x44:    # Left arrow
