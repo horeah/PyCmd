@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
+from pty_control import pty_control
 from .console_common import *
 
 # These are taken from the win32console
@@ -97,6 +98,7 @@ def cursor_backward(count):
     """Move cursor backward with the given number of positions"""
     for i in range(count):
         sys.__stdout__.write('\b')
+        sys.__stdout__.flush()
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
@@ -124,7 +126,7 @@ def read_input():
     while len(input_buffer) == 0:
         time.sleep(0.1)
     ch = input_buffer.pop()
-    # print(ch, chr(ch))
+    #print('\n\rC1=0x%02X' % ch)
     match ch:
         case c if c == 0x04:  # Ctrl-D
             return PyINPUT_RECORDType(True, 0, chr(c), LEFT_CTRL_PRESSED)
@@ -132,8 +134,33 @@ def read_input():
             return PyINPUT_RECORDType(True, 0, chr(8), 0)
         case c if c == 0x0A:  # Enter
             return PyINPUT_RECORDType(True, 0, '\x0D', 0)
-        case other:
-            return PyINPUT_RECORDType(True, 0, chr(ch), 0)
+        case c if c == 0x1B:  # Escape
+            pty_control.input_processed = True
+            while len(input_buffer) == 0:
+                time.sleep(0.1)
+            ch = input_buffer.pop()
+            #print('\n\rC2=0x%02X' % ch)
+            if ch == 0x5B:
+                pty_control.input_processed = True
+                while len(input_buffer) == 0:
+                    time.sleep(0.1)
+                ch = input_buffer.pop()
+                #print('\n\rC3=0x%02X' % ch)
+                if ch == 0x44:    # Left arrow
+                    return PyINPUT_RECORDType(True, 37, chr(0), 0)
+                elif ch == 0x43:  # Right arrow
+                    return PyINPUT_RECORDType(True, 39, chr(0), 0)
+                elif ch == 0x41:  # Up arrow
+                    return PyINPUT_RECORDType(True, 38, chr(0), 0)
+                elif ch == 0x42:  # Down arrow
+                    return PyINPUT_RECORDType(True, 40, chr(0), 0)
+                elif ch == 0x48:
+                    return PyINPUT_RECORDType(True, 36, chr(0), 0)
+                elif ch == 0x46:
+                    return PyINPUT_RECORDType(True, 35, chr(0), 0)
+
+
+    return PyINPUT_RECORDType(True, 0, chr(ch), 0)
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
