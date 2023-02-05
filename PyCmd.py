@@ -18,6 +18,7 @@ from console import remove_escape_sequences
 from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
+from pty_control import pty_control
 
 
 pycmd_data_dir = None
@@ -100,10 +101,9 @@ def main():
             if pass_through:
                 return ch
             else:
-                global input_processed
-                input_processed = False
+                pty_control.input_processed = False
                 console.console_linux.input_buffer.append(ch[0])
-                while not input_processed:
+                while not pty_control.input_processed:
                     time.sleep(0.1)
                 if command_to_run:
                     return bytearray(command_to_run, 'utf-8')
@@ -222,8 +222,7 @@ def main():
 
         while True:
             # Signal console to process next character
-            global input_processed
-            input_processed = True
+            pty_control.input_processed = True
 
             # Update console title and environment
             curdir = os.getcwd()
@@ -665,9 +664,9 @@ def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if sys.platform == 'linux':
         #print('Running', tokens)
-        global command_to_run, pass_through, input_processed, captured_prompt
+        global command_to_run, pass_through, captured_prompt
         command_to_run = ' '.join(tokens) + '\n'
-        input_processed = True
+        pty_control.input_processed = True
         pass_through = True
         if tokens != ['exit']:
             while pass_through:
