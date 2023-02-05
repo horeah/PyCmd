@@ -619,7 +619,7 @@ def run_command(tokens):
         pty_control.input_processed = True
         if tokens != ['exit']:
             while pty_control.pass_through:
-                time.sleep(0.1)
+                time.sleep(0)
         # print(f'Captured[{captured_prompt}]')
         curdir, exit_code = pty_control.captured_prompt.split('|')
         os.chdir(curdir)
