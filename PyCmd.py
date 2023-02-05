@@ -1,6 +1,4 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
-if sys.platform == 'linux':
-    import pty, threading
 from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
@@ -18,7 +16,9 @@ from console import remove_escape_sequences
 from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
-from pty_control import pty_control
+
+if sys.platform == 'linux':
+    import pty_control
 
 
 pycmd_data_dir = None
@@ -91,57 +91,7 @@ def main():
         run_command(['echo', '>', 'NUL'])
     else:
         # Start a bash instance and control its pty
-        global command_to_run, pass_through, marker_buffer
-        command_to_run = None
-        pass_through = False
-
-        def read_stdin(fd):
-            global pass_through
-            ch = os.read(fd, 1)
-            if pass_through:
-                return ch
-            else:
-                pty_control.input_processed = False
-                console.console_linux.input_buffer.append(ch[0])
-                while not pty_control.input_processed:
-                    time.sleep(0.1)
-                if command_to_run:
-                    return bytearray(command_to_run, 'utf-8')
-                else:
-                    return bytearray(chr(0), 'utf-8')
-
-        def read_shell(fd):
-            global command_to_run, pass_through, marker_buffer, captured_prompt
-            if command_to_run:
-                os.read(fd, len(command_to_run) - 1)
-                command_to_run = None
-                return bytearray(chr(0), 'utf-8')
-            else:
-                ch = os.read(fd, 1)
-                if pass_through:
-                    discarded = marker_buffer[0:1]
-                    marker_buffer.pop(0)
-                    marker_buffer += ch
-                    if ''.join(marker_buffer.decode('utf-8')) == MARKER:
-                        captured_prompt = ''
-                        while not captured_prompt.endswith(MARKER):
-                            captured_prompt += os.read(fd, 1).decode('utf-8')
-                        captured_prompt = captured_prompt[:-len(MARKER)]
-                        pass_through = False
-                        marker_buffer = bytearray(len(MARKER))
-                    return discarded
-                else:
-                    return ch
-                
-        MARKER = 'MARKER'
-        os.environ['PS1'] = MARKER + r'$PWD|$?' + MARKER
-        marker_buffer = bytearray(len(MARKER))
-        pass_through = True
-        t = threading.Thread(group=None,
-                             target=(lambda: pty.spawn(['/bin/bash', '--norc'],
-                                                   master_read=read_shell,
-                                                   stdin_read=read_stdin)))
-        t.start()
+        pty_control.start()
         
     # Parse arguments
     arg = 1
@@ -221,8 +171,8 @@ def main():
         print()
 
         while True:
-            # Signal console to process next character
-            pty_control.input_processed = True
+            if sys.platform == 'linux':
+                pty_control.input_processed = True
 
             # Update console title and environment
             curdir = os.getcwd()
@@ -664,15 +614,14 @@ def run_command(tokens):
     """Execute a command line (treat internal and external appropriately"""
     if sys.platform == 'linux':
         #print('Running', tokens)
-        global command_to_run, pass_through, captured_prompt
-        command_to_run = ' '.join(tokens) + '\n'
+        pty_control.command_to_run = ' '.join(tokens) + '\n'
+        pty_control.pass_through = True
         pty_control.input_processed = True
-        pass_through = True
         if tokens != ['exit']:
-            while pass_through:
+            while pty_control.pass_through:
                 time.sleep(0.1)
         # print(f'Captured[{captured_prompt}]')
-        curdir, exit_code = captured_prompt.split('|')
+        curdir, exit_code = pty_control.captured_prompt.split('|')
         os.chdir(curdir)
         return
     
