@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
-from pty_control import pty_control
+import pty_control
 from .console_common import *
 
 # These are taken from the win32console
@@ -123,9 +123,9 @@ def scroll_to_quarter(line):
 
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
-    while len(input_buffer) == 0:
+    while len(pty_control.input_buffer) == 0:
         time.sleep(0.1)
-    ch = input_buffer.pop()
+    ch = pty_control.input_buffer.pop()
     #print('\n\rC1=0x%02X' % ch)
     match ch:
         case c if c == 0x04:  # Ctrl-D
@@ -136,15 +136,15 @@ def read_input():
             return PyINPUT_RECORDType(True, 0, '\x0D', 0)
         case c if c == 0x1B:  # Escape
             pty_control.input_processed = True
-            while len(input_buffer) == 0:
+            while len(pty_control.input_buffer) == 0:
                 time.sleep(0.1)
-            ch = input_buffer.pop()
+            ch = pty_control.input_buffer.pop()
             #print('\n\rC2=0x%02X' % ch)
             if ch == 0x5B:
                 pty_control.input_processed = True
-                while len(input_buffer) == 0:
+                while len(pty_control.input_buffer) == 0:
                     time.sleep(0.1)
-                ch = input_buffer.pop()
+                ch = pty_control.input_buffer.pop()
                 #print('\n\rC3=0x%02X' % ch)
                 if ch == 0x44:    # Left arrow
                     return PyINPUT_RECORDType(True, 37, chr(0), 0)
@@ -246,9 +246,3 @@ class ColorOutputStream:
 # Install our custom output stream
 sys.stdout = ColorOutputStream()
 
-# Direct character processing
-import tty
-tty.setcbreak(sys.stdin)
-
-# Buffer that is filled in by the pty callbacks
-input_buffer = []
