@@ -17,6 +17,10 @@ RIGHT_ALT_PRESSED = 0x0001
 RIGHT_CTRL_PRESSED = 0x0004
 SHIFT_PRESSED = 0x0010
 
+# We count the number of lines we write so that we can emulate the behavior of
+# get_cursor on linux
+scrollback = 0
+
 @dataclass
 class PyINPUT_RECORDType:
     KeyDown: bool = False
@@ -46,13 +50,7 @@ def set_buffer_attributes(x, y, colors):
 
 def visual_bell():
     """Flash the screen for brief moment to notify the user"""
-    l, t, r, b = get_viewport()
-    count = (r - l + 1) * (b - t + 1)
-    colors = get_buffer_attributes(l, t, count)
-    reverted_colors = (count * WORD)(*tuple([c ^ BACKGROUND_BRIGHT for c in colors]))
-    set_buffer_attributes(l, t, reverted_colors)
-    time.sleep(0.15)
-    set_buffer_attributes(l, t, colors)
+    return
 
 def set_console_title(title):
     """Set the title of the current console"""
@@ -60,14 +58,23 @@ def set_console_title(title):
 
 def move_cursor(x, y):
     """Move the cursor to the specified location"""
-    location = COORD(x, y)
-    ctypes.windll.kernel32.SetConsoleCursorPosition(stdout_handle, location)
+    sys.__stdout__.write('\033[%d;%dH' % (y, x))
+    sys.__stdout__.flush()
 
 def get_cursor():
     """Get the current cursor position"""
-    buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
-    return (buffer_info.cursorPosition.X, buffer_info.cursorPosition.Y)
+    sys.__stdout__.write('\033[6n')
+    sys.__stdout__.flush()
+    pos = ''
+    ch = sys.__stdin__.read(1)
+    while (ch != 'R'):
+        if (ch != '\x1B'):
+            pos += ch
+        ch = sys.__stdin__.read(1)
+#    print('\r\n', pos, '\r\n')    
+    line, col = pos[1:].split(';')
+    line, col = int(line), int(col)
+    return col, line
 
 def count_chars(start, end):
     return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
@@ -80,15 +87,11 @@ def erase_to(end):
 
 def get_buffer_size():
     """Get the size of the text buffer"""
-    buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
-    return (buffer_info.size.X, buffer_info.size.Y)
+    return (80, 40)
 
 def get_viewport():
     """Get the current viewport position"""
-    buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
-    ctypes.windll.kernel32.GetConsoleScreenBufferInfo(stdout_handle, pointer(buffer_info))
-    return (buffer_info.window.Left, buffer_info.window.Top, buffer_info.window.Right, buffer_info.window.Bottom)
+    return (0, 0, 80, 40)
 
 def set_cursor_attributes(size, visibility):
     """Set the cursor size and visibility"""
@@ -164,12 +167,7 @@ def read_input():
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
-    record = PyINPUT_RECORDType(KEY_EVENT)
-    record.KeyDown = True
-    record.VirtualKeyCode = key_code
-    record.Char = char
-    record.ControlKeyState = control_state
-    stdin_handle.WriteConsoleInput([record])
+    pty_control.input_buffer.append(char)
 
 def write_str(s):
     """
