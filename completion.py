@@ -112,7 +112,7 @@ def complete_file_simple(line):
                              'set', 'setlocal', 'shift', 'start',
                              'time', 'title', 'type',
                              'ver', 'verify', 'vol']
-        if sys.getwindowsversion()[0] >= 6:
+        if sys.platform == 'win32' and sys.getwindowsversion()[0] >= 6:
             # Windows 7 or newer
             internal_commands.append('mklink')
         completions_path += [elem for elem in internal_commands
