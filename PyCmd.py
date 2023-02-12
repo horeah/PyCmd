@@ -485,6 +485,7 @@ def main():
                             w = Window(suggestions, pattern, height=optimal_window_height())
                             w.display()
                             w.reset_cursor()
+                            pty_control.input_processed = True
                             r = read_input()
                             if r.Char == chr(0) and r.VirtualKeyCode == 40:
                                 selection = w.interact()
@@ -512,7 +513,7 @@ def main():
                                         state.before_cursor += ' '
                                     state.reset_selection()
                             else:
-                                write_input(r.VirtualKeyCode, r.Char, 0)
+                                write_input(r.VirtualKeyCode, ord(r.Char), 0)
                                 w.erase()
                                 continue
                         set_cursor_attributes(cursor_height, True)
@@ -735,6 +736,8 @@ def signal_handler(signum, frame):
         write_input(67, u'c', 0x0008)
 
 def optimal_window_height():
+    if sys.platform.startswith('linux'):
+        return 10
     _, viewport_top, _, viewport_bottom  = get_viewport()
     window_height = viewport_bottom - get_cursor()[1] - 1
     if window_height < (viewport_bottom - viewport_top) // 3:
