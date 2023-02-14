@@ -87,11 +87,15 @@ def erase_to(end):
 
 def get_buffer_size():
     """Get the size of the text buffer"""
-    return (80, 40)
+    orig_cursor = get_cursor()
+    move_cursor(999, 999)
+    end_cursor = get_cursor()
+    move_cursor(*orig_cursor)
+    return end_cursor
 
 def get_viewport():
     """Get the current viewport position"""
-    return (0, 0, 80, 40)
+    return (0, 0, *get_buffer_size())
 
 def set_cursor_attributes(size, visibility):
     """Set the cursor size and visibility"""
