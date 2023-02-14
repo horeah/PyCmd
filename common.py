@@ -274,8 +274,18 @@ def abbrev_string(string):
     return string_abbrev
 
 def has_exec_extension(file_name):
-    """Check whether the specified file is executable, i.e. its extension is .exe, .com, .bat etc"""
     return os.path.splitext(file_name)[1].lower() in exec_extensions
+
+def is_executable(file_name):
+    """
+    Check whether the specified file is executable
+    On Windows, this means checking if its extension is .exe, .com, .bat etc.
+    On Linux, this means checking the executable permission.
+    """
+    if sys.platform == 'win32':
+        return has_exec_extension(file_name)
+    else:
+        return os.access(file_name, os.X_OK)
 
 def strip_extension(file_name):
     """Remove extension, if present"""
