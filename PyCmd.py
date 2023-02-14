@@ -495,7 +495,9 @@ def main():
                             w = Window(suggestions, pattern, height=optimal_window_height())
                             w.display()
                             w.reset_cursor()
-                            pty_control.input_processed = True
+
+                            if sys.platform == 'linux':
+                                pty_control.input_processed = True
                             while True:
                                 r = read_input()
                                 if not is_control_only(r):
