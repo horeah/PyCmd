@@ -804,8 +804,6 @@ def signal_handler(signum, frame):
         write_input(67, u'c', 0x0008)
 
 def optimal_window_height():
-    if sys.platform.startswith('linux'):
-        return 10
     _, viewport_top, _, viewport_bottom  = get_viewport()
     window_height = viewport_bottom - get_cursor()[1] - 1
     if window_height < (viewport_bottom - viewport_top) // 3:
