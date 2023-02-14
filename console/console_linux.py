@@ -171,7 +171,7 @@ def read_input():
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
-    pty_control.input_buffer.append(char)
+    pty_control.input_buffer.append(ord(char))
 
 def write_str(s):
     """
