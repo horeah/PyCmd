@@ -5,7 +5,7 @@
 #
 
 import sys, os, re, time
-from common import tokenize, expand_env_vars, has_exec_extension, strip_extension
+from common import tokenize, expand_env_vars, has_exec_extension, is_executable, strip_extension
 from common import contains_special_char, starts_with_special_char
 from common import sep_chars, seq_tokens
 
@@ -50,20 +50,23 @@ def complete_file_simple(line, timeout=None):
     tokens = tokenize(line)
     token = tokens[-1].replace('"', '')
 
-    pos_fwd = expand_env_vars(token).rfind('/')
-    pos_bck = expand_env_vars(token).rfind('\\')
-    path_sep = '\\' if pos_bck >= pos_fwd else '/'
+    if sys.platform == 'win32':
+        pos_fwd = expand_env_vars(token).rfind('/')
+        pos_bck = expand_env_vars(token).rfind('\\')
+        path_sep = '\\' if pos_bck >= pos_fwd else '/'
+    else:
+        path_sep = '/'
     
     (path_to_complete, _, prefix) = token.rpartition(path_sep)
     if path_to_complete == '' and token != '' and token[0] == path_sep:
         path_to_complete = path_sep
 
-    # print '\n\n', path_to_complete, '---', prefix, '\n\n'
+    # print('\n\n', path_to_complete, '---', prefix, '\n\n')
 
     if path_to_complete == '':
         dir_to_complete = os.getcwd()
     elif path_to_complete == path_sep:
-        dir_to_complete = os.getcwd()[0:3]
+        dir_to_complete = os.getcwd()[0:3] if sys.platform == 'win32' else path_to_complete
     else:
         dir_to_complete = expand_env_vars(path_to_complete) + path_sep
 
@@ -91,13 +94,18 @@ def complete_file_simple(line, timeout=None):
     if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
         # We are at the beginning of a command ==> also complete from the path
         completions_path = []
-        for elem_in_path in os.environ['PATH'].split(';'):
+        elems_in_path = os.environ['PATH'].split(os.pathsep)
+        if sys.platform == 'linux':
+            elems_in_path = (e for e in elems_in_path
+                             if not (e.lower().startswith('/mnt/c/windows') or
+                                     e.lower().startswith('/mnt/c/program files')))
+        for elem_in_path in elems_in_path:
             dir_to_complete = expand_env_vars(elem_in_path) + path_sep
             try:                
                 completions_path += [elem.name for elem in os.scandir(dir_to_complete)
                                      if matcher.match(elem.name)
                                      and elem.is_file()
-                                     and has_exec_extension(elem.name)
+                                     and is_executable(dir_to_complete + path_sep + elem.name)
                                      and not elem.name in completions
                                      and not elem.name in completions_path]
             except OSError:
@@ -105,22 +113,25 @@ def complete_file_simple(line, timeout=None):
                 pass
 
         # Add internal commands
-        internal_commands = ['assoc',
-                             'call', 'cd', 'chdir', 'cls', 'color', 'copy',
-                             'date', 'del', 'dir',
-                             'echo', 'endlocal', 'erase', 'exit',
-                             'for', 'ftype',
-                             'goto',
-                             'if',
-                             'md', 'mkdir', 'move',
-                             'path', 'pause', 'popd', 'prompt', 'pushd',
-                             'rem', 'ren', 'rename', 'rd', 'rmdir',
-                             'set', 'setlocal', 'shift', 'start',
-                             'time', 'title', 'type',
-                             'ver', 'verify', 'vol']
-        if sys.platform == 'win32' and sys.getwindowsversion()[0] >= 6:
-            # Windows 7 or newer
-            internal_commands.append('mklink')
+        if sys.platform == 'win32':
+            internal_commands = ['assoc',
+                                 'call', 'cd', 'chdir', 'cls', 'color', 'copy',
+                                 'date', 'del', 'dir',
+                                 'echo', 'endlocal', 'erase', 'exit',
+                                 'for', 'ftype',
+                                 'goto',
+                                 'if',
+                                 'md', 'mkdir', 'move',
+                                 'path', 'pause', 'popd', 'prompt', 'pushd',
+                                 'rem', 'ren', 'rename', 'rd', 'rmdir',
+                                 'set', 'setlocal', 'shift', 'start',
+                                 'time', 'title', 'type',
+                                 'ver', 'verify', 'vol']
+            if sys.getwindowsversion()[0] >= 6:
+                internal_commands.append('mklink')
+        else:
+            internal_commands = ['bg', 'cd', 'jobs']
+
         completions_path += [elem for elem in internal_commands
                              if matcher.match(elem)
                              and not elem in completions
@@ -206,7 +217,7 @@ def complete_file_alternate(line, timeout=None):
     (last_token_prefix, equal_char, last_token) = tokens[-1].replace('"', '').rpartition('=')
     last_token_prefix += equal_char
         
-    paths = last_token.split(';')
+    paths = last_token.split(os.pathsep)
     token = paths[-1]
 
     path_sep = '/' if '/' in expand_env_vars(token) else '\\'
