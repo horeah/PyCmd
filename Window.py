@@ -93,7 +93,7 @@ class Window(object):
                     stdout.write(default_color + ' ' * (self.column_width - len(s)))
                 else:
                     stdout.write(default_color + ' ' * (self.column_width))                    
-            stdout.write('\n')
+            stdout.write('\n\r')
 
         if self.height < self.max_lines:
             format_width = int(ceil(log10(self.max_lines)))
