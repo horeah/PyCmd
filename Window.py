@@ -4,6 +4,9 @@ from pycmd_public import color, appearance
 from math import log10, ceil
 from sys import stdout
 from common import fuzzy_match
+import sys
+if sys.platform == 'linux':
+    import pty_control
 
 
 class Window(object):
@@ -143,6 +146,8 @@ class Window(object):
             set_cursor_attributes(10, False)
             self.reset_cursor()
             self.display()
+            if sys.platform == 'linux':
+                pty_control.input_processed = True
             rec = read_input()
             match ord(rec.Char), rec.VirtualKeyCode, is_ctrl_pressed(rec), is_alt_pressed(rec):
                 case (0, 37, False, False) | (_, 66, True, False): # Left arrow or Ctrl-B
