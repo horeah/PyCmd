@@ -3,8 +3,9 @@ import sys, os, threading, time, tty, pty
 input_processed = False
 command_to_run = None
 pass_through = True
-MARKER = 'MARKER'
-marker_buffer = bytearray(len(MARKER))
+MARKER = '_M' + 'ARKE' + 'R_'
+MARKER_BYTES = bytearray(MARKER, 'utf-8')
+marker_acc = []
 input_buffer = []
 captured_prompt = None
 
@@ -25,27 +26,40 @@ def read_stdin(fd):
             return bytearray(chr(0), 'utf-8')
 
 def read_shell(fd):
-    global command_to_run, pass_through, marker_buffer, captured_prompt
+    global command_to_run, pass_through, marker_buffer, marker_acc, captured_prompt
     if command_to_run:
+        # bash outputs the command; we swallow it
         os.read(fd, len(command_to_run) - 1)
         command_to_run = None
+        marker_acc = []
         return bytearray(chr(0), 'utf-8')
     else:
-        ch = os.read(fd, 1)
         if pass_through:
-            discarded = marker_buffer[0:1]
-            marker_buffer.pop(0)
-            marker_buffer += ch
-            if ''.join(marker_buffer.decode('utf-8')) == MARKER:
-                captured_prompt = ''
-                while not captured_prompt.endswith(MARKER):
-                    captured_prompt += os.read(fd, 1).decode('utf-8')
-                captured_prompt = captured_prompt[:-len(MARKER)]
+            # Command is running, pass output through until a MARKER is detected
+            # TODO marker_acc and captured_prompt should be turned into bytearrays for efficiency
+            ch = os.read(fd, 1)[0]
+            marker_acc.append(ch)
+            while len(marker_acc) < len(MARKER_BYTES) and ch == MARKER_BYTES[len(marker_acc) - 1]:
+                ch = os.read(fd, 1)[0]
+                marker_acc.append(ch)
+
+            if len(marker_acc) == len(MARKER_BYTES):
+                # first MARKER (begin) has been detected; search for the next one (end)
+                captured_prompt = []
+                while captured_prompt[-len(MARKER_BYTES):] != list(MARKER_BYTES):
+                    ch = os.read(fd, 1)[0]
+                    captured_prompt.append(ch)
+                captured_prompt = bytearray(captured_prompt[:-len(MARKER_BYTES)]).decode('utf-8')
                 pass_through = False
-                marker_buffer = bytearray(len(MARKER))
-            return discarded
+                marker_acc = []
+                return bytearray(chr(0), 'utf-8')
+            else:
+                # this is not the MARKER, return the accumulated bytes
+                bytes = bytearray(marker_acc)
+                marker_acc = []
+                return bytes
         else:
-            return ch
+            return os.read(fd, 1)
 
         
 def start():
