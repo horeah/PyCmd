@@ -1,4 +1,4 @@
-import sys, os, threading, time, tty, pty
+import sys, os, threading, time, tty, pty, fcntl, array, termios
 
 input_processed = False
 command_to_run = None
@@ -27,7 +27,18 @@ def read_stdin(fd):
 
 def read_shell(fd):
     global command_to_run, pass_through, marker_buffer, marker_acc, captured_prompt
+
     if command_to_run:
+        # ensure terminal dimensions match the real terminal
+        #
+        # TODO this is too late for bash to correctly expand $LINES
+        # and $COLUMNS in the *current* command (works fine for other
+        # commands, thoug). Ideally we should trigger this update at
+        # an eariler time.
+        buf = array.array('h', [0, 0, 0, 0])
+        fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+        fcntl.ioctl(fd, termios.TIOCSWINSZ, buf)
+
         # bash outputs the command; we swallow it
         os.read(fd, len(command_to_run) - 1)
         command_to_run = None
@@ -49,6 +60,7 @@ def read_shell(fd):
                 while captured_prompt[-len(MARKER_BYTES):] != list(MARKER_BYTES):
                     ch = os.read(fd, 1)[0]
                     captured_prompt.append(ch)
+
                 captured_prompt = bytearray(captured_prompt[:-len(MARKER_BYTES)]).decode('utf-8')
                 pass_through = False
                 marker_acc = []
