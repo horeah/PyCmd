@@ -176,7 +176,7 @@ def read_input():
     while len(pty_control.input_buffer) == 0:
         time.sleep(0)
     ch = pty_control.input_buffer.pop()
-    #print('\n\rC1=0x%02X' % ch)
+    #debug('C1=0x%02X' % ch)
     match ch:
         case c if c == 0x04:  # Ctrl-D
             return PyINPUT_RECORDType(True, 0, chr(c), LEFT_CTRL_PRESSED)
@@ -189,13 +189,13 @@ def read_input():
             while len(pty_control.input_buffer) == 0:
                 time.sleep(0)
             ch = pty_control.input_buffer.pop()
-            #print('\n\rC2=0x%02X' % ch)
+            #debug('C2=0x%02X' % ch)
             if ch == 0x5B:
                 pty_control.input_processed = True
                 while len(pty_control.input_buffer) == 0:
                     time.sleep(0)
                 ch = pty_control.input_buffer.pop()
-                #print('\n\rC3=0x%02X' % ch)
+                #debug('C3=0x%02X' % ch)
                 if ch == 0x44:    # Left arrow
                     return PyINPUT_RECORDType(True, 37, chr(0), 0)
                 elif ch == 0x43:  # Right arrow
@@ -251,4 +251,23 @@ def is_control_only(record):
 def write_with_sane_cursor(s):
     sys.__stdout__.write(s)
     sys.__stdout__.flush()
+
+_debug_messages = []
+def debug(message):
+    from pycmd_public import color
+    queue_len = 6
+    width = 50
+    _debug_messages.append(message)
+    if len(_debug_messages) > queue_len:
+        _debug_messages.pop(0)
+    sys.__stdout__.write('\033[s')  # Save cursor position
+    sys.__stdout__.write('\033[H')  # Move cursor to home position
+    sys.stdout.write(color.Back.TOGGLE_RED)
+    for m in _debug_messages:
+        sys.stdout.write('| %-*s |\r\n' % (width - 1, m))
+    sys.stdout.write('+' + (width + 1) * '-' + '+')
+    sys.stdout.write(color.Back.TOGGLE_RED)
+    sys.__stdout__.write('\033[u')  # Restore cursor position
+
+
 
