@@ -244,7 +244,7 @@ class color(object):
         WHITE = SET_RED + SET_GREEN + SET_BLUE
 
         # Default terminal color
-        DEFAULT = console.get_current_foreground() if sys.platform == 'win32' else ''
+        DEFAULT = console.get_current_foreground()
 
 
     class Back(object):
@@ -279,7 +279,7 @@ class color(object):
         WHITE = SET_RED + SET_GREEN + SET_BLUE
 
         # Default terminal color
-        DEFAULT = console.get_current_background() if sys.platform == 'win32' else ''
+        DEFAULT = console.get_current_background()
 
     @staticmethod
     def update():
