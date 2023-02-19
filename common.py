@@ -6,23 +6,6 @@ from console import get_cursor, move_cursor, get_viewport
 import re
 import pycmd_public
 
-_debug_messages = []
-def debug(message):
-    queue_len = 6
-    width = 50
-    _debug_messages.append(message)
-    if len(_debug_messages) > queue_len:
-        _debug_messages.pop(0)
-    orig_cursor = get_cursor()
-    v_left, v_top, _, _ = get_viewport()
-    move_cursor(v_left, v_top)
-    sys.stdout.write(pycmd_public.color.Back.TOGGLE_RED)
-    for m in _debug_messages:
-        sys.stdout.write('| %-*s |\n' % (width - 1, m))
-    sys.stdout.write('+' + (width + 1) * '-' + '+')
-    sys.stdout.write(pycmd_public.color.Back.TOGGLE_RED)
-    move_cursor(orig_cursor[0], orig_cursor[1])
-
 
 # Stop points when navigating one word at a time
 word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';', '"']
