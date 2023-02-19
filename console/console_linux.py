@@ -17,9 +17,8 @@ RIGHT_ALT_PRESSED = 0x0001
 RIGHT_CTRL_PRESSED = 0x0004
 SHIFT_PRESSED = 0x0010
 
-# We count the number of lines we write so that we can emulate the behavior of
-# get_cursor on linux
-scrollback = 0
+# Current formatting attributes (in windows format)
+current_attributes = FOREGROUND_WHITE | BACKGROUND_BLACK
 
 @dataclass
 class PyINPUT_RECORDType:
@@ -28,10 +27,54 @@ class PyINPUT_RECORDType:
     Char: str = '\0'
     ControlKeyState: int = 0
 
+def get_text_attributes():
+    return current_attributes
 
 def set_text_attributes(color):
     """Set foreground/background RGB components for the text to write"""
-    ctypes.windll.kernel32.SetConsoleTextAttribute(stdout_handle, color)
+    R, G, B = (color & FOREGROUND_RED != 0,
+               color & FOREGROUND_GREEN != 0,
+               color & FOREGROUND_BLUE != 0)
+    # sys.__stdout__.write('\r\nCOLOR:%02X RGB: %d %d %d\r\n' % (color, R, G, B))
+    match R, G, B:
+        case 0, 0, 0: seq = 30
+        case 0, 0, 1: seq = 34
+        case 0, 1, 0: seq = 32
+        case 0, 1, 1: seq = 36
+        case 1, 0, 0: seq = 31
+        case 1, 0, 1: seq = 35
+        case 1, 1, 0: seq = 33
+        case 1, 1, 1: seq = 37
+    #sys.__stdout__.write('\r\nSEQ: %d\r\n' % seq)
+    if color & FOREGROUND_BRIGHT:
+        seq += 60
+    if seq == 37:
+        seq = 39  # use "default" instead of white
+    sys.__stdout__.write('\033[%dm' % seq)
+
+    R, G, B = (color & BACKGROUND_RED != 0,
+               color & BACKGROUND_GREEN != 0,
+               color & BACKGROUND_BLUE != 0)
+    # sys.__stdout__.write('\r\nCOLOR:%02X RGB: %d %d %d\r\n' % (color, R, G, B))
+    match R, G, B:
+        case 0, 0, 0: seq = 40
+        case 0, 0, 1: seq = 44
+        case 0, 1, 0: seq = 42
+        case 0, 1, 1: seq = 46
+        case 1, 0, 0: seq = 41
+        case 1, 0, 1: seq = 45
+        case 1, 1, 0: seq = 43
+        case 1, 1, 1: seq = 47
+    #sys.__stdout__.write('\r\nSEQ: %d\r\n' % seq)
+    if color & BACKGROUND_BRIGHT:
+        seq += 60
+    if seq == 40:
+        seq = 49  # use "default" instead of black
+    sys.__stdout__.write('\033[%dm' % seq)
+
+    sys.__stdout__.flush()
+    global current_attributes
+    current_attributes = color
 
 def get_buffer_attributes(x, y, n):
     """Get the fg/bg/attributes for the n chars in the buffer starting at (x, y)"""
@@ -173,20 +216,6 @@ def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
     pty_control.input_buffer.append(ord(char))
 
-def write_str(s):
-    """
-    Output s to stdout, while processing the color sequences
-    """
-    sys.__stdout__.write(remove_escape_sequences(s))
-    sys.__stdout__.flush()
-
-
-def get_current_foreground():
-    return ''
-
-def get_current_background():
-    return ''
-
 def remove_escape_sequences(s):
     """
     Remove color escape sequences from the given string
@@ -219,32 +248,7 @@ def is_control_only(record):
     """
     return record.VirtualKeyCode in [16, 17, 18]
 
-# Initialization
-FOREGROUND_BLUE = 0x01
-FOREGROUND_GREEN = 0x02
-FOREGROUND_RED = 0x04
-FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-FOREGROUND_BRIGHT = 0x08
-BACKGROUND_BLUE = 0x10
-BACKGROUND_GREEN = 0x20
-BACKGROUND_RED = 0x40
-BACKGROUND_BRIGHT = 0x80
-BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
-
-class ColorOutputStream:
-    """
-    We install a custom sys.stdout that handles our color sequences
-
-    Note that this requires sys.stdout be only imported _after_ console;
-    not doing so will bring the original stdout in the current scope!
-    """
-    def write(self, str):
-        """Dispatch printing to our enhanced write function"""
-        write_str(str)
-
-    def __getattr__(self, name):
-        return getattr(sys.__stdout__, name)
-
-# Install our custom output stream
-sys.stdout = ColorOutputStream()
+def write_with_sane_cursor(s):
+    sys.__stdout__.write(s)
+    sys.__stdout__.flush()
 
