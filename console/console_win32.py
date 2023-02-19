@@ -171,87 +171,6 @@ def write_input(key_code, char, control_state):
     record.ControlKeyState = control_state
     stdin_handle.WriteConsoleInput([record])
 
-def write_str(s):
-    """
-    Output s to stdout, while processing the color sequences
-    """
-    def write_with_sane_cursor(s):
-        """
-        Under Win10, write() no longer advances the cursor to the next line after writing in the last column; so we
-        use a custom function to restore that behavior when needed
-        """
-        buffer_width = get_buffer_size()[0]
-        cursor_before = get_cursor()[0]
-        sys.__stdout__.write(s)
-        sys.__stdout__.flush()
-        cursor_after = get_cursor()[0]
-        if (buffer_width > 0
-            and (cursor_before + len(s)) % buffer_width == 0
-            and cursor_after > 0):
-            # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
-            # ourselves
-            sys.__stdout__.write(' \r')
-
-    i = 0
-    buf = ''
-    attr = get_text_attributes()
-    while i < len(s):
-        c = s[i]
-        if c == chr(27):
-            if buf:
-                # We have some characters, apply attributes and write them out
-                set_text_attributes(attr)
-                write_with_sane_cursor(buf)
-                buf = ''
-
-            # Process color commands to compute and set new attributes
-            target = s[i + 1]
-            command = s[i + 2]
-            component = s[i + 3]
-            i += 3
-
-            # Escape sequence format is [ESC][TGT][OP][COMP], where:
-            #  * ESC is the Escape character: chr(27)
-            #  * TGT is the target: 'F' for foreground, 'B' for background
-            #  * OP is the operation: 'S' (set), 'C' (clear), 'T' (toggle) a component
-            #  * COMP is the color component: 'R', 'G', 'B' or 'X' (bright)
-            if target == 'F':
-                name_prefix = 'FOREGROUND'
-            else:
-                name_prefix = 'BACKGROUND'
-
-            if component == 'R':
-                name_suffix = 'RED'
-            elif component == 'G':
-                name_suffix = 'GREEN'
-            elif component == 'B':
-                name_suffix = 'BLUE'
-            else:
-                name_suffix = 'BRIGHT'
-
-            if command == 'S':
-                operator = lambda x, y: x | y
-            elif command == 'C':
-                operator = lambda x, y: x & ~y
-            else:
-                operator = lambda x, y: x ^ y
-
-            import console
-            # We use the bit masks defined at the end of console.py by computing
-            # the name and accessing the module's dictionary (FOREGROUND_RED,
-            # BACKGROUND_BRIGHT etc)
-            bit_mask = console.__dict__[name_prefix + '_' + name_suffix]
-            attr = operator(attr, bit_mask)
-        else:
-            # Regular character, just append to the buffer
-            buf += c
-        i += 1
-
-    # Apply the last attributes and write the remaining chars (if any)
-    set_text_attributes(attr)
-    if buf:
-        write_with_sane_cursor(buf)
-
 def remove_escape_sequences(s):
     """
     Remove color escape sequences from the given string
@@ -264,34 +183,6 @@ def remove_escape_sequences(s):
     return reduce(lambda x, y: x.replace(y, ''), 
                   escape_sequences_fore,
                   s)
-
-def get_current_foreground():
-    """Get the current foreground setting as a color string"""
-    color = ''
-    attr = get_text_attributes()
-    letters = ['B', 'G', 'R', 'X']
-
-    for i in range(4):
-        if attr & 1 << i:
-            color += chr(27) + 'FS' + letters[i]
-        else:
-            color += chr(27) + 'FC' + letters[i]
-
-    return color
-
-def get_current_background():
-    """Get the current background setting as a color string"""
-    color = ''
-    attr = get_text_attributes()
-    letters = ['B', 'G', 'R', 'X']
-
-    for i in range(4):
-        if attr & 1 << (i + 4):
-            color += chr(27) + 'BS' + letters[i]
-        else:
-            color += chr(27) + 'BC' + letters[i]
-
-    return color
 
 def is_ctrl_pressed(record):
     """Check whether the Ctrl key is pressed"""
@@ -312,34 +203,24 @@ def is_control_only(record):
     """
     return record.VirtualKeyCode in [16, 17, 18]
 
-# Initialization
-FOREGROUND_BLUE = 0x01
-FOREGROUND_GREEN = 0x02
-FOREGROUND_RED = 0x04
-FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-FOREGROUND_BRIGHT = 0x08
-BACKGROUND_BLUE = 0x10
-BACKGROUND_GREEN = 0x20
-BACKGROUND_RED = 0x40
-BACKGROUND_BRIGHT = 0x80
-BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
+def write_with_sane_cursor(s):
+    """
+    Under Win10, write() no longer advances the cursor to the next line after writing in the last column; so we
+    use a custom function to restore that behavior when needed
+    """
+    buffer_width = get_buffer_size()[0]
+    cursor_before = get_cursor()[0]
+    sys.__stdout__.write(s)
+    sys.__stdout__.flush()
+    cursor_after = get_cursor()[0]
+    if (buffer_width > 0
+        and (cursor_before + len(s)) % buffer_width == 0
+        and cursor_after > 0):
+        # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
+        # ourselves
+        sys.__stdout__.write(' \r')
+
 
 stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
 stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
 
-class ColorOutputStream:
-    """
-    We install a custom sys.stdout that handles our color sequences
-
-    Note that this requires sys.stdout be only imported _after_ console;
-    not doing so will bring the original stdout in the current scope!
-    """
-    def write(self, str):
-        """Dispatch printing to our enhanced write function"""
-        write_str(str)
-
-    def __getattr__(self, name):
-        return getattr(sys.__stdout__, name)
-
-# Install our custom output stream
-sys.stdout = ColorOutputStream()
