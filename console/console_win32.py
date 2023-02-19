@@ -160,6 +160,7 @@ def read_input():
     while True:
         record = stdin_handle.ReadConsoleInput(1)[0]
         if record.EventType == KEY_EVENT and record.KeyDown:
+            # debug('%s %d' % (record.Char, record.VirtualKeyCode))
             return record
 
 def write_input(key_code, char, control_state):
@@ -219,6 +220,24 @@ def write_with_sane_cursor(s):
         # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
         # ourselves
         sys.__stdout__.write(' \r')
+
+_debug_messages = []
+def debug(message):
+    from pycmd_public import color
+    queue_len = 6
+    width = 50
+    _debug_messages.append(message)
+    if len(_debug_messages) > queue_len:
+        _debug_messages.pop(0)
+    orig_cursor = get_cursor()
+    v_left, v_top, _, _ = get_viewport()
+    move_cursor(v_left, v_top)
+    sys.stdout.write(color.Back.TOGGLE_RED)
+    for m in _debug_messages:
+        sys.stdout.write('| %-*s |\n' % (width - 1, m))
+    sys.stdout.write('+' + (width + 1) * '-' + '+')
+    sys.stdout.write(color.Back.TOGGLE_RED)
+    move_cursor(orig_cursor[0], orig_cursor[1])
 
 
 stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
