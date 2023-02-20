@@ -27,6 +27,92 @@ class PyINPUT_RECORDType:
     Char: str = '\0'
     ControlKeyState: int = 0
 
+KEYMAP_IDENT = {ch: PyINPUT_RECORDType(True, 0, chr(ch)) for ch in range(128)}
+KEYMAP_NAVI = {
+    0x44: PyINPUT_RECORDType(True, 37, chr(0), 0),  # Left arrow
+    0x43: PyINPUT_RECORDType(True, 39, chr(0), 0),  # Right arrow
+    0x41: PyINPUT_RECORDType(True, 38, chr(0), 0),  # Up arrow
+    0x42: PyINPUT_RECORDType(True, 40, chr(0), 0),  # Down arrow
+    0x48: PyINPUT_RECORDType(True, 36, chr(0), 0),  # Home
+    0x46: PyINPUT_RECORDType(True, 35, chr(0), 0),  # End
+}
+
+KEYMAP = {
+    **KEYMAP_IDENT,
+    0x04: PyINPUT_RECORDType(True, 0, chr(0x04), LEFT_CTRL_PRESSED),  # Ctrl-D
+    0x7F: PyINPUT_RECORDType(True, 0, chr(8), 0),  # Backspace
+    0x0A: PyINPUT_RECORDType(True, 0, '\x0D', 0),  # Enter
+    0x01: PyINPUT_RECORDType(True, 65, 0, LEFT_CTRL_PRESSED),  # Ctrl-A
+    0x03: PyINPUT_RECORDType(True, 67, 0, LEFT_CTRL_PRESSED),  # Ctrl-C
+    0x05: PyINPUT_RECORDType(True, 69, 0, LEFT_CTRL_PRESSED),  # Ctrl-E
+    0x10: PyINPUT_RECORDType(True, 80, 0, LEFT_CTRL_PRESSED),  # Ctrl-P
+    0x0E: PyINPUT_RECORDType(True, 78, 0, LEFT_CTRL_PRESSED),  # Ctrl-N
+    0x12: PyINPUT_RECORDType(True, 82, 0, LEFT_CTRL_PRESSED),  # Ctrl-R
+    0x06: PyINPUT_RECORDType(True, 70, 0, LEFT_CTRL_PRESSED),  # Ctrl-F
+    0x02: PyINPUT_RECORDType(True, 66, 0, LEFT_CTRL_PRESSED),  # Ctrl-B
+    0x16: PyINPUT_RECORDType(True, 86, 0, LEFT_CTRL_PRESSED),  # Ctrl-V
+    0x17: PyINPUT_RECORDType(True, 87, 0, LEFT_CTRL_PRESSED),  # Ctrl-W
+    0x18: PyINPUT_RECORDType(True, 88, 0, LEFT_CTRL_PRESSED),  # Ctrl-X
+    0x19: PyINPUT_RECORDType(True, 89, 0, LEFT_CTRL_PRESSED),  # Ctrl-Y
+    0x1B: {  # Escape
+        **KEYMAP_IDENT,
+        0x7F: PyINPUT_RECORDType(True, 8, chr(8), LEFT_ALT_PRESSED), # Alt-Backspace
+        0x1B: PyINPUT_RECORDType(True, 0, chr(27), 0),  # Escape
+        0x64: PyINPUT_RECORDType(True, 68, 0, LEFT_ALT_PRESSED),  # Alt-D
+        0x6E: PyINPUT_RECORDType(True, 78, 0, LEFT_ALT_PRESSED),  # Alt-N
+        0x70: PyINPUT_RECORDType(True, 80, 0, LEFT_ALT_PRESSED),  # Alt-P
+        0x5B: {  # [
+            **KEYMAP_IDENT,
+            **KEYMAP_NAVI,
+            0x31: {  # ]
+                **KEYMAP_IDENT,
+                0x3B: {
+                    **KEYMAP_IDENT,
+                    0x33: {
+                        **KEYMAP_IDENT,
+                        **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_ALT_PRESSED)
+                           for k, v in KEYMAP_NAVI.items()},
+                    },
+                    0x35: {
+                        **KEYMAP_IDENT,
+                        **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_ALT_PRESSED)
+                           for k, v in KEYMAP_NAVI.items()},
+
+                    },
+                    0x32: {
+                        **KEYMAP_IDENT,
+                        **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, SHIFT_PRESSED)
+                           for k, v in KEYMAP_NAVI.items()},
+                    },
+                },
+            },
+            0x32: {
+                **KEYMAP_IDENT,
+                0x7E: PyINPUT_RECORDType(True, 45, chr(0), 0),  # Insert
+            },
+            0x33: {
+                **KEYMAP_IDENT,
+                0x7E: PyINPUT_RECORDType(True, 46, chr(0), 0),  # Delete
+                0x3B: {
+                    **KEYMAP_IDENT,
+                    0x33: {
+                        **KEYMAP_IDENT,
+                        0x7E: PyINPUT_RECORDType(True, 46, chr(0), LEFT_ALT_PRESSED),  # Alt-Delete
+                    },
+                    0x35: {
+                        **KEYMAP_IDENT,
+                        0x7E: PyINPUT_RECORDType(True, 46, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-Delete
+                    },
+                    0x32: {
+                        **KEYMAP_IDENT,
+                        0x7E: PyINPUT_RECORDType(True, 46, chr(0), SHIFT_PRESSED),  # Shift-Delete
+                    },
+                },
+            },
+        },
+    },
+}
+
 def get_text_attributes():
     return current_attributes
 
@@ -173,44 +259,19 @@ def scroll_to_quarter(line):
 
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
-    while len(pty_control.input_buffer) == 0:
-        time.sleep(0)
-    ch = pty_control.input_buffer.pop()
-    #debug('C1=0x%02X' % ch)
-    match ch:
-        case c if c == 0x04:  # Ctrl-D
-            return PyINPUT_RECORDType(True, 0, chr(c), LEFT_CTRL_PRESSED)
-        case c if c == 0x7F:  # Backspace
-            return PyINPUT_RECORDType(True, 0, chr(8), 0)
-        case c if c == 0x0A:  # Enter
-            return PyINPUT_RECORDType(True, 0, '\x0D', 0)
-        case c if c == 0x1B:  # Escape
+    keymap = KEYMAP
+    while True:    
+        while len(pty_control.input_buffer) == 0:
+            time.sleep(0)
+        ch = pty_control.input_buffer.pop()
+        #debug('CH=0x%02X' % ch)
+        mapped = keymap[ch]
+        if isinstance(mapped, PyINPUT_RECORDType):
+            return mapped
+        else:
+            # we are still in a sequence
+            keymap = mapped
             pty_control.input_processed = True
-            while len(pty_control.input_buffer) == 0:
-                time.sleep(0)
-            ch = pty_control.input_buffer.pop()
-            #debug('C2=0x%02X' % ch)
-            if ch == 0x5B:
-                pty_control.input_processed = True
-                while len(pty_control.input_buffer) == 0:
-                    time.sleep(0)
-                ch = pty_control.input_buffer.pop()
-                #debug('C3=0x%02X' % ch)
-                if ch == 0x44:    # Left arrow
-                    return PyINPUT_RECORDType(True, 37, chr(0), 0)
-                elif ch == 0x43:  # Right arrow
-                    return PyINPUT_RECORDType(True, 39, chr(0), 0)
-                elif ch == 0x41:  # Up arrow
-                    return PyINPUT_RECORDType(True, 38, chr(0), 0)
-                elif ch == 0x42:  # Down arrow
-                    return PyINPUT_RECORDType(True, 40, chr(0), 0)
-                elif ch == 0x48:
-                    return PyINPUT_RECORDType(True, 36, chr(0), 0)
-                elif ch == 0x46:
-                    return PyINPUT_RECORDType(True, 35, chr(0), 0)
-
-
-    return PyINPUT_RECORDType(True, 0, chr(ch), 0)
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
@@ -255,7 +316,7 @@ def write_with_sane_cursor(s):
 _debug_messages = []
 def debug(message):
     from pycmd_public import color
-    queue_len = 6
+    queue_len = 8
     width = 50
     _debug_messages.append(message)
     if len(_debug_messages) > queue_len:
