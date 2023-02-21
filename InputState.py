@@ -1,3 +1,4 @@
+import sys
 from CommandHistory import CommandHistory
 from common import word_sep, tokenize, seq_tokens
 from completion import complete_file, complete_env_var, has_wildcards
@@ -521,6 +522,8 @@ class InputState:
 
     def key_copy(self):
         """Copy selection to clipboard"""
+        if sys.platform == "linux":
+            return
         import win32clipboard as wclip
         wclip.OpenClipboard()
         wclip.EmptyClipboard()
@@ -530,12 +533,16 @@ class InputState:
 
     def key_cut(self):
         """Cut selection to clipboard"""
+        if sys.platform == "linux":
+            return
         self.key_copy()
         self.delete_selection()
         self.history.reset()
 
     def key_paste(self):
         """Paste from clipboard"""
+        if sys.platform == "linux":
+            return
         wclip.OpenClipboard()
         if wclip.IsClipboardFormatAvailable(wclip.CF_TEXT):
             text = wclip.GetClipboardData()
