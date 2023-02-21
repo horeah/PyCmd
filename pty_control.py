@@ -19,7 +19,7 @@ def read_stdin(fd):
         input_processed = False
         input_buffer.append(ch[0])
         while not input_processed:
-            time.sleep(0)
+            time.sleep(0.01)
         if command_to_run:
             return bytearray(command_to_run, 'utf-8')
         else:
