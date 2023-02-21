@@ -262,7 +262,7 @@ def read_input():
     keymap = KEYMAP
     while True:    
         while len(pty_control.input_buffer) == 0:
-            time.sleep(0)
+            time.sleep(0.01)
         ch = pty_control.input_buffer.pop()
         #debug('CH=0x%02X' % ch)
         mapped = keymap[ch]
