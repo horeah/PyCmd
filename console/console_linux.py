@@ -1,6 +1,7 @@
 #
 # Functions for manipulating the console using ANSI terminal sequences
 #
+import os
 from itertools import chain
 from functools import reduce
 from dataclasses import dataclass
@@ -216,11 +217,7 @@ def erase_to(end):
 
 def get_buffer_size():
     """Get the size of the text buffer"""
-    orig_cursor = get_cursor()
-    move_cursor(999, 999)
-    end_cursor = get_cursor()
-    move_cursor(*orig_cursor)
-    return end_cursor
+    return os.get_terminal_size()
 
 def get_viewport():
     """Get the current viewport position"""
