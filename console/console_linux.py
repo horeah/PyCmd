@@ -2,6 +2,7 @@
 # Functions for manipulating the console using ANSI terminal sequences
 #
 import os
+from pty import STDIN_FILENO
 from itertools import chain
 from functools import reduce
 from dataclasses import dataclass
@@ -195,15 +196,19 @@ def get_cursor():
     """Get the current cursor position"""
     sys.__stdout__.write('\033[6n')
     sys.__stdout__.flush()
-    pos = ''
-    ch = sys.__stdin__.read(1)
-    while (ch != 'R'):
-        if (ch != '\x1B'):
-            pos += ch
-        ch = sys.__stdin__.read(1)
-#    print('\r\n', pos, '\r\n')    
-    line, col = pos[1:].split(';')
+    buf = bytearray()
+    ch = os.read(STDIN_FILENO, 1)
+    while ch[0] != ord('R'):
+        buf.extend(ch)
+        ch = os.read(STDIN_FILENO, 1)
+    #debug(' '.join('%02X' % c for c in buf))
+    pos = buf.decode('ascii')
+    line, col = pos[pos.rfind('\033[') + len('\033['):].split(';')
     line, col = int(line), int(col)
+
+    # write back any bytes we might have skipped (e.g. from real keyboard input)
+    os.write(STDIN_FILENO, buf[:pos.rfind('\033[')])
+
     return col, line
 
 def count_chars(start, end):
