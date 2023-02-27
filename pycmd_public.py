@@ -26,23 +26,28 @@ def abbrev_path(path = None):
     """
     if not path:
         path = os.getcwd()
-        path = path[0].upper() + path[1:]
 
-    if path.lower().startswith(os.path.expanduser('~').lower()):
+    if os.path.normcase(path).startswith(os.path.normcase(os.path.expanduser('~'))):
         # Replace home directory with ~
         current_dir = os.path.expanduser('~')
         path = path[len(os.path.expanduser('~')) + 1:]
         path_abbrev = '~'
     else:
-        current_dir = path[ : 3]
-        path = path[3 : ]
-        path_abbrev = current_dir[ : 2]
+        if sys.platform == 'win32':
+            path = path[0].upper() + path[1:]
+            current_dir = path[ : 3]
+            path = path[3 : ]
+            path_abbrev = current_dir[ : 2]
+        else:
+            path = path[1:]
+            current_dir = '/'
+            path_abbrev = ''
 
-    for elem in path.split('\\')[ : -1]:
+    for elem in path.split(os.sep)[ : -1]:
         elem_abbrev = common.abbrev_string(elem)
         try:
             for other in os.listdir(current_dir):
-                if os.path.isdir(current_dir + '\\' + other) and common.abbrev_string(other).lower() == elem_abbrev.lower() and other.lower() != elem.lower():
+                if os.path.isdir(current_dir + os.sep + other) and common.abbrev_string(other).lower() == elem_abbrev.lower() and other.lower() != elem.lower():
                     # Found other directory with the same abbreviation
                     # In this case, we use the entire name
                     elem_abbrev = elem
@@ -50,10 +55,10 @@ def abbrev_path(path = None):
         except PermissionError:
             # we were unable to list parent directory to check for collisions
             elem_abbrev = elem
-        current_dir += '\\' + elem
-        path_abbrev += '\\' + elem_abbrev
+        current_dir += os.sep + elem
+        path_abbrev += os.sep + elem_abbrev
 
-    return path_abbrev if path_abbrev == '~' and not path else path_abbrev + '\\' + path.split('\\')[-1]
+    return path_abbrev if path_abbrev == '~' and not path else path_abbrev + os.sep + path.split(os.sep)[-1]
 
 
 def find_updir(name, path=None):
