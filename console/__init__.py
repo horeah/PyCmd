@@ -34,6 +34,24 @@ def get_current_background():
 
     return color
 
+def cursor_backward(count):
+    """Move cursor backward with the given number of positions"""
+    (x, y) = get_cursor()
+    while count > 0:
+        x -= 1
+        if x < 0:
+            y -= 1
+            (x, _) = get_buffer_size()
+            x -= 1
+        count -= 1
+    move_cursor(x, y)
+
+def erase_to(end):
+    from pycmd_public import color
+    to_erase = count_chars(get_cursor(), end)
+    sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
+    cursor_backward(to_erase)
+
 def write_str(s):
     """
     Output s to stdout, while processing the color sequences
