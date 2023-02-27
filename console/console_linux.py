@@ -22,6 +22,19 @@ SHIFT_PRESSED = 0x0010
 # Current formatting attributes (in windows format)
 current_attributes = FOREGROUND_WHITE | BACKGROUND_BLACK
 
+# Current cursor position
+# 
+# We perform our own cursor tracking in write_with_sane_cursor()
+# because getting the actual cursor position using ANSI ESC[6n can
+# easily interfere with actual keyboard input.
+#
+# Note that our tracked position is not the "absolute" cursor
+# position, but rather a "relative" position compared to our own
+# previous output (i.e. output that goes through our ColorOutputStream
+# stdout replacement (and consequently through
+# write_with_sane_cursor()
+current_cursor = [0, 0]
+
 @dataclass
 class PyINPUT_RECORDType:
     KeyDown: bool = False
@@ -189,36 +202,24 @@ def set_console_title(title):
 
 def move_cursor(x, y):
     """Move the cursor to the specified location"""
-    sys.__stdout__.write('\033[%d;%dH' % (y, x))
+    if x > current_cursor[0]:
+        sys.__stdout__.write('\033[%dC' % (x - current_cursor[0]))
+    elif x < current_cursor[0]:
+        sys.__stdout__.write('\033[%dD' % (current_cursor[0] - x))
+    if y > current_cursor[1]:
+        sys.__stdout__.write('\033[%dB' % (y - current_cursor[1]))
+    elif y < current_cursor[1]:
+        sys.__stdout__.write('\033[%dA' % (current_cursor[1] - y))
     sys.__stdout__.flush()
+    current_cursor[0] = x
+    current_cursor[1] = y
 
 def get_cursor():
     """Get the current cursor position"""
-    sys.__stdout__.write('\033[6n')
-    sys.__stdout__.flush()
-    buf = bytearray()
-    ch = os.read(STDIN_FILENO, 1)
-    while ch[0] != ord('R'):
-        buf.extend(ch)
-        ch = os.read(STDIN_FILENO, 1)
-    #debug(' '.join('%02X' % c for c in buf))
-    pos = buf.decode('ascii')
-    line, col = pos[pos.rfind('\033[') + len('\033['):].split(';')
-    line, col = int(line), int(col)
-
-    # write back any bytes we might have skipped (e.g. from real keyboard input)
-    os.write(STDIN_FILENO, buf[:pos.rfind('\033[')])
-
-    return col, line
+    return tuple(current_cursor)
 
 def count_chars(start, end):
     return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
-
-def erase_to(end):
-    from pycmd_public import color
-    to_erase = count_chars(get_cursor(), end)
-    sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
-    cursor_backward(to_erase)
 
 def get_buffer_size():
     """Get the size of the text buffer"""
@@ -231,12 +232,6 @@ def get_viewport():
 def set_cursor_attributes(size, visibility):
     """Set the cursor size and visibility"""
     pass
-
-def cursor_backward(count):
-    """Move cursor backward with the given number of positions"""
-    for i in range(count):
-        sys.__stdout__.write('\b')
-        sys.__stdout__.flush()
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
@@ -312,25 +307,28 @@ def is_control_only(record):
     return record.VirtualKeyCode in [16, 17, 18]
 
 def write_with_sane_cursor(s):
-    sys.__stdout__.write(s)
-    sys.__stdout__.flush()
-
-_debug_messages = []
-def debug(message):
-    from pycmd_public import color
-    queue_len = 8
-    width = 50
-    _debug_messages.append(message)
-    if len(_debug_messages) > queue_len:
-        _debug_messages.pop(0)
-    sys.__stdout__.write('\033[s')  # Save cursor position
-    sys.__stdout__.write('\033[H')  # Move cursor to home position
-    sys.stdout.write(color.Back.TOGGLE_RED)
-    for m in _debug_messages:
-        sys.stdout.write('| %-*s |\r\n' % (width - 1, m))
-    sys.stdout.write('+' + (width + 1) * '-' + '+')
-    sys.stdout.write(color.Back.TOGGLE_RED)
-    sys.__stdout__.write('\033[u')  # Restore cursor position
-
-
+    """Write simple text (i.e. no escape sequences) and track the
+    (relative) cursor position; also ensure that the cursor is
+    automatically moved to the next line when the end of a line is
+    reached (this does not happen by default!)
+    """
+    buffer_size = get_buffer_size()
+    for c in s:
+        sys.__stdout__.write(c)
+        if c == '\r':
+            current_cursor[0] = 0
+        elif c == '\b':
+            current_cursor[0] -= 1
+            if current_cursor[0] < 0:
+                current_cursor[0] = 0
+        elif c == '\n':
+            current_cursor[1] += 1
+        else:
+            current_cursor[0] += 1
+            if current_cursor[0] >= buffer_size[0]:
+                sys.__stdout__.write('\r\n')
+                current_cursor[1] += 1
+                current_cursor[0] = 0
+        if current_cursor[1] >= buffer_size[1]:
+            current_cursor[1] = buffer_size[1] - 1
 

@@ -10,41 +10,7 @@ from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY
 from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
 from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
 from win32con import SHIFT_PRESSED
-
-global FOREGROUND_RED
-global FOREGROUND_GREEN
-global FOREGROUND_BLUE
-global FOREGROUND_WHITE
-global FOREGROUND_BRIGHT
-
-global BACKGROUND_RED
-global BACKGROUND_GREEN
-global BACKGROUND_BLUE
-global BACKGROUND_BRIGHT
-
-global stdout_handle
-global stdin_handle
-
-class COORD(Structure):
-    _fields_ = [('X', c_short),
-                ('Y', c_short)]
-
-class SMALL_RECT(Structure):
-    _fields_ = [('Left', c_short),
-                ('Top', c_short),
-                ('Right', c_short),
-                ('Bottom', c_short)]
-
-class CONSOLE_CURSOR_INFO(Structure):
-    _fields_ = [('size', c_int),
-                ('visible', c_int)]
-
-class CONSOLE_SCREEN_BUFFER_INFO(Structure):
-    _fields_ = [('size', COORD),
-                ('cursorPosition', COORD),
-                ('attributes', WORD),
-                ('window', SMALL_RECT),
-                ('maxWindowSize', COORD)]
+from .console_common import *
 
 def get_text_attributes():
     """Get the current foreground/background RGB components"""
@@ -99,12 +65,6 @@ def get_cursor():
 def count_chars(start, end):
     return (end[1] - start[1]) * get_buffer_size()[0] + (end[0] - start[0])
 
-def erase_to(end):
-    from pycmd_public import color
-    to_erase = count_chars(get_cursor(), end)
-    sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
-    cursor_backward(to_erase)
-
 def get_buffer_size():
     """Get the size of the text buffer"""
     buffer_info = CONSOLE_SCREEN_BUFFER_INFO()
@@ -121,18 +81,6 @@ def set_cursor_attributes(size, visibility):
     """Set the cursor size and visibility"""
     cursor_info = CONSOLE_CURSOR_INFO(size, visibility)
     ctypes.windll.kernel32.SetConsoleCursorInfo(stdout_handle, pointer(cursor_info))
-
-def cursor_backward(count):
-    """Move cursor backward with the given number of positions"""
-    (x, y) = get_cursor()
-    while count > 0:
-        x -= 1
-        if x < 0:
-            y -= 1
-            (x, _) = get_buffer_size()
-            x -= 1
-        count -= 1
-    move_cursor(x, y)
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
@@ -220,25 +168,6 @@ def write_with_sane_cursor(s):
         # We have written over until the last column, but the cursor is NOT pushed to the next line; so we push it
         # ourselves
         sys.__stdout__.write(' \r')
-
-_debug_messages = []
-def debug(message):
-    from pycmd_public import color
-    queue_len = 6
-    width = 50
-    _debug_messages.append(message)
-    if len(_debug_messages) > queue_len:
-        _debug_messages.pop(0)
-    orig_cursor = get_cursor()
-    v_left, v_top, _, _ = get_viewport()
-    move_cursor(v_left, v_top)
-    sys.stdout.write(color.Back.TOGGLE_RED)
-    for m in _debug_messages:
-        sys.stdout.write('| %-*s |\n' % (width - 1, m))
-    sys.stdout.write('+' + (width + 1) * '-' + '+')
-    sys.stdout.write(color.Back.TOGGLE_RED)
-    move_cursor(orig_cursor[0], orig_cursor[1])
-
 
 stdin_handle = GetStdHandle(STD_INPUT_HANDLE)
 stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
