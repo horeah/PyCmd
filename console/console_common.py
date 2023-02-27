@@ -55,3 +55,8 @@ BACKGROUND_RED = 0x40
 BACKGROUND_BRIGHT = 0x80
 BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
 
+debug_file = open('PyCmd_debug.txt', 'w')
+def debug(message):
+    debug_file.write(str(message) + '\n')
+    debug_file.flush()
+
