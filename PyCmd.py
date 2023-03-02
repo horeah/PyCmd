@@ -326,8 +326,10 @@ def main():
                         state.reset_prev_line()
                         if rec.VirtualKeyCode == 37:            # Alt-Left
                             dir_hist.go_left()
+                            apply_cwd()
                         elif rec.VirtualKeyCode == 39:          # Alt-Right     
                             dir_hist.go_right()
+                            apply_cwd()
                         state.prev_prompt = state.prompt
                         state.prompt = appearance.prompt()
                         update_dir_history()
@@ -340,6 +342,7 @@ def main():
                     if state.before_cursor + state.after_cursor == '':
                         os.chdir('..')
                         dir_hist.visit_cwd()
+                        apply_cwd()
                         break
                 elif rec.VirtualKeyCode == 66:          # Alt-B
                     state.handle(ActionCode.ACTION_LEFT_WORD, select)
@@ -357,6 +360,7 @@ def main():
                         selection = w.interact(initial_index=dir_hist.index)
                         if selection:
                             dir_hist.jump(selection)
+                            apply_cwd()
                             state.prev_prompt = state.prompt
                             state.prompt = appearance.prompt()
                             update_dir_history()
@@ -574,6 +578,11 @@ def internal_cd(args):
         stderr.write(str(error).replace('\\\\', '\\') + '\n')
         os.environ['ERRORLEVEL'] = '1'
     os.environ['CD'] = os.getcwd()
+
+
+def apply_cwd():
+    if sys.platform == 'linux':
+        run_command(['cd', f'"{os.getcwd()}"'])
 
 
 def internal_exit(message = ''):
