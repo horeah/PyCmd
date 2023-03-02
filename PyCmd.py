@@ -461,7 +461,7 @@ def main():
                         state.bell = True
                     elif len(suggestions) > 1:
                         # Multiple completions possible
-                        path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else '\\'
+                        path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else os.sep
                         if tokens[-1]:
                             # Tokenize again in case the original line has been appended to
                             tokens = tokenize(completed.rstrip(' ').rstrip(path_sep))

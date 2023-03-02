@@ -296,7 +296,7 @@ def complete_wildcard(line):
     tokens = tokenize(line)
     token = tokens[-1].replace('"', '')
 
-    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
+    path_sep = '/' if '/' in expand_env_vars(token) else os.sep
     
     (path_to_complete, _, prefix) = token.rpartition(path_sep)
     if path_to_complete == '' and token != '' and token[0] == path_sep:
