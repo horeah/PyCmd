@@ -1,4 +1,4 @@
-import sys, os, threading, time, tty, pty, fcntl, array, termios
+import sys, os, threading, time, tty, pty, fcntl, array, termios, tempfile
 
 input_processed = False
 command_to_run = None
@@ -77,11 +77,21 @@ def read_shell(fd):
 def start():
     # Direct character processing
     tty.setcbreak(sys.stdin)
-    os.environ['PS1'] = MARKER + r'$PWD|$?' + MARKER
+    ps1 = MARKER + r'$PWD|$?' + MARKER
+
+    # We make the temp file global, otherwise it will be deleted when
+    # this function ends -- which could be before beash gets a chance
+    # to read it!
+    global rc      
+    try:
+        rc = tempfile.NamedTemporaryFile()
+        rc.write(open(os.path.expanduser('~/.bashrc'), 'rb').read())
+        rc.write(f"PS1='{ps1}'\n".encode('utf-8'))
+        rc.flush()
+    except OSError as e:
+        pass
     t = threading.Thread(group=None,
-                         target=(lambda: pty.spawn(['/bin/bash', '--norc'],
-                                               master_read=read_shell,
-                                               stdin_read=read_stdin)))
+                         target=(lambda: pty.spawn(['/bin/bash', '--rcfile', rc.name],
+                                                   master_read=read_shell,
+                                                   stdin_read=read_stdin)))
     t.start()
-
-
