@@ -74,7 +74,7 @@ def read_shell(fd):
             return os.read(fd, 1)
 
         
-def start():
+def start(env_dump_file):
     # Direct character processing
     tty.setcbreak(sys.stdin)
     ps1 = MARKER + r'$PWD|$?' + MARKER
@@ -87,6 +87,7 @@ def start():
         rc = tempfile.NamedTemporaryFile()
         rc.write(open(os.path.expanduser('~/.bashrc'), 'rb').read())
         rc.write(f"PS1='{ps1}'\n".encode('utf-8'))
+        rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"'.encode('utf-8'))
         rc.flush()
     except OSError as e:
         pass
