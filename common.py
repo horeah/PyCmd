@@ -155,7 +155,7 @@ def unescape(string):
     return result
 
 
-def expand_tilde(string):
+def expand_tilde_win(string):
     """
     Return an expanded version of the string by replacing a leading tilde
     with %HOME% (if defined) or %USERPROFILE%.
@@ -179,7 +179,7 @@ def abbrev_tilde(path):
     else:
         return path
 
-def expand_env_vars(string):
+def expand_env_vars_win(string):
     """
     Return an expanded version of the string by inlining the values of the
     environment variables. Also replaces ~ with %HOME% or %USERPROFILE%.
@@ -200,6 +200,14 @@ def expand_env_vars(string):
         begin = string.find('%', begin + 1)
 
     return string
+
+
+if sys.platform == 'win32':
+    expand_tilde = expand_tilde_win
+    expand_env_vars = expand_env_vars_win
+else:
+    expand_tilde = os.path.expanduser
+    expand_env_vars = os.path.expandvars
 
 
 def split_nocase(string, separator):

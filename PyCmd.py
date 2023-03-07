@@ -91,7 +91,7 @@ def main():
         run_command(['echo', '>', 'NUL'])
     else:
         # Start a bash instance and control its pty
-        pty_control.start()
+        pty_control.start(env_dump_file=tmpfile)
         
     # Parse arguments
     arg = 1
@@ -621,20 +621,45 @@ def internal_exit(message = ''):
 
 
 def run_command(tokens):
-    """Execute a command line (treat internal and external appropriately"""
     if sys.platform == 'linux':
-        #print('Running', tokens)
-        pty_control.command_to_run = ' '.join(tokens) + '\n'
-        pty_control.pass_through = True
-        pty_control.input_processed = True
-        if tokens != ['exit']:
-            while pty_control.pass_through:
-                time.sleep(0)
-        # print(f'Captured[{captured_prompt}]')
-        curdir, exit_code = pty_control.captured_prompt.split('|')
-        os.chdir(curdir)
+        run_command_linux(tokens)
+    else:
+        run_command_win(tokens)
+
+
+def run_command_linux(tokens):
+    #print('Running', tokens)
+    pty_control.command_to_run = ' '.join(tokens) + '\n'
+    pty_control.pass_through = True
+    pty_control.input_processed = True
+    if tokens == ['exit']:
         return
-    
+
+    while pty_control.pass_through:
+        time.sleep(0)
+    # print(f'Captured[{captured_prompt}]')
+    curdir, exit_code = pty_control.captured_prompt.split('|')
+    os.chdir(curdir)
+
+    # Update environment and state
+    new_environ = {}
+    env_file = open(tmpfile, 'r')
+    for line in [l for l in env_file.readlines() if not l.isspace()]:
+        [variable, value] = line.split('=', 1)
+        value = value.rstrip('\n ')
+        new_environ[variable] = value
+    env_file.close()
+    if new_environ != {}:
+        for variable in os.environ.keys():
+            if not variable in new_environ.keys():
+                del os.environ[variable]
+        for variable in new_environ:
+            os.environ[variable] = new_environ[variable]
+    from console.console_common import debug
+
+
+def run_command_win(tokens):
+    """Execute a command line (treat internal and external appropriately"""
     import win32console, win32gui, win32con
     
     # Inline %ERRORLEVEL%
