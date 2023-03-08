@@ -233,7 +233,7 @@ def complete_file_alternate(line, timeout=None):
     if path_to_complete == '':
         dir_to_complete = os.getcwd()
     elif path_to_complete == path_sep:
-        dir_to_complete = os.getcwd()[0:3]
+        dir_to_complete = os.getcwd()[0:3] if sys.platform == 'win32' else path_sep
     else:
         dir_to_complete = expand_env_vars(path_to_complete) + path_sep
 
@@ -395,7 +395,7 @@ def complete_wildcard(line):
         return (line, [])
 
 
-def complete_env_var(line):
+def complete_env_var_win(line):
     """
     Complete names of environment variables
     This function tokenizes the line and computes completions
@@ -445,6 +445,34 @@ def complete_env_var(line):
         # No completion possible, return original line
         return (line, [])
 
+
+def complete_env_var_linux(line):
+    token = tokenize(line)[-1]
+    start_brace = end_brace = ''
+    [lead, prefix] = token.strip('"').rsplit('$', 1)
+    if len(prefix) > 0 and prefix[0] == '{':
+        start_brace = '{'
+        end_brace = '}'
+        prefix = prefix[1:]
+    completions = [var for var in os.environ if var.lower().startswith(prefix.lower())]
+    if completions != []:
+        # Find longest prefix
+        common_string = find_common_prefix(prefix, completions)
+
+        quote = ''  # Assume no quoting needed by default, then check for spaces
+        for completion in completions:
+            if contains_special_char(os.environ[completion]):
+                quote = '"'
+                break
+
+        result = line[0 : len(line) - len(token)] + quote + lead + '$' + start_brace + common_string + end_brace
+        return (result, completions)
+    else:
+        # No completion possible, return original line
+        return (line, [])
+
+
+complete_env_var = complete_env_var_win if sys.platform == 'win32' else complete_env_var_linux
 
 
 def find_common_prefix(original, completions):
@@ -516,3 +544,15 @@ def wildcard_to_regex(pattern):
 def has_wildcards(pattern):
     """Check if the given pattern contains wildcards"""
     return pattern.find('*') >= 0 or pattern.find('?') >= 0
+
+
+def ends_in_env_var(token):
+    """Check if the current token seems to have an env-var at the end"""
+    if sys.platform == 'win32':
+        return token.strip('"').count('%') % 2 == 1
+    else:
+        pos_dollar = token.rfind('$')
+        pos_brace = token.rfind('${')
+        return (pos_dollar >= 0 and
+                (not any(c in token[pos_dollar+1:] for c in [' ', '\t', os.sep] + sep_chars))
+                or (pos_brace >= 0 and not '}' in token[pos_brace+1:]))
