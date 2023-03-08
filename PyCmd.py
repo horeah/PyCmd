@@ -609,7 +609,7 @@ def internal_cd(args):
 
 def apply_cwd():
     if sys.platform == 'linux':
-        run_command(['cd', f'"{os.getcwd()}"'])
+        run_command(['cd', f'"{os.getcwd()}"', ';', '(exit %s)' % os.environ['ERRORLEVEL']])
 
 
 def internal_exit(message = ''):
