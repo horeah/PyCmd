@@ -640,6 +640,7 @@ def run_command_linux(tokens):
     # print(f'Captured[{captured_prompt}]')
     curdir, exit_code = pty_control.captured_prompt.split('|')
     os.chdir(curdir)
+    os.environ['ERRORLEVEL'] = exit_code
 
     # Update environment and state
     new_environ = {}
@@ -651,10 +652,11 @@ def run_command_linux(tokens):
     env_file.close()
     if new_environ != {}:
         for variable in os.environ.keys():
-            if not variable in new_environ.keys():
+            if not variable in new_environ.keys() and variable != 'ERRORLEVEL':
                 del os.environ[variable]
         for variable in new_environ:
-            os.environ[variable] = new_environ[variable]
+            if variable != 'ERRORLEVEL':
+                os.environ[variable] = new_environ[variable]
     from console.console_common import debug
 
 
