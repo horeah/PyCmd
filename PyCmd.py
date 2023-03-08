@@ -2,7 +2,7 @@ import sys, os, tempfile, signal, time, traceback, codecs, platform
 from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
-from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
+from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex, ends_in_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
@@ -439,7 +439,7 @@ def main():
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
                     tokens = tokenize(state.before_cursor)
-                    if tokens[-1].strip('"').count('%') % 2 == 1:
+                    if ends_in_env_var(tokens[-1]):
                         (completed, suggestions) = complete_env_var(state.before_cursor)
                     elif has_wildcards(tokens[-1]):
                         (completed, suggestions)  = complete_wildcard(state.before_cursor)
