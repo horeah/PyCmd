@@ -230,8 +230,9 @@ def get_viewport():
     return (0, 0, *get_buffer_size())
 
 def set_cursor_attributes(size, visibility):
-    """Set the cursor size and visibility"""
-    pass
+    """Set the cursor visibility (setting the size is not possible on Linux)"""
+    sys.__stdout__.write('\033[?25%s' % ('h' if visibility else 'l'))
+    sys.__stdout__.flush()
 
 def scroll_buffer(lines):
     """Scroll vertically with the given (positive or negative) number of lines"""
