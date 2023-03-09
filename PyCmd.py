@@ -74,7 +74,8 @@ def init():
     signal.signal(signal.SIGINT, signal_handler)
 
 def deinit():
-    os.remove(tmpfile)
+    if os.path.isfile(tmpfile):
+        os.remove(tmpfile)
 
 def main():
     title_prefix = ""
@@ -619,7 +620,8 @@ def internal_exit(message = ''):
         print(message)
     if sys.platform == 'linux':
         run_command(['exit'])
-    sys.exit()
+    else:
+        sys.exit()
 
 
 def run_command(tokens):
@@ -635,7 +637,10 @@ def run_command_linux(tokens):
     pty_control.pass_through = True
     pty_control.input_processed = True
     if tokens == ['exit']:
-        return
+        time.sleep(0.5)
+        deinit()
+        os.system('reset -I')
+        sys.exit()
 
     while pty_control.pass_through:
         time.sleep(0)
@@ -940,6 +945,8 @@ if __name__ == '__main__':
         print()
         print('Crash report written to:\n  ' + report_file_name)
         print()
-        print('Press any key to exit... ')
-        print('************************************')
-        read_input()
+        if sys.platform == 'win32':
+            print('Press any key to exit... ')
+            print('************************************')
+            read_input()
+        internal_exit()
