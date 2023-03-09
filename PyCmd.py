@@ -643,7 +643,7 @@ def run_command_linux(tokens):
         sys.exit()
 
     while pty_control.pass_through:
-        time.sleep(0)
+        time.sleep(0.01)
     # print(f'Captured[{captured_prompt}]')
     curdir, exit_code = pty_control.captured_prompt.split('|')
     os.chdir(curdir)
