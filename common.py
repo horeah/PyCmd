@@ -220,7 +220,7 @@ if sys.platform == 'win32':
     expand_env_vars = expand_env_vars_win
 else:
     expand_tilde = os.path.expanduser
-    expand_env_vars = os.path.expandvars
+    expand_env_vars = lambda s: os.path.expandvars(os.path.expanduser(s))
 
 
 def split_nocase(string, separator):
