@@ -5,6 +5,7 @@ from math import log10, ceil
 from sys import stdout
 from common import fuzzy_match
 import sys
+from console.console_common import debug
 if sys.platform == 'linux':
     import pty_control
 
@@ -146,7 +147,8 @@ class Window(object):
             self.reset_cursor()
             self.display()
             if sys.platform == 'linux':
-                pty_control.input_processed = True
+                debug('Window interact input_processed.set')
+                pty_control.input_processed.set()
             rec = read_input()
             if rec.Char == chr(0) or is_ctrl_pressed(rec) and not rec.VirtualKeyCode == 71 or is_alt_pressed(rec):
                 if rec.VirtualKeyCode == 37 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 66:

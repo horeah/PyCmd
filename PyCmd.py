@@ -16,6 +16,7 @@ from console import remove_escape_sequences
 from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
+from console.console_common import debug
 
 if sys.platform == 'linux':
     import pty_control
@@ -172,9 +173,6 @@ def main():
         print()
 
         while True:
-            if sys.platform == 'linux':
-                pty_control.input_processed = True
-
             # Update console title and environment
             curdir = os.getcwd()
             curdir = curdir[0].upper() + curdir[1:]
@@ -333,9 +331,11 @@ def main():
                         if rec.VirtualKeyCode == 37:            # Alt-Left
                             dir_hist.go_left()
                             apply_cwd()
+                            break
                         elif rec.VirtualKeyCode == 39:          # Alt-Right     
                             dir_hist.go_right()
                             apply_cwd()
+                            break
                         state.prev_prompt = state.prompt
                         state.prompt = appearance.prompt()
                         update_dir_history()
@@ -370,6 +370,7 @@ def main():
                             state.prev_prompt = state.prompt
                             state.prompt = appearance.prompt()
                             update_dir_history()
+                            break
                     else:
                         state.handle(ActionCode.ACTION_DELETE_WORD) 
                 elif rec.VirtualKeyCode == 87:          # Alt-W
@@ -431,6 +432,10 @@ def main():
                         state.reset_selection()
                     else:
                         state.history.reset()
+                        if (state.before_cursor + state.after_cursor).strip() == '':
+                            if sys.platform == 'linux':
+                                debug('Empty line input_processed.set')
+                                pty_control.input_processed.set()
                         break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
@@ -484,15 +489,22 @@ def main():
                                 (c_x, c_y) = get_cursor()
                                 offset_from_bottom = get_buffer_size()[1] - c_y
                                 message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
-                                stdout.write('\n' + message)
+                                stdout.write('\r\n' + message)
+                                stdout.flush()
+                                if sys.platform == 'linux':
+                                    debug('bash-completion-confirm input_processed.set')
+                                    pty_control.input_processed.set()
                                 rec = read_input()
                                 move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
-                                stdout.write('\n' + ' ' * len(message))
+                                stdout.write('\r\n' + ' ' * len(message))
                                 move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
                                 if rec.Char != '\t':
                                     if not ord(rec.Char) in [0, 8, 13, 27]:
                                         state.handle(ActionCode.ACTION_INSERT, rec.Char)
                                     state.reset_prev_line()
+                                    if sys.platform == 'linux':
+                                        debug('bash-completion-nextchar input_processed.set')
+                                        pty_control.input_processed.set()
                                     continue
                             w.display()
                             state.reset_prev_line()
@@ -502,7 +514,8 @@ def main():
                             w.reset_cursor()
 
                             if sys.platform == 'linux':
-                                pty_control.input_processed = True
+                                debug('zsh completion input_processed.set')
+                                pty_control.input_processed.set()
                             while True:
                                 r = read_input()
                                 if not is_control_only(r):
@@ -538,6 +551,9 @@ def main():
                             else:
                                 write_input(r.VirtualKeyCode, r.Char, r.ControlKeyState)
                                 w.erase()
+                                if sys.platform == 'linux':
+                                    debug('zsh completion writeback input_available.set')
+                                    pty_control.input_available.set()
                                 continue
                         set_cursor_attributes(cursor_height, True)
                 elif rec.Char == chr(8):                # Backspace
@@ -546,6 +562,11 @@ def main():
                     tokens_before = tokenize(state.before_cursor)
                     state.handle(ActionCode.ACTION_INSERT, rec.Char)
                     tokens_after = tokenize(state.before_cursor)
+                    
+            if sys.platform == 'linux':
+                debug('Step input_processed.set')
+                pty_control.input_processed.set()
+
 
         # Done reading line, now execute
         stdout.write(state.after_cursor)        # Move cursor to the end
@@ -633,7 +654,8 @@ def run_command_linux(tokens):
     #print('Running', tokens)
     pty_control.command_to_run = ' '.join(tokens) + '\n'
     pty_control.pass_through = True
-    pty_control.input_processed = True
+    debug('run_command input_processed.set')
+    pty_control.input_processed.set()
     if tokens == ['exit']:
         time.sleep(0.5)
         deinit()
@@ -662,7 +684,6 @@ def run_command_linux(tokens):
         for variable in new_environ:
             if variable != 'ERRORLEVEL':
                 os.environ[variable] = new_environ[variable]
-    from console.console_common import debug
 
 
 def run_command_win(tokens):
