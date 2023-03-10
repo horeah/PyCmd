@@ -186,7 +186,7 @@ class Window(object):
                 else:
                     self.erase()
                     return None, None
-            elif not is_ctrl_pressed(rec):
+            elif not is_ctrl_pressed(rec) and not is_alt_pressed(rec):
                 if rec.Char == '\b':
                     self.filter = self.filter[:-1]
                 else:            
