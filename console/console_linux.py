@@ -258,9 +258,11 @@ def scroll_to_quarter(line):
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
     keymap = KEYMAP
-    while True:    
-        while len(pty_control.input_buffer) == 0:
-            time.sleep(0.01)
+    while True:
+        debug('read_input input_available.wait')
+        pty_control.input_available.wait()
+        debug('read_input got')
+        pty_control.input_available.clear()
         ch = pty_control.input_buffer.pop()
         #debug('CH=0x%02X' % ch)
         mapped = keymap[ch]
@@ -269,7 +271,8 @@ def read_input():
         else:
             # we are still in a sequence
             keymap = mapped
-            pty_control.input_processed = True
+            debug('read_input input_processed.set')
+            pty_control.input_processed.set()
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
