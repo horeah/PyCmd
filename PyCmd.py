@@ -381,7 +381,7 @@ def main():
                     state.handle(ActionCode.ACTION_DELETE_WORD)
                 elif rec.VirtualKeyCode == 8:           # Alt-Backspace
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
-                elif rec.VirtualKeyCode == 191:
+                elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
             elif is_ctrl_pressed(rec) and is_alt_pressed(rec):          # Ctrl-Alt-something
                 if rec.VirtualKeyCode == 75:            # Ctrl-Alt-K
