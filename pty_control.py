@@ -1,6 +1,8 @@
 import sys, os, threading, time, tty, pty, fcntl, array, termios, tempfile
+from console.console_common import debug
 
-input_processed = False
+input_processed = threading.Event()
+input_available = threading.Event()
 command_to_run = None
 pass_through = True
 MARKER = '_M' + 'ARKE' + 'R_'
@@ -11,15 +13,19 @@ captured_prompt = None
 
 
 def read_stdin(fd):
-    global input_processed, pass_through
+    global pass_through
+    debug('read_stdin os.read')
     ch = os.read(fd, 1)
     if pass_through:
         return ch
     else:
-        input_processed = False
         input_buffer.append(ch[0])
-        while not input_processed:
-            time.sleep(0.01)
+        debug('read_stdin input_available.set')
+        input_available.set()
+        debug('read_stdin input_processed.wait')
+        input_processed.wait()
+        debug('read_stdin got')
+        input_processed.clear()
         if command_to_run:
             return bytearray(command_to_run, 'utf-8')
         else:
