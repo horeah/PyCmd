@@ -5,7 +5,14 @@ input_processed = threading.Event()
 input_available = threading.Event()
 command_to_run = None
 pass_through = True
-MARKER = '_M' + 'ARKE' + 'R_'
+
+# The "interpreted" MARKER (i.e. the string that bash will show when printing the
+# prompt) must be different from the "raw" MARKER, i.e. the actual value of the
+# PS1 variable; otherwise echoing $PS1 will trick the prompt detection mechanism
+# in read_shell()
+MARKER_BASE = '_MARKER_'
+MARKER_RAW = r'\036' + MARKER_BASE
+MARKER = '\036' + MARKER_BASE
 MARKER_BYTES = bytearray(MARKER, 'utf-8')
 marker_acc = []
 input_buffer = []
@@ -83,7 +90,7 @@ def read_shell(fd):
 def start(env_dump_file):
     # Direct character processing
     tty.setcbreak(sys.stdin)
-    ps1 = MARKER + r'$PWD|$?' + MARKER
+    ps1 = MARKER_RAW + r'$PWD|$?' + MARKER_RAW
 
     # We make the temp file global, otherwise it will be deleted when
     # this function ends -- which could be before beash gets a chance
