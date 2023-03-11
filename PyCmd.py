@@ -183,7 +183,6 @@ def main():
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor + state.prev_suggestion)
                 set_cursor_attributes(50 if state.overwrite else 10, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
-                stdout.write('\r')
 
                 # Write current line
                 stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt +
@@ -243,7 +242,7 @@ def main():
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.Char == chr(4):                  # Ctrl-D
                     if state.before_cursor + state.after_cursor == '':
-                        internal_exit('\r\nBye!')
+                        internal_exit('\nBye!')
                     else:
                         state.handle(ActionCode.ACTION_DELETE)
                 elif rec.Char == chr(31):                   # Ctrl-_
@@ -489,14 +488,14 @@ def main():
                                 (c_x, c_y) = get_cursor()
                                 offset_from_bottom = get_buffer_size()[1] - c_y
                                 message = ' Scroll ' + str(int(round(num_screens))) + ' screens? [Tab] '
-                                stdout.write('\r\n' + message)
+                                stdout.write('\n' + message)
                                 stdout.flush()
                                 if sys.platform == 'linux':
                                     debug('bash-completion-confirm input_processed.set')
                                     pty_control.input_processed.set()
                                 rec = read_input()
                                 move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
-                                stdout.write('\r\n' + ' ' * len(message))
+                                stdout.write('\n' + ' ' * len(message))
                                 move_cursor(c_x, get_buffer_size()[1] - offset_from_bottom)
                                 if rec.Char != '\t':
                                     if not ord(rec.Char) in [0, 8, 13, 27]:
