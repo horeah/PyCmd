@@ -192,6 +192,24 @@ def svn_prompt():
     return prompt
 
 
+def user_at_host():
+    """
+    Return a colored string in the format "user@host", meant to be
+    included in the prompt (on Linux, this is automatically included
+    by the universal_prompt)
+    """
+    import getpass, platform, ctypes
+    user = getpass.getuser()
+    if sys.platform == 'linux':
+        user_color_modifier = color.Fore.TOGGLE_BLUE if os.getuid() == 0 else ''
+    else:
+        user_color_modifier = color.Fore.TOGGLE_BLUE if ctypes.windll.shell32.IsUserAnAdmin() != 0 else ''
+    host = platform.node()
+    return (color.Fore.TOGGLE_GREEN + user_color_modifier + '['
+            + user + '@' + host
+            + ']' + color.Fore.TOGGLE_GREEN + user_color_modifier)
+
+
 def universal_prompt():
     """
     Universal prompt function
@@ -199,12 +217,13 @@ def universal_prompt():
     This function selects the appropriate prompt sub-function (simple prompt,
     git prompt, svn prompt) based on the current directory.
     """
+    user_host = user_at_host() + ' ' if sys.platform == 'linux'  else ''
     if find_updir('.git'):
-        return appearance.git_prompt()
+        return user_host + appearance.git_prompt()
     elif find_updir('.svn'):
-        return appearance.svn_prompt()
+        return user_host + appearance.svn_prompt()
     else:
-        return appearance.simple_prompt()
+        return user_host + appearance.simple_prompt()
 
 
 class color(object):
