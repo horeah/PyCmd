@@ -75,7 +75,9 @@ KEYMAP = {
         0x7F: PyINPUT_RECORDType(True, 8, chr(8), LEFT_ALT_PRESSED), # Alt-Backspace
         0x1B: PyINPUT_RECORDType(True, 0, chr(27), 0),  # Escape
         0x2F: PyINPUT_RECORDType(True, 191, 0, LEFT_ALT_PRESSED),  # Alt-/
+        0x62: PyINPUT_RECORDType(True, 66, 0, LEFT_ALT_PRESSED),   # Alt-B
         0x64: PyINPUT_RECORDType(True, 68, 0, LEFT_ALT_PRESSED),   # Alt-D
+        0x66: PyINPUT_RECORDType(True, 70, 0, LEFT_ALT_PRESSED),   # Alt-F
         0x6E: PyINPUT_RECORDType(True, 78, 0, LEFT_ALT_PRESSED),   # Alt-N
         0x70: PyINPUT_RECORDType(True, 80, 0, LEFT_ALT_PRESSED),   # Alt-P
         0x5B: {  # [
