@@ -337,6 +337,7 @@ def write_with_sane_cursor(s):
                 current_cursor[0] = 0
         elif c == '\n':
             current_cursor[1] += 1
+            write_with_sane_cursor('\r')
         else:
             current_cursor[0] += 1
             if current_cursor[0] >= buffer_size[0]:
