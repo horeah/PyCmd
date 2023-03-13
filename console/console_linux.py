@@ -35,6 +35,11 @@ current_attributes = FOREGROUND_WHITE | BACKGROUND_BLACK
 # write_with_sane_cursor()
 current_cursor = [0, 0]
 
+# Write-back buffer used to emulate "write_input" (these will be
+# consumed by read_input() before attempting to consume from the
+# input_buffer)
+write_back = []
+
 @dataclass
 class PyINPUT_RECORDType:
     KeyDown: bool = False
@@ -269,6 +274,9 @@ def scroll_to_quarter(line):
 
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""
+    if write_back:
+        return write_back.pop(0)
+
     keymap = KEYMAP
     while True:
         debug('read_input input_available.wait')
@@ -288,7 +296,7 @@ def read_input():
 
 def write_input(key_code, char, control_state):
     """Emulate a key press with the given key code and control key mask"""
-    pty_control.input_buffer.append(ord(char))
+    write_back.append(PyINPUT_RECORDType(True, key_code, char, control_state))
 
 def remove_escape_sequences(s):
     """
