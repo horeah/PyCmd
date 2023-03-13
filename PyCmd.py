@@ -550,9 +550,6 @@ def main():
                             else:
                                 write_input(r.VirtualKeyCode, r.Char, r.ControlKeyState)
                                 w.erase()
-                                if sys.platform == 'linux':
-                                    debug('zsh completion writeback input_available.set')
-                                    pty_control.input_available.set()
                                 continue
                         set_cursor_attributes(cursor_height, True)
                 elif rec.Char == chr(8):                # Backspace
