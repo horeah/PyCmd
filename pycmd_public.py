@@ -231,13 +231,13 @@ def user_at_host():
     import getpass, platform, ctypes
     user = getpass.getuser()
     if sys.platform == 'linux':
-        user_color_modifier = color.Fore.TOGGLE_BLUE if os.getuid() == 0 else ''
+        user_color = color.Fore.RED if os.getuid() == 0 else color.Fore.GREEN
     else:
-        user_color_modifier = color.Fore.TOGGLE_BLUE if ctypes.windll.shell32.IsUserAnAdmin() != 0 else ''
+        user_color = color.Fore.RED if ctypes.windll.shell32.IsUserAnAdmin() != 0 else color.Fore.GREEN
     host = platform.node()
-    return (color.Fore.TOGGLE_GREEN + user_color_modifier + '['
-            + user + '@' + host
-            + ']' + color.Fore.TOGGLE_GREEN + user_color_modifier)
+    return (user_color +
+            '[' + user + '@' + host + ']' +
+            color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt)
 
 
 def universal_prompt():
@@ -367,7 +367,8 @@ class _Appearance(_Settings):
         """Color-related settings"""
         def __init__(self):
             self.text = ''
-            self.prompt = color.Fore.TOGGLE_BRIGHT
+            self.prompt = (color.Fore.TOGGLE_BRIGHT if sys.platform == 'win32'
+                           else color.Fore.BLUE + color.Fore.SET_BRIGHT)
             self.selection = (color.Fore.TOGGLE_RED +
                               color.Fore.TOGGLE_GREEN +
                               color.Fore.TOGGLE_BLUE +
