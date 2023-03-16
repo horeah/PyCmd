@@ -859,7 +859,7 @@ def signal_handler(signum, frame):
 
 def optimal_window_height():
     _, viewport_top, _, viewport_bottom  = get_viewport()
-    window_height = viewport_bottom - get_cursor()[1] - 1
+    window_height = viewport_bottom - get_cursor()[1] - 2
     if window_height < (viewport_bottom - viewport_top) // 3:
         window_height = (viewport_bottom - viewport_top) // 3
     return window_height
