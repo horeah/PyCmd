@@ -278,7 +278,14 @@ def read_input():
         return write_back.pop(0)
 
     keymap = KEYMAP
+    pty_control.input_processed.clear()
+    ch = 0
     while True:
+        if ch == 0x1B:
+            # Try to guess if the ESC character is the ESC key being
+            # pressed, or the beginning of a special sequence
+            if not pty_control.input_available.wait(0.1):
+                return mapped[ch]
         debug('read_input input_available.wait')
         pty_control.input_available.wait()
         debug('read_input got')
