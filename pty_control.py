@@ -52,8 +52,8 @@ def read_shell(fd):
         fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(fd, termios.TIOCSWINSZ, buf)
 
-        # bash outputs the command; we swallow it
-        os.read(fd, len(command_to_run) - 1)
+        # bash outputs the command; we swallow it (incl. '\r\n')
+        os.read(fd, len(command_to_run) + 1)
         command_to_run = None
         marker_acc = []
         return bytearray(chr(0), 'utf-8')
