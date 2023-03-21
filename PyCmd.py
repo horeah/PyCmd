@@ -650,6 +650,7 @@ def run_command(tokens):
 
 def run_command_linux(tokens):
     #print('Running', tokens)
+    pty_control.command_completed.clear()
     pty_control.command_to_run = ' '.join(tokens) + '\n'
     pty_control.pass_through = True
     debug('run_command input_processed.set')
@@ -660,8 +661,7 @@ def run_command_linux(tokens):
         os.system('reset -I')
         sys.exit()
 
-    while pty_control.pass_through:
-        time.sleep(0.01)
+    pty_control.command_completed.wait()
     # print(f'Captured[{captured_prompt}]')
     curdir, exit_code = pty_control.captured_prompt.split('|')
     os.chdir(curdir)
