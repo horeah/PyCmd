@@ -5,6 +5,7 @@ input_processed = threading.Event()
 input_available = threading.Event()
 command_to_run = None
 pass_through = True
+command_completed = threading.Event()
 
 # The "interpreted" MARKER (i.e. the string that bash will show when printing the
 # prompt) must be different from the "raw" MARKER, i.e. the actual value of the
@@ -77,6 +78,7 @@ def read_shell(fd):
                 captured_prompt = bytearray(captured_prompt[:-len(MARKER_BYTES)]).decode('utf-8')
                 pass_through = False
                 marker_acc = []
+                command_completed.set()
                 return bytearray(chr(0), 'utf-8')
             else:
                 # this is not the MARKER, return the accumulated bytes
