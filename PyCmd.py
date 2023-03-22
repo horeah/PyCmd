@@ -1,4 +1,5 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
+from common import pycmd_data_dir, pycmd_install_dir
 from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
@@ -16,14 +17,12 @@ from console import remove_escape_sequences
 from Window import Window
 from pycmd_public import color, appearance, behavior
 from common import apply_settings, sanitize_settings
-from console.console_common import debug
+from common import debug
 
 if sys.platform == 'linux':
     import pty_control
 
 
-pycmd_data_dir = None
-pycmd_install_dir = None
 state = None
 dir_hist = None
 pushd_stack = []
@@ -31,26 +30,8 @@ tmpfile = None
 save_history_limit = 2000
 
 def init():
-    global pycmd_data_dir
-    if sys.platform == 'win32':
-        # %APPDATA% is not always defined (e.g. when using runas.exe)
-        if 'APPDATA' in os.environ.keys():
-            APPDATA = '%APPDATA%'
-        else:
-            APPDATA = '%USERPROFILE%\\Application Data'
-        pycmd_data_dir = expand_env_vars(APPDATA + '\\PyCmd')
-    else:
-        pycmd_data_dir = os.path.expanduser('~/.PyCmd')
-
-    # Create app data directory structure if not present
-    if not os.path.isdir(pycmd_data_dir):
-        os.mkdir(pycmd_data_dir)
-    if not os.path.isdir(pycmd_data_dir + '/tmp'):
-        os.mkdir(pycmd_data_dir + '/tmp')
-
     # Determine the "installation" directory
     global pycmd_install_dir
-    pycmd_install_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     # Current state of the input (prompt, entered chars, history)
     global state

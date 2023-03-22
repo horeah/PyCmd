@@ -1,11 +1,8 @@
 #
 # Common utility functions
 #
-import os, string, fsm, mmap, sys, traceback
-from console import get_cursor, move_cursor, get_viewport
+import os, string, fsm, mmap, sys, traceback, threading
 import re
-import pycmd_public
-
 
 # Stop points when navigating one word at a time
 word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';', '"']
@@ -383,6 +380,37 @@ def is_gui_application(executable):
 
     # Return False when not sure
     return result
+
+# Data directory (history files, debug log, temp files...)
+if sys.platform == 'win32':
+    # %APPDATA% is not always defined (e.g. when using runas.exe)
+    if 'APPDATA' in os.environ.keys():
+        APPDATA = '%APPDATA%'
+    else:
+        APPDATA = '%USERPROFILE%\\Application Data'
+    pycmd_data_dir = expand_env_vars(APPDATA + '\\PyCmd')
+else:
+    pycmd_data_dir = os.path.expanduser('~/.PyCmd')
+
+# Create app data directory structure if not present
+if not os.path.isdir(pycmd_data_dir):
+    os.mkdir(pycmd_data_dir)
+if not os.path.isdir(pycmd_data_dir + '/tmp'):
+    os.mkdir(pycmd_data_dir + '/tmp')
+
+# Installation directory (will be searched for init.py)
+pycmd_install_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+
+# Minimalistic debug infrastructure
+debug_file = open(os.path.join(pycmd_data_dir, 'debug.log'), 'w+')
+debug_lock = threading.Lock()
+def debug(message):
+    with debug_lock:
+        debug_file.write(str(message) + '\n')
+        debug_file.flush()
+
+
+import pycmd_public
 
 def apply_settings(settings_file):
     """

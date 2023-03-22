@@ -2,7 +2,6 @@
 # Common console constants, datatypes and definitions (used on both
 # Windows and Linux)
 #
-import threading
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short
 from ctypes.wintypes import BOOL, WORD, DWORD
 
@@ -55,11 +54,3 @@ BACKGROUND_GREEN = 0x20
 BACKGROUND_RED = 0x40
 BACKGROUND_BRIGHT = 0x80
 BACKGROUND_WHITE = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
-
-debug_file = open('PyCmd_debug.txt', 'w')
-debug_lock = threading.Lock()
-def debug(message):
-    with debug_lock:
-        debug_file.write(str(message) + '\n')
-        debug_file.flush()
-
