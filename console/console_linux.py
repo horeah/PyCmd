@@ -11,6 +11,7 @@ from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, po
 from ctypes.wintypes import BOOL, WORD, DWORD
 import pty_control
 from .console_common import *
+from common import debug
 
 # These are taken from the win32console
 LEFT_ALT_PRESSED = 0x0002
