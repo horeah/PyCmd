@@ -77,6 +77,8 @@ KEYMAP = {
     0x17: PyINPUT_RECORDType(True, 87, 0, LEFT_CTRL_PRESSED),  # Ctrl-W
     0x18: PyINPUT_RECORDType(True, 88, 0, LEFT_CTRL_PRESSED),  # Ctrl-X
     0x19: PyINPUT_RECORDType(True, 89, 0, LEFT_CTRL_PRESSED),  # Ctrl-Y
+    0x1A: PyINPUT_RECORDType(True, 90, 0, LEFT_CTRL_PRESSED),  # Ctrl-Z
+    0x1F: PyINPUT_RECORDType(True, 0, chr(31), LEFT_CTRL_PRESSED),  # Ctrl-_
     0x1B: {  # Escape
         **KEYMAP_IDENT,
         0x7F: PyINPUT_RECORDType(True, 8, chr(8), LEFT_ALT_PRESSED), # Alt-Backspace
@@ -293,7 +295,7 @@ def read_input():
         debug('read_input got')
         pty_control.input_available.clear()
         ch = pty_control.input_buffer.pop()
-        #debug('CH=0x%02X' % ch)
+        debug('CH=0x%02X' % ch)
         mapped = keymap[ch]
         if isinstance(mapped, PyINPUT_RECORDType):
             return mapped
