@@ -1,5 +1,5 @@
 import sys, os, threading, time, tty, pty, fcntl, array, termios, tempfile
-from console.console_common import debug
+from common import debug
 
 input_processed = threading.Event()
 input_available = threading.Event()

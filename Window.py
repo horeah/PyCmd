@@ -5,7 +5,7 @@ from math import log10, ceil
 from sys import stdout
 from common import fuzzy_match
 import sys
-from console.console_common import debug
+from common import debug
 if sys.platform == 'linux':
     import pty_control
 
