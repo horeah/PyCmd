@@ -60,6 +60,7 @@ KEYMAP_NAVI = {
 
 KEYMAP = {
     **KEYMAP_IDENT,
+    0x00: PyINPUT_RECORDType(True, 32, 0, LEFT_CTRL_PRESSED),  # Ctrl-Space
     0x04: PyINPUT_RECORDType(True, 0, chr(0x04), LEFT_CTRL_PRESSED),  # Ctrl-D
     0x7F: PyINPUT_RECORDType(True, 0, chr(8), 0),  # Backspace
     0x0A: PyINPUT_RECORDType(True, 0, '\x0D', 0),  # Enter
@@ -70,6 +71,7 @@ KEYMAP = {
     0x07: PyINPUT_RECORDType(True, 71, 0, LEFT_CTRL_PRESSED),  # Ctrl-G
     0x10: PyINPUT_RECORDType(True, 80, 0, LEFT_CTRL_PRESSED),  # Ctrl-P
     0x0E: PyINPUT_RECORDType(True, 78, 0, LEFT_CTRL_PRESSED),  # Ctrl-N
+    0x0F: PyINPUT_RECORDType(True, 79, 0, LEFT_CTRL_PRESSED),  # Ctrl-O
     0x12: PyINPUT_RECORDType(True, 82, 0, LEFT_CTRL_PRESSED),  # Ctrl-R
     0x06: PyINPUT_RECORDType(True, 70, 0, LEFT_CTRL_PRESSED),  # Ctrl-F
     0x02: PyINPUT_RECORDType(True, 66, 0, LEFT_CTRL_PRESSED),  # Ctrl-B
@@ -89,6 +91,7 @@ KEYMAP = {
         0x66: PyINPUT_RECORDType(True, 70, 0, LEFT_ALT_PRESSED),   # Alt-F
         0x6E: PyINPUT_RECORDType(True, 78, 0, LEFT_ALT_PRESSED),   # Alt-N
         0x70: PyINPUT_RECORDType(True, 80, 0, LEFT_ALT_PRESSED),   # Alt-P
+        0x77: PyINPUT_RECORDType(True, 87, 0, LEFT_ALT_PRESSED),   # Alt-W
         0x5B: {  # [
             **KEYMAP_IDENT,
             **KEYMAP_NAVI,
