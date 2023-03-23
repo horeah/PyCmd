@@ -75,6 +75,11 @@ def read_shell(fd):
                 captured_prompt = []
                 while captured_prompt[-len(MARKER_BYTES):] != list(MARKER_BYTES):
                     ch = os.read(fd, 1)[0]
+                    if ch == 0x0D:
+                        # When the prompt is longer than $COLUMNS, some versions of bash re-print
+                        # the first overflowing character preceded by '\r'
+                        os.read(fd, 1)
+                        continue
                     captured_prompt.append(ch)
 
                 captured_prompt = bytearray(captured_prompt[:-len(MARKER_BYTES)]).decode('utf-8')
