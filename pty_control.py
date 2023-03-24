@@ -6,6 +6,7 @@ input_available = threading.Event()
 command_to_run = None
 pass_through = True
 command_completed = threading.Event()
+terminated = False
 
 # The "interpreted" MARKER (i.e. the string that bash will show when printing the
 # prompt) must be different from the "raw" MARKER, i.e. the actual value of the
@@ -113,8 +114,15 @@ def start(env_dump_file):
         rc.flush()
     except OSError as e:
         pass
-    t = threading.Thread(group=None,
-                         target=(lambda: pty.spawn(['/bin/bash', '--rcfile', rc.name],
-                                                   master_read=read_shell,
-                                                   stdin_read=read_stdin)))
+
+    def run_shell():
+        global terminated
+        terminated = False
+        pty.spawn(['/bin/bash', '--rcfile', rc.name],
+                  master_read=read_shell,
+                  stdin_read=read_stdin)
+        terminated = True
+        command_completed.set()
+
+    t = threading.Thread(group=None, target=run_shell)
     t.start()
