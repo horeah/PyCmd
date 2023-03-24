@@ -110,7 +110,8 @@ def start(env_dump_file):
         rc = tempfile.NamedTemporaryFile()
         rc.write(open(os.path.expanduser('~/.bashrc'), 'rb').read())
         rc.write(f"PS1='{ps1}'\n".encode('utf-8'))
-        rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"'.encode('utf-8'))
+        rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"\n'.encode('utf-8'))
+        rc.write('HISTCONTROL=ignorespace\n'.encode('utf-8'))
         rc.flush()
     except OSError as e:
         pass
