@@ -58,6 +58,8 @@ def init():
 def deinit():
     if os.path.isfile(tmpfile):
         os.remove(tmpfile)
+    if sys.platform == 'linux':
+        os.system('reset -I')
 
 def main():
     title_prefix = ""
@@ -636,13 +638,12 @@ def run_command_linux(tokens):
     pty_control.pass_through = True
     debug('run_command input_processed.set')
     pty_control.input_processed.set()
-    if tokens == ['exit']:
-        time.sleep(0.5)
+    pty_control.command_completed.wait()
+
+    if pty_control.terminated:
         deinit()
-        os.system('reset -I')
         sys.exit()
 
-    pty_control.command_completed.wait()
     # print(f'Captured[{captured_prompt}]')
     curdir, exit_code = pty_control.captured_prompt.split('|')
     os.chdir(curdir)
