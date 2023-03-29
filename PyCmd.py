@@ -1,5 +1,5 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
-import win32console, win32gui, win32con
+import win32console, win32gui, win32con, win32api
 
 from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
@@ -588,6 +588,18 @@ def run_command(tokens):
         # This is a single CD command -- use our custom, more handy CD
         internal_cd([unescape(t) for t in tokens[1:]])
     else:
+        # cx_freeze calls SetDllDirectory() to exert control over the
+        # loading of DLLs by imported packages; this PROPAGATES TO
+        # SUBPROCESSES and can therefore influence the behavior of
+        # programs spawned by PyCmd. Here we reset the DLL search
+        # behavior to the default; we will restore it after executing
+        # the command
+        try:
+            orig_dll_dir = win32api.GetDllDirectory()
+        except:
+            orig_dll_dir = None
+        win32api.SetDllDirectory(None)
+
         if set(sep_tokens).intersection(tokens) == set([]):
             # This is a simple (non-compound) command
             # Crude hack so that we return to the prompt when starting GUI
@@ -620,11 +632,13 @@ def run_command(tokens):
                         s = u' '.join([expand_tilde(t) for t in tokens])
                         subprocess.Popen(s, shell=True)
                         os.environ['ERRORLEVEL'] = '0'
+                        win32api.SetDllDirectory(orig_dll_dir)
                         return
 
         # Regular (external) command
         start_time = time.time()
         run_in_cmd(tokens)
+        win32api.SetDllDirectory(orig_dll_dir)
         console_window = win32console.GetConsoleWindow()
         if win32gui.GetForegroundWindow() != console_window and time.time() - start_time > 15:
             # If the window is inactive, flash after long t1asks
