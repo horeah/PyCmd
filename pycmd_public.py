@@ -20,13 +20,23 @@ def abbrev_path(path = None):
     The abbreviation is performed by keeping only the first letter of each
     "word" composing a path element. "Words" are defined by CamelCase,
     underscore_separation or "whitespace separation".
+
+    Before the abbreviation is performed, a leading home-dir is
+    replaced with "~"
     """
     if not path:
         path = os.getcwd()
         path = path[0].upper() + path[1:]
-    current_dir = path[ : 3]
-    path = path[3 : ]
-    path_abbrev = current_dir[ : 2]
+
+    if path.lower().startswith(os.path.expanduser('~').lower()):
+        # Replace home directory with ~
+        current_dir = os.path.expanduser('~')
+        path = path[len(os.path.expanduser('~')) + 1:]
+        path_abbrev = '~'
+    else:
+        current_dir = path[ : 3]
+        path = path[3 : ]
+        path_abbrev = current_dir[ : 2]
 
     for elem in path.split('\\')[ : -1]:
         elem_abbrev = common.abbrev_string(elem)
@@ -39,7 +49,7 @@ def abbrev_path(path = None):
         current_dir += '\\' + elem
         path_abbrev += '\\' + elem_abbrev
 
-    return path_abbrev + '\\' + path.split('\\')[-1]
+    return path_abbrev if path_abbrev == '~' and not path else path_abbrev + '\\' + path.split('\\')[-1]
 
 
 def find_updir(name, path=None):
