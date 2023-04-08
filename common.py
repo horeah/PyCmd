@@ -185,6 +185,16 @@ def expand_tilde(string):
         string = string.replace('~', '%' + home_var + '%', 1)
     return string
 
+def abbrev_tilde(path):
+    """
+    Return an abbreviated form of the specified path by replacing a leading "home-dir" 
+    with "~"
+    """
+    home_dir = os.path.expanduser('~')
+    if path.lower().startswith(home_dir.lower()):
+        return '~' if len(path) == len(home_dir) else os.path.join('~', path[len(home_dir):].lstrip('\\'))
+    else:
+        return path
 
 def expand_env_vars(string):
     """

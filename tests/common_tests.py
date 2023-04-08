@@ -1,10 +1,11 @@
 #
 # Unit tests for common.py
 #
-
+import os
 from unittest import TestCase, TestSuite, defaultTestLoader
 from common import parse_line, unescape, fuzzy_match
 from common import associated_application, full_executable_path, is_gui_application
+from common import abbrev_tilde
 
 class TestParseLine(TestCase):
 
@@ -264,11 +265,17 @@ class TestAppIdentification(TestCase):
         for app, type in self.standard_app_types.items():
             self.assertEqual(is_gui_application(app), type)
 
+class TestPathManipulation(TestCase):
+    def testAbbrevTilde(self):
+        self.assertEqual(abbrev_tilde(os.path.expanduser('~')), '~')
+        self.assertEqual(abbrev_tilde(os.path.expanduser(r'~\pycmd')), r'~\pycmd')
+        self.assertEqual(abbrev_tilde(r'C:\Windows'), r'C:\Windows')
 
 def suite():
     suite = TestSuite()
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestParseLine))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestFuzzyMatch))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAppIdentification))
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestPathManipulation))
     return suite
 
