@@ -173,7 +173,8 @@ def svn_prompt():
     prompt = ''
     path = abbrev_path()
     stdout = subprocess.Popen('svn stat -q', shell=True,
-                              stdout=subprocess.PIPE, stderr=-1).communicate()[0]
+                              stdout=subprocess.PIPE,
+                              stderr=-1).communicate()[0].decode(sys.stdout.encoding)
     dirty = any(line[0] in ['M', 'A', 'D'] for line in stdout)
     prompt += color.Fore.YELLOW + '['
     if dirty:
