@@ -1,9 +1,12 @@
 import os, sys
-from os.path import expanduser, normcase
+import os.path
 from console import get_cursor, move_cursor, get_buffer_size
 from sys import stdout
 from common import abbrev_tilde
 from pycmd_public import appearance, color
+
+def _norm(path):
+    return os.path.normcase(os.path.expanduser(path))
 
 class DirHistory:
     """
@@ -43,7 +46,7 @@ class DirHistory:
     def _apply(self):
         """Change to the currently selected directory (checks if still valid)"""
         try:
-            os.chdir(expanduser(self.locations[self.index]))
+            os.chdir(os.path.expanduser(self.locations[self.index]))
             self.keep = True  # keep saved entries even if no command is executed
         except OSError as error:
             stdout.write('\n  ' + str(error) + '\n')
@@ -57,7 +60,7 @@ class DirHistory:
     def visit_cwd(self):
         """Add the current directory to the history of visited locations"""
         cwd = abbrev_tilde(os.getcwd())
-        if self.locations and normcase(expanduser(cwd)) == normcase(self.locations[self.index]):
+        if self.locations and _norm(cwd) == _norm(self.locations[self.index]):
             return
 
         if self.keep:
@@ -73,11 +76,9 @@ class DirHistory:
         self.keep = False
 
         # remove duplicates
-        self.locations = ([l for l in self.locations[:self.index]
-                           if normcase(expanduser(l)) != normcase(expanduser(cwd))]
+        self.locations = ([l for l in self.locations[:self.index] if _norm(l) != _norm(cwd)]
                           + [cwd]
-                          + [l for l in self.locations[self.index + 1:]
-                             if normcase(expanduser(l)) != normcase(expanduser(cwd))])
+                          + [l for l in self.locations[self.index + 1:] if _norm(l) != _norm(cwd)])
         self.index = self.locations.index(cwd)
 
         # rotate the history so that the current directory is last
