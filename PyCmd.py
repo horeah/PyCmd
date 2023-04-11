@@ -668,7 +668,7 @@ def run_command_linux(tokens):
 
 def run_command_win(tokens):
     """Execute a command line (treat internal and external appropriately"""
-    import win32console, win32gui, win32con
+    import win32console, win32gui, win32con, win32api
     
     # Inline %ERRORLEVEL%
     if behavior.delayed_expansion:
