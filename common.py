@@ -172,7 +172,7 @@ def abbrev_tilde(path):
     """
     home_dir = os.path.expanduser('~')
     if path.lower().startswith(home_dir.lower()):
-        return '~' if len(path) == len(home_dir) else os.path.join('~', path[len(home_dir):].lstrip('\\'))
+        return '~' if len(path) == len(home_dir) else os.path.join('~', path[len(home_dir):].lstrip(os.sep))
     else:
         return path
 
