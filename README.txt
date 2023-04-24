@@ -4,6 +4,8 @@ PyCmd is a smart command prompt extension for Windows' cmd.exe; its purpose is
 to emulate a few power features of UNIX shells (decent Tab-completion,
 persistent history, etc.)
 
+[Experimental] PyCmd now also runs on Linux, acting as a front-end for bash
+
 
 2. What are some important features?
 ------------------------------------
@@ -45,7 +47,7 @@ persistent history, etc.)
       - customizable
     - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
-    - expand ~ as %HOME% or %USERPROFILE%
+    - expand/abbreviate ~ as %HOME% or %USERPROFILE%
     - Ctrl-D on an empty line closes PyCmd
     - show the current working directory in the window title
 

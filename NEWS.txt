@@ -1,3 +1,9 @@
+ * Abbreviate the user's "home dir" to "~" in the prompt and dir history
+ * Fix SVN prompt (broken after upgrade to Python3)
+ * Avoid altering the "DLL directory" for spawned commands
+ * Linux port [experimental]
+
+Release 20230202:
  * Ctrl-R for incrementally searching the command history
  * Alt-D now opens the directory history in an interactive, searchable
    Window
