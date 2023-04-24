@@ -112,6 +112,7 @@ def start(env_dump_file):
         rc.write(f"PS1='{ps1}'\n".encode('utf-8'))
         rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"\n'.encode('utf-8'))
         rc.write('HISTCONTROL=ignorespace\n'.encode('utf-8'))
+        rc.write("bind 'set enable-bracketed-paste off'\n".encode('utf-8'))
         rc.flush()
     except OSError as e:
         pass
