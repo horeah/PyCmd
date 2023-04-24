@@ -42,7 +42,7 @@ all:
 else
 all:
 	$(MAKE) clean
-	$(MAKE) dist_z64
+	$(MAKE) dist_linux64
 endif
 
 doc: pycmd_public.py
@@ -68,13 +68,13 @@ dist_w64: clean $(SRC) doc
 	(echo Release $(BUILD_DATE): && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
-dist_z64: clean $(SRC) doc
+dist_linux64: clean $(SRC) doc
 	echo build_date = '$(BUILD_DATE)' > buildinfo.py
 	python3 setup.py build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	$(CP) README.txt PyCmd
 	(echo Release $(BUILD_DATE): && cat NEWS.txt) > PyCmd/NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_DATE)-z64.zip PyCmd
+	$(ZIP) -r PyCmd-$(BUILD_DATE)-linux64.zip PyCmd
 
 .PHONY: clean
 clean:
