@@ -1,5 +1,5 @@
 from console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes
-from console import read_input, erase_to, is_ctrl_pressed
+from console import read_input, erase_to, is_ctrl_pressed, is_alt_pressed
 from pycmd_public import color, appearance
 from math import log10, ceil
 from sys import stdout
@@ -140,22 +140,22 @@ class Window(object):
             self.reset_cursor()
             self.display()
             rec = read_input()
-            if rec.Char == chr(0):
-                if rec.VirtualKeyCode == 37:
+            if rec.Char == chr(0) or is_ctrl_pressed(rec) and not rec.VirtualKeyCode == 71 or is_alt_pressed(rec):
+                if rec.VirtualKeyCode == 37 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 66:
                     self.selected_column -= 1
-                elif rec.VirtualKeyCode == 39:
+                elif rec.VirtualKeyCode == 39 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 70:
                     self.selected_column += 1
-                elif rec.VirtualKeyCode == 40:
+                elif rec.VirtualKeyCode == 40 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 78:
                     self.selected_line += 1
-                elif rec.VirtualKeyCode == 38:
+                elif rec.VirtualKeyCode == 38 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 80:
                     self.selected_line -= 1
-                elif rec.VirtualKeyCode == 34:
+                elif rec.VirtualKeyCode == 34 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 86:
                     self.selected_line += self.height
-                elif rec.VirtualKeyCode == 33:
+                elif rec.VirtualKeyCode == 33 or is_alt_pressed(rec) and rec.VirtualKeyCode == 86:
                     self.selected_line -= self.height
-                elif rec.VirtualKeyCode == 36:
+                elif rec.VirtualKeyCode == 36 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 65:
                     self.selected_column = 0
-                elif rec.VirtualKeyCode == 35:
+                elif rec.VirtualKeyCode == 35 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 69:
                     self.selected_column = self.num_columns
 
                 self.selected_line = Window._bound(self.selected_line, 0, self.num_lines - 1)
@@ -167,7 +167,7 @@ class Window(object):
             elif (rec.Char == chr(13) or rec.Char == '\t') and self.entries:
                 self.erase()
                 return self.entries[self.selected_line + self.selected_column * self.num_lines]
-            elif rec.Char == chr(27):
+            elif rec.Char == chr(27) or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 71:
                 if self.filter:
                     self.filter = ''
                 else:

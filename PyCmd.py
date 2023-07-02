@@ -473,8 +473,11 @@ def main():
                             w = Window(suggestions, pattern, height=optimal_window_height())
                             w.display()
                             w.reset_cursor()
-                            r = read_input()
-                            if r.Char == chr(0) and r.VirtualKeyCode == 40:
+                            while True:
+                                r = read_input()
+                                if not is_control_only(r):
+                                    break
+                            if r.Char == chr(0) and r.VirtualKeyCode == 40 or is_ctrl_pressed(r) and r.VirtualKeyCode == 78:
                                 selection = w.interact()
                                 if selection:
                                     orig_last_token = tokenize(state.before_cursor)[-1]
@@ -500,7 +503,7 @@ def main():
                                         state.before_cursor += ' '
                                     state.reset_selection()
                             else:
-                                write_input(r.VirtualKeyCode, r.Char, 0)
+                                write_input(r.VirtualKeyCode, r.Char, r.ControlKeyState)
                                 w.erase()
                                 continue
                         set_cursor_attributes(cursor_height, True)
