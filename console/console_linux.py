@@ -91,7 +91,9 @@ KEYMAP = {
         0x66: PyINPUT_RECORDType(True, 70, 0, LEFT_ALT_PRESSED),   # Alt-F
         0x6E: PyINPUT_RECORDType(True, 78, 0, LEFT_ALT_PRESSED),   # Alt-N
         0x70: PyINPUT_RECORDType(True, 80, 0, LEFT_ALT_PRESSED),   # Alt-P
+        0x76: PyINPUT_RECORDType(True, 86, 0, LEFT_ALT_PRESSED),   # Alt-V
         0x77: PyINPUT_RECORDType(True, 87, 0, LEFT_ALT_PRESSED),   # Alt-W
+        0x0B: PyINPUT_RECORDType(True, 75, 0, LEFT_ALT_PRESSED | LEFT_CTRL_PRESSED),   # Ctrl-Alt-K
         0x5B: {  # [
             **KEYMAP_IDENT,
             **KEYMAP_NAVI,
