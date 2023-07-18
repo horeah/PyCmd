@@ -547,7 +547,10 @@ def internal_cd(args):
         if len(args) == 0:
             os.chdir(expand_env_vars('~'))
         else:
-            target = args[0]
+            if len(args) == 1:
+                target = args[0]
+            else:
+                target = " ".join(args)
             if target != '\\' and target[1:] != ':\\':
                 target = target.rstrip('\\')
             target = expand_env_vars(target.strip('"').strip(' '))
