@@ -541,6 +541,9 @@ def main():
 def internal_cd(args):
     """The internal CD command"""
     try:
+        if args[0].lower() == "/d":
+            # cmd.exe requires `/d` when changing volumes; we just ignore it
+            args.pop(0)
         if len(args) == 0:
             os.chdir(expand_env_vars('~'))
         else:
