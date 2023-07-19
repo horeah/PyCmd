@@ -519,7 +519,7 @@ def main():
             continue
         else:
             print()
-            if not is_pure_cwd_command(tokens):
+            if not is_pure_cd(tokens):
                 dir_hist.keep = True
             run_command(tokens)
 
@@ -562,39 +562,6 @@ def internal_cd(args):
     os.environ['CD'] = os.getcwd()
 
 
-def internal_pushd(args):
-    current_stack = []
-    if 'PYCMD_CWD_STACK' in os.environ and os.environ['PYCMD_CWD_STACK']:
-        try:
-            current_stack = os.environ['PYCMD_CWD_STACK'].split(os.pathsep)
-        except Exception:
-            stderr.write('Failed to parse current directory stack.')
-            os.environ['ERRORLEVEL'] = '1'
-            return
-    current_stack.append(os.getcwd())
-    internal_cd(args)
-    if os.environ['ERRORLEVEL'] == '0':
-        os.environ['PYCMD_CWD_STACK'] = os.pathsep.join(current_stack)
-
-
-def internal_popd():
-    current_stack = []
-    if 'PYCMD_CWD_STACK' in os.environ and os.environ['PYCMD_CWD_STACK']:
-        try:
-            current_stack = os.environ['PYCMD_CWD_STACK'].split(os.pathsep, )
-        except Exception:
-            stderr.write('Failed to parse current directory stack.')
-            os.environ['ERRORLEVEL'] = '1'
-            return
-    if len(current_stack) == 0:
-        os.environ['ERRORLEVEL'] = '0'
-        return
-    last_cwd = current_stack.pop(-1)
-    # update the stack even if cd will fail
-    os.environ['PYCMD_CWD_STACK'] = os.pathsep.join(current_stack)
-    internal_cd([last_cwd])
-
-
 def internal_exit(message = ''):
     """The EXIT command, with an optional goodbye message"""
     deinit()
@@ -617,15 +584,9 @@ def run_command(tokens):
 
     if tokens[0] == 'exit':
         internal_exit('Bye!')
-    elif is_pure_cwd_command(tokens):
-        # This is a single CD/PUSHD/POPD command -- use our custom, more handy handlers
-        tail_tokens = [unescape(t) for t in tokens[1:]]
-        if tokens[0].lower() == 'pushd':
-            internal_pushd(tail_tokens)
-        elif tokens[0].lower() == 'popd':
-            internal_popd()
-        else:
-            internal_cd(tail_tokens)
+    elif is_pure_cd(tokens):
+        # This is a single CD command -- use our custom, more handy CD
+        internal_cd([unescape(t) for t in tokens[1:]])
     else:
         # cx_freeze calls SetDllDirectory() to exert control over the
         # loading of DLLs by imported packages; this PROPAGATES TO
@@ -684,9 +645,8 @@ def run_command(tokens):
             win32gui.FlashWindowEx(console_window, win32con.FLASHW_ALL, 3, 750)
 
 
-def is_pure_cwd_command(tokens):
-    return tokens[0].lower() in {'cd', 'pushd', 'popd'} \
-        and [t for t in tokens if t in sep_tokens] == []
+def is_pure_cd(tokens):
+    return tokens[0].lower() == 'cd' and [t for t in tokens if t in sep_tokens] == []
 
 
 def run_in_cmd(tokens):
