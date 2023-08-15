@@ -39,6 +39,7 @@ class ActionCode:
     ACTION_SEARCH_LEFT = 26
     ACTION_SELECT_UP = 27
     ACTION_SELECT_DOWN = 28
+    ACTION_ZAP = 29
 
 
 class InputState:
@@ -114,6 +115,7 @@ class InputState:
             ActionCode.ACTION_PASTE: self.key_paste,
             ActionCode.ACTION_PREV: self.key_up,
             ActionCode.ACTION_NEXT: self.key_down,
+            ActionCode.ACTION_ZAP: self.key_zap,
             ActionCode.ACTION_INSERT: self.key_insert,
             ActionCode.ACTION_COMPLETE: self.key_complete,
             ActionCode.ACTION_DELETE: self.key_del,
@@ -438,6 +440,12 @@ class InputState:
             self.bell = True
         self.reset_selection()
 
+    def key_zap(self):
+        """Remove current command from current state and from history"""
+        self.zap(self.before_cursor + self.after_cursor)
+        self.before_cursor = ''
+        self.after_cursor = ''
+
     def key_esc(self):
         """Esc key"""
         if self.get_selection() != '' or self.search_substr is not None:
@@ -697,3 +705,6 @@ class InputState:
             self.extend_separators = separators
         else:
             self.bell = True
+
+    def zap(self, command):
+        self.history.zap(command)

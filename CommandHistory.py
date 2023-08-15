@@ -104,6 +104,14 @@ class CommandHistory:
         else:
             return False
 
+    def zap(self, line):
+        """
+        Zap current entry out of the history list
+        """
+        if line in self.list:
+            self.list.remove(line)
+        self.reset()
+
     def reset(self):
         """Reset browsing through the history"""
         self.filter = ''

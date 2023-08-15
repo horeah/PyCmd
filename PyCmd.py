@@ -246,21 +246,23 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        update_history(state.history.list[-1],
-                                     pycmd_data_dir + '\\history',
-                                       save_history_limit)
+                        update_history('add', state.history.list[-1],
+                                       pycmd_data_dir + '\\history', save_history_limit)
                         auto_select = False
                 elif rec.VirtualKeyCode == 82:          # Ctrl-R
                     w = Window(state.history.list, pattern=re.compile('(.*)$'),
                                height=optimal_window_height())
                     w.display()
                     w.filter = state.history.filter if state.history.filter else state.before_cursor + state.after_cursor
-                    selection = w.interact(default_selection_last=True)
-                    if selection:
+                    action, selection = w.interact(default_selection_last=True, can_zap=True)
+                    if action == 'select':
                         state.before_cursor = selection
                         state.after_cursor = ''
                         state.reset_selection()
                         state.history.reset()
+                    elif action == 'zap':
+                        state.zap(selection)
+                        update_history('remove', selection, pycmd_data_dir + '\\history', save_history_limit)
                 elif rec.VirtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.VirtualKeyCode == 69:          # Ctrl-E
@@ -342,8 +344,8 @@ def main():
                         w = Window(dir_hist.locations, pattern=re.compile('(.*)$'),
                                    height=optimal_window_height())
                         w.display()
-                        selection = w.interact(initial_index=dir_hist.index)
-                        if selection:
+                        action, selection = w.interact(initial_index=dir_hist.index)
+                        if action == 'select' and selection:
                             dir_hist.jump(selection)
                             state.prev_prompt = state.prompt
                             state.prompt = appearance.prompt()
@@ -360,6 +362,11 @@ def main():
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
                 elif rec.VirtualKeyCode == 191:
                     state.handle(ActionCode.ACTION_EXPAND)
+            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):          # Ctrl-Alt-something
+                if rec.VirtualKeyCode == 75:            # Ctrl-Alt-K
+                    line = state.before_cursor + state.after_cursor
+                    state.handle(ActionCode.ACTION_ZAP)
+                    update_history('remove', line, pycmd_data_dir + '\\history', save_history_limit)
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
@@ -410,9 +417,6 @@ def main():
                         scrolling = False
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        update_history(state.history.list[-1],
-                                     pycmd_data_dir + '\\history',
-                                       save_history_limit)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
                     tokens = tokenize(state.before_cursor)
@@ -478,8 +482,8 @@ def main():
                                 if not is_control_only(r):
                                     break
                             if r.Char == chr(0) and r.VirtualKeyCode == 40 or is_ctrl_pressed(r) and r.VirtualKeyCode == 78:
-                                selection = w.interact()
-                                if selection:
+                                action, selection = w.interact()
+                                if action == 'select' and selection:
                                     orig_last_token = tokenize(state.before_cursor)[-1]
 
                                     # Replace initial completion prefix with selection,
@@ -528,10 +532,8 @@ def main():
 
         # Add to history
         state.history.add(line)
-        update_history(state.history.list[-1],
-                     pycmd_data_dir + '\\history',
-                       save_history_limit)
-
+        update_history('add', state.history.list[-1],
+                       pycmd_data_dir + '\\history', save_history_limit)
 
         # Add to dir history
         dir_hist.visit_cwd()
@@ -731,12 +733,12 @@ def optimal_window_height():
     return window_height
 
 
-def update_history(line, filename, length):
+def update_history(action, line, filename, length):
     """
-    Append a new line to a history file. If the line was already present in the
-    file, we move it to the end. The resulting file is then truncated to the 
-    specified number of lines.
-
+    Append/remove a line to/from a history file.  
+    When adding, if the line was already present in the file, we move it to
+    the end. The resulting file is then truncated to the specified number of 
+    lines.
     """
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
@@ -745,10 +747,11 @@ def update_history(line, filename, length):
         history_file.close()
         if line in history_to_save:
             history_to_save.remove(line)
-        history_to_save.append(line)
+        if action == 'add':
+            history_to_save.append(line)
     else:
-        # No previous history, save current
-        history_to_save = [line]
+        # No previous history, save current (only if adding)
+        history_to_save = [line] if action == 'add' else []
 
     if len(history_to_save) > length:
         history_to_save = history_to_save[-length :]    # Limit history file
@@ -774,9 +777,8 @@ def read_history(filename):
 
 
 def update_dir_history():
-    update_history(dir_hist.locations[-1],
-                   pycmd_data_dir + '\\dir_history',
-                   dir_hist.max_len)
+    update_history('add', dir_hist.locations[-1],
+                   pycmd_data_dir + '\\dir_history', dir_hist.max_len)
 
 
 def print_usage():
