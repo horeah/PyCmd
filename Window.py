@@ -132,8 +132,11 @@ class Window(object):
         if initial_index is None:
             initial_index = len(self.entries) - 1 if default_selection_last else 0
         self.interactive = True
-        self.selected_column = initial_index // self.num_lines
-        self.selected_line = initial_index % self.num_lines
+        if self.num_lines > 0:
+            self.selected_column = initial_index // self.num_lines
+            self.selected_line = initial_index % self.num_lines
+        else:
+            self.selected_column = self.selected_line = 0
         self._center_on_selection()
         while True:
             set_cursor_attributes(10, False)
