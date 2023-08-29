@@ -1,3 +1,8 @@
+ * remove commands from the history with Ctrl-Alt-K
+ * support Emacs-style keybindings (Ctrl-N/P/F/B/E/A) in interactive Windows
+  (completion selection, dir history, incremental command search)
+
+Release 20230424:
  * Abbreviate the user's "home dir" to "~" in the prompt and dir history
  * Fix SVN prompt (broken after upgrade to Python3)
  * Avoid altering the "DLL directory" for spawned commands

@@ -23,6 +23,7 @@ persistent history, etc.)
     - the history is persistent across PyCmd sessions
     - direct history search (type a few filter characters/words, then Up/Down)
     - incremental history search (Ctrl-R)
+    - remove command from history (Ctrl-Alt-K)
     - history ordering is more intuitive than cmd's default strategy
 
  c. Command editing
