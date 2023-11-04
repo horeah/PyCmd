@@ -55,7 +55,6 @@ persistent history, etc.)
 
 3. Known problems
 -----------------
-    - pushd/popd are not supported
     - when DelayedExpansion is disabled (PyCmd.exe /V:OFF), %ERRORLEVEL% is not
       properly processed
     - DOSKEY macros are not supported
