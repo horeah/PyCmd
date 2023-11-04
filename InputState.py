@@ -97,9 +97,6 @@ class InputState:
         # List of delimiters for the "extend-selection" feature
         self.extend_separators = None
 
-        # Lists of cumulated pushd directories
-        self.pushd_stack = []
-
         # Action handlers
         self.handlers = {
             ActionCode.ACTION_none: None,

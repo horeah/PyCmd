@@ -24,6 +24,7 @@ pycmd_data_dir = None
 pycmd_install_dir = None
 state = None
 dir_hist = None
+pushd_stack = []
 tmpfile = None
 save_history_limit = 2000
 
@@ -687,8 +688,9 @@ def run_in_cmd(tokens):
     # Run command
     if line_sanitized != '':
         command = '"'
-        if state.pushd_stack:
-            (first_dir, *rest) = (*state.pushd_stack, os.getcwd())
+        global pushd_stack
+        if pushd_stack:
+            (first_dir, *rest) = (*pushd_stack, os.getcwd())
             command += 'cd /d "' + first_dir + '"'
             for d in rest:
                 command += '& pushd "' + d + '"'
@@ -711,9 +713,9 @@ def run_in_cmd(tokens):
 
     # Update environment and state
     new_environ = {}
-    pushd_stack = []
     with open(tmpfile, 'r') as env_file:
         lines = [l.rstrip('\n ') for l in env_file.readlines() if not l.isspace()]
+
     # parse env
     i = 0
     while i < len(lines):
@@ -724,15 +726,15 @@ def run_in_cmd(tokens):
             value = value.strip('"')
         new_environ[variable] = value
         i += 1
+
     # parse pushd stack
+    pushd_stack = []
     i += 1
     while i < len(lines):
         if lines[i] == "===PUSHD STACK END===":
             break
-        if lines[i]:
-            pushd_stack.append(lines[i])
+        pushd_stack.append(lines[i])
         i += 1
-    state.pushd_stack = pushd_stack
 
     if new_environ != {}:
         for variable in os.environ.keys():

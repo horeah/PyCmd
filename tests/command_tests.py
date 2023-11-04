@@ -54,6 +54,12 @@ class TestDelayedExpansion(TestCase):
         self.assertEqual(os.environ['CD'], orig_cwd)
         self.assertEqual(os.environ['ERRORLEVEL'], '1')
 
+    def testPushd(self):
+        PyCmd.run_command(['pushd', '..'])
+        self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
+        PyCmd.run_command(['popd'])
+        self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd)))
+
     def testBrokenPath(self):
         os.environ['PATH'] = 'Wrong stuff'
         PyCmd.run_command(['dir', '>NUL'])
