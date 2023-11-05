@@ -220,7 +220,11 @@ def set_buffer_attributes(x, y, colors):
 
 def visual_bell():
     """Flash the screen for brief moment to notify the user"""
-    return
+    sys.__stdout__.write('\033[?5h')
+    sys.__stdout__.flush()
+    time.sleep(0.15)
+    sys.__stdout__.write('\033[?5l')
+    sys.__stdout__.flush()
 
 def set_console_title(title):
     """Set the title of the current console"""
