@@ -130,7 +130,24 @@ def complete_file_simple(line, timeout=None):
             if sys.getwindowsversion()[0] >= 6:
                 internal_commands.append('mklink')
         else:
-            internal_commands = ['bg', 'cd', 'jobs']
+            internal_commands = ['alias',
+                                 'bg', 'bind', 'break', 'builtin',
+                                 'case', 'cd', 'command', 'compgen', 'complete', 'continue',
+                                 'declare', 'dirs', 'disown',
+                                 'echo', 'enable', 'eval', 'exec', 'exit', 'export',
+                                 'fc', 'fg',
+                                 'getopts',
+                                 'hash', 'help', 'history',
+                                 'if',
+                                 'jobs',
+                                 'kill',
+                                 'let', 'local', 'logout',
+                                 'popd', 'printf', 'pushd', 'pwd',
+                                 'read', 'readonly', 'return',
+                                 'set', 'shift', 'shopt', 'source', 'suspend',
+                                 'test', 'times', 'trap', 'type', 'typeset',
+                                 'ulimit', 'umask', 'unalias', 'unset', 'until',
+                                 'wait', 'while']
 
         completions_path += [elem for elem in internal_commands
                              if matcher.match(elem)
