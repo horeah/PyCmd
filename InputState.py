@@ -1,4 +1,4 @@
-import sys
+import sys, subprocess
 from CommandHistory import CommandHistory
 from common import word_sep, tokenize, seq_tokens
 from completion import complete_file, complete_env_var, has_wildcards
@@ -557,45 +557,57 @@ class InputState:
     def key_copy(self):
         """Copy selection to clipboard"""
         if sys.platform == "linux":
-            return
-        import win32clipboard as wclip
-        wclip.OpenClipboard()
-        wclip.EmptyClipboard()
-        wclip.SetClipboardText(self.get_selection())
-        wclip.CloseClipboard()
+            result = subprocess.run('xsel -b', shell=True,
+                                    input=self.get_selection().encode('utf-8'),
+                                    capture_output=True)
+            if result.returncode != 0:
+                self.bell = True
+        else:
+            import win32clipboard as wclip
+            wclip.OpenClipboard()
+            wclip.EmptyClipboard()
+            wclip.SetClipboardText(self.get_selection())
+            wclip.CloseClipboard()
         self.history.reset()
 
     def key_cut(self):
         """Cut selection to clipboard"""
-        if sys.platform == "linux":
-            return
         self.key_copy()
         self.delete_selection()
         self.history.reset()
 
     def key_paste(self):
         """Paste from clipboard"""
+        text = None
         if sys.platform == "linux":
+            result = subprocess.run('xsel -b', shell=True, capture_output=True)
+            if result.returncode == 0:
+                text = result.stdout.decode('utf-8')
+            else:
+                self.bell = True
+        else:
+            import win32clipboard as wclip
+            wclip.OpenClipboard()
+            if wclip.IsClipboardFormatAvailable(wclip.CF_TEXT):
+                text = wclip.GetClipboardData()
+                wclip.CloseClipboard()
+        if not text:
             return
-        wclip.OpenClipboard()
-        if wclip.IsClipboardFormatAvailable(wclip.CF_TEXT):
-            text = wclip.GetClipboardData()
 
-            # Purge garbage chars that some apps put in the clipboard
-            if text.find('\0') >= 0:
-                text = text[:text.find('\0')]
+        # Purge garbage chars that some apps put in the clipboard
+        if text.find('\0') >= 0:
+            text = text[:text.find('\0')]
 
-            # Convert newlines to blanks
-            text = text.replace('\r', '').replace('\n', ' ')
+        # Convert newlines to blanks
+        text = text.replace('\r', '').replace('\n', ' ')
 
-            # Insert into command line
-            if self.get_selection() != '':
-                self.delete_selection()
-            self.before_cursor = self.before_cursor + text
-            if self.overwrite:
-                self.after_cursor = self.after_cursor[len(text):]
-            self.reset_selection()
-        wclip.CloseClipboard()
+        # Insert into command line
+        if self.get_selection() != '':
+            self.delete_selection()
+        self.before_cursor = self.before_cursor + text
+        if self.overwrite:
+            self.after_cursor = self.after_cursor[len(text):]
+        self.reset_selection()
         self.history.reset()
 
     def key_insert(self, text):
