@@ -4,6 +4,7 @@
 
 from unittest import TestCase, TestSuite, defaultTestLoader
 import PyCmd
+from common import expand_env_vars
 import os, time
 
 test_dir = os.path.split(__file__)[0]
@@ -36,6 +37,12 @@ class TestDelayedExpansion(TestCase):
     def testInternalCd(self):
         PyCmd.run_command(['cd', '..'])
         self.assertEqual(os.environ['CD'], os.path.abspath(os.path.join(orig_cwd, '..')))
+        self.assertEqual(os.environ['ERRORLEVEL'], '0')
+        os.chdir(orig_cwd)
+        
+    def testInternalCdNoArgs(self):
+        PyCmd.run_command(['cd'])
+        self.assertEqual(os.environ['CD'], expand_env_vars('~'))
         self.assertEqual(os.environ['ERRORLEVEL'], '0')
         os.chdir(orig_cwd)
 
