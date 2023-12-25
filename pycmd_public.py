@@ -234,6 +234,7 @@ class color(object):
 
 
         # Standard colors defined as combinations of the RGB constants
+        BLACK = CLEAR_RED + CLEAR_GREEN + CLEAR_BLUE
         RED = SET_RED + CLEAR_GREEN + CLEAR_BLUE
         GREEN = CLEAR_RED + SET_GREEN + CLEAR_BLUE
         YELLOW = SET_RED + SET_GREEN + CLEAR_BLUE
@@ -268,6 +269,7 @@ class color(object):
         TOGGLE_BRIGHT = chr(27) + 'BTX'
 
         # Standard colors defined as combinations of the RGB constants
+        BLACK = CLEAR_RED + CLEAR_GREEN + CLEAR_BLUE
         RED = SET_RED + CLEAR_GREEN + CLEAR_BLUE
         GREEN = CLEAR_RED + SET_GREEN + CLEAR_BLUE
         YELLOW = SET_RED + SET_GREEN + CLEAR_BLUE
@@ -288,6 +290,11 @@ class color(object):
         """
         color.Back.DEFAULT = console.get_current_background()
         color.Fore.DEFAULT = console.get_current_foreground()
+
+    @staticmethod
+    def back_to_fore(other):
+        return other.replace(chr(27) + 'B', chr(27) + 'F')
+
 
 class _Settings(object):
     """
@@ -319,6 +326,7 @@ class _Appearance(_Settings):
             self.completion_match = color.Fore.TOGGLE_RED
             self.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
                                           color.Back.TOGGLE_BRIGHT)
+            self.suggestion = color.back_to_fore(color.Back.DEFAULT) + color.Fore.TOGGLE_BRIGHT
 
     def __init__(self):
         # Prompt function (should return a string)

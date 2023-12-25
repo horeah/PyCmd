@@ -19,6 +19,11 @@ persistent history, etc.)
     - expand values of environment variables when completing
     - support both '/' and '\' as path separators
 
+ b. Command suggestions
+    - automatically suggest commands from history or from available
+      completions (accept with Right/End or partially with Ctrl-Right; or
+      Emacs-style)
+
  b. Command history
     - the history is persistent across PyCmd sessions
     - direct history search (type a few filter characters/words, then Up/Down)

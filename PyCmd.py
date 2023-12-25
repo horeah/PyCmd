@@ -169,7 +169,7 @@ def main():
             os.environ['CD'] = curdir
 
             if state.changed() or force_repaint:
-                prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor)
+                prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor + state.prev_suggestion)
                 set_cursor_attributes(50 if state.overwrite else 10, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 stdout.write('\r')
@@ -186,6 +186,7 @@ def main():
                                  line[sel_start: sel_end] +
                                  color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text +
                                  line[sel_end:])
+                    stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                 else:
                     pos = 0
                     colored_line = ''
@@ -197,7 +198,7 @@ def main():
                     stdout.write(colored_line)
 
                 # Erase remaining chars from old line
-                to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor)
+                to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor + state.suggestion)
                 if to_erase > 0:
                     stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
                     cursor_backward(to_erase)
@@ -210,7 +211,7 @@ def main():
                 else:
                     cursor_height = 10
                 set_cursor_attributes(cursor_height, True)
-                cursor_backward(len(state.after_cursor))
+                cursor_backward(len(state.after_cursor + state.suggestion))
 
             # Bell if a notification is pending
             if state.bell:
@@ -428,10 +429,13 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
+                    stdout.write(' ' * len(state.suggestion))
+                    cursor_backward(len(state.suggestion))
                     cursor_backward(len(state.before_cursor))
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                     stdout.write(state.before_cursor + state.after_cursor)
-                    cursor_backward(len(state.after_cursor))
+                    stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
+                    cursor_backward(len(state.after_cursor) + len(state.suggestion))
                     state.step_line()
 
                     # Show multiple completions if available
@@ -483,6 +487,8 @@ def main():
                                 if not is_control_only(r):
                                     break
                             if r.Char == chr(0) and r.VirtualKeyCode == 40 or is_ctrl_pressed(r) and r.VirtualKeyCode == 78:
+                                stdout.write(' ' * len(state.suggestion))  # Erase suggestion
+                                cursor_backward(len(state.suggestion))
                                 action, selection = w.interact()
                                 if action == 'select' and selection:
                                     orig_last_token = tokenize(state.before_cursor)[-1]
@@ -507,6 +513,7 @@ def main():
                                         and not completed.endswith(' ')):
                                         state.before_cursor += ' '
                                     state.reset_selection()
+                                    state.update_suggestion()
                             else:
                                 write_input(r.VirtualKeyCode, r.Char, r.ControlKeyState)
                                 w.erase()
@@ -521,6 +528,9 @@ def main():
 
         # Done reading line, now execute
         stdout.write(state.after_cursor)        # Move cursor to the end
+        stdout.write(' ' * len(state.suggestion))  # Erase suggestion
+        cursor_backward(len(state.suggestion))
+
         line = (state.before_cursor + state.after_cursor).strip()
         tokens = tokenize(line)
         if tokens == [] or tokens[0] == '':

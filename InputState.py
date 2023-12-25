@@ -1,5 +1,6 @@
 from CommandHistory import CommandHistory
-from common import word_sep
+from common import word_sep, tokenize, seq_tokens
+from completion import complete_file, complete_env_var, has_wildcards
 import win32clipboard as wclip
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
@@ -57,11 +58,13 @@ class InputState:
         self.prompt = ''
         self.before_cursor = ''
         self.after_cursor = ''
+        self.suggestion = ''
 
         # Previous state of the input line
         self.prev_prompt = ''
         self.prev_before_cursor = ''
         self.prev_after_cursor = ''
+        self.prev_suggestion = ''
 
         # Some error needs to be notified with a bell
         self.bell = False
@@ -165,12 +168,14 @@ class InputState:
         self.prev_prompt = self.prompt
         self.prev_before_cursor = self.before_cursor
         self.prev_after_cursor = self.after_cursor
+        self.prev_suggestion = self.suggestion
 
     def reset_line(self, prompt):
         """Prepare for a new input line"""
         self.prompt = prompt
         self.before_cursor = ''
         self.after_cursor = ''
+        self.suggestion = ''
         self.overwrite = False
         self.reset_prev_line()
 
@@ -179,12 +184,14 @@ class InputState:
         self.prev_prompt = ''
         self.prev_before_cursor = ''
         self.prev_after_cursor = ''
+        self.prev_suggestion = ''
 
     def changed(self):
         """Check whether a change has occurred in the input state (e.g. for repaint)"""
         return self.prompt != self.prev_prompt \
                or self.before_cursor != self.prev_before_cursor \
-               or self.after_cursor != self.prev_after_cursor
+               or self.after_cursor != self.prev_after_cursor \
+               or self.suggestion != self.prev_suggestion
 
     def handle(self, action, arg = None):
         """Handle a keyboard action"""
@@ -199,8 +206,9 @@ class InputState:
             # Other actions don't have arguments
             handler()
 
-        # Add the previous state as an undo state if needed
+
         if self.changed():
+            # Add the previous state as an undo state if needed
             if action in self.batch_actions \
                     or (action in self.insert_actions + self.delete_actions \
                                 and action != self.last_action) \
@@ -214,9 +222,29 @@ class InputState:
                 self.undo_emacs.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.undo_emacs_index = -1
 
+            if not self.history.filter:
+                self.update_suggestion()
+
         # print "\n", self.undo, "    ", self.redo, "\n"
 
         self.last_action = action
+
+    def update_suggestion(self):
+        suggestions = []
+        if self.before_cursor + self.after_cursor:
+            suggestions = [l for l in reversed(self.history.list) if l.startswith(self.before_cursor + self.after_cursor)]
+            if not suggestions:
+                tokens = tokenize(self.before_cursor)
+                if len(tokens) > 1 and not tokens[-2] in seq_tokens and not has_wildcards(tokens[-1]):
+                    if tokens[-1].count('%') % 2 == 1:
+                        completed, completions = complete_env_var(self.before_cursor)
+                    else:
+                        completed, completions = complete_file(self.before_cursor)
+                    if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
+                        suggestions = [completed]
+        suggestion = suggestions[0][len(self.before_cursor + self.after_cursor):] if suggestions else ''
+        self.prev_suggestion = self.suggestion
+        self.suggestion = suggestion
 
 
     def key_left(self, select=False):
@@ -240,6 +268,9 @@ class InputState:
         if self.after_cursor != '':
             self.before_cursor = self.before_cursor + self.after_cursor[0]
             self.after_cursor = self.after_cursor[1 : ]
+        else:
+            if self.suggestion:
+                self.before_cursor += self.suggestion
         if not select:
             self.reset_selection()
         self.history.reset()
@@ -262,12 +293,17 @@ class InputState:
         End key
         Also handle text selection according to flag
         """
-        self.before_cursor = self.before_cursor + self.after_cursor
-        self.after_cursor = ''
+        if self.after_cursor:
+            self.before_cursor = self.before_cursor + self.after_cursor
+            self.after_cursor = ''
+            self.history.reset()
+            self.search_substr = None
+        else:
+            if self.suggestion:
+                self.before_cursor += self.suggestion
         if not select:
             self.reset_selection()
-        self.history.reset()
-        self.search_substr = None
+
 
     def key_search_right(self, _):
         """
@@ -354,13 +390,26 @@ class InputState:
 
     def key_right_word(self, select=False):
         """Move forward one word (Ctrl-Right)"""
-        # Skip spaces
-        while self.after_cursor != '' and self.after_cursor[0] in word_sep:
-            self.key_right(select)
+        if self.after_cursor:
+            # Skip spaces
+            while self.after_cursor != '' and self.after_cursor[0] in word_sep:
+                self.key_right(select)
 
-        # Jump over word
-        while self.after_cursor != '' and not self.after_cursor[0] in word_sep:
-            self.key_right(select)
+            # Jump over word
+            while self.after_cursor != '' and not self.after_cursor[0] in word_sep:
+                self.key_right(select)
+        else:
+            if self.suggestion:  # Accept one word from suggestion
+                # Accept spaces
+                while self.suggestion != '' and self.suggestion[0] in word_sep:
+                    self.before_cursor += self.suggestion[0]
+                    self.suggestion = self.suggestion[1:]
+                # Accept word
+                while self.suggestion != '' and not self.suggestion[0] in word_sep:
+                    self.before_cursor += self.suggestion[0]
+                    self.suggestion = self.suggestion[1:]
+                if not select:
+                    self.reset_selection()
 
     def key_backspace_word(self):
         """Delte backwards one word (Ctrl-Left), or delete selection"""
@@ -425,6 +474,7 @@ class InputState:
         #print 'Trail:', self.history_trail, '\n\n'
 
         self.reset_selection()
+        self.suggestion = ''
 
     def key_down(self):
         """Arrow down (history next)"""
@@ -539,6 +589,8 @@ class InputState:
         self.before_cursor = completed
         if self.overwrite:
             self.after_cursor = self.after_cursor[chars_added:]
+
+        self.update_suggestion()
         self.reset_selection()
         self.history.reset()
 

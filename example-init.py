@@ -120,6 +120,15 @@ appearance.colors.completion_match = color.Fore.TOGGLE_RED
 appearance.colors.dir_history_selection = (color.Fore.TOGGLE_BRIGHT +
                                            color.Back.TOGGLE_BRIGHT)
 
+# The color of the auto-suggestion text (relative to the console's default color)
+#
+# The default value use the background color with the brightness toggled to achieve
+# a "dimmed" color efect:
+#    appearance.colors.suggestion = (color.back_to_fore(color.Back.DEFAULT) +
+#                                    color.Fore.TOGGLE_BRIGHT)
+appearance.colors.suggestion = (color.back_to_fore(color.Back.DEFAULT) +
+                                color.Fore.TOGGLE_BRIGHT)
+
 # Define a custom prompt function.
 #
 # This is called by PyCmd whenever a prompt is to be displayed. It should return

@@ -6,7 +6,7 @@ from unittest import TestCase, TestSuite, defaultTestLoader
 from InputState import InputState
 
 class TestInputState(TestCase):
-    """Test the handling of key_complete"""
+    """Test the handling of the Input State"""
 
     def setUp(self):
         self.state = InputState()
@@ -17,6 +17,25 @@ class TestInputState(TestCase):
         self.state.key_complete('C:\\Windows')
         self.assertEqual(self.state.before_cursor, 'C:\\Windows')
         self.assertEqual(self.state.after_cursor, '')
+
+    def testSuggestFromHistory(self):
+        self.state.history.list = ['make clean']
+        self.state.before_cursor = 'm'
+        self.state.reset_selection()
+        self.state.key_insert('a')
+        self.state.update_suggestion()
+        self.assertEqual(self.state.before_cursor, 'ma')
+        self.assertEqual(self.state.suggestion, 'ke clean')
+        self.state.key_insert('X')
+        self.state.update_suggestion()
+        self.assertEqual(self.state.before_cursor, 'maX')
+        self.assertEqual(self.state.suggestion, '')
+
+    def testDontSuggestFromPath(self):
+        self.state.history.list = []
+        self.state.before_cursor = 'promp'
+        self.state.update_suggestion()
+        self.assertEqual(self.state.suggestion, '')
 
     def testAvoidDuplicateFillers(self):
         """Tests the avoidance of duplicate whitespace, backslash, quites after completing"""
