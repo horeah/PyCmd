@@ -1,7 +1,7 @@
 import sys, subprocess
 from CommandHistory import CommandHistory
 from common import word_sep, tokenize, seq_tokens
-from completion import complete_file, complete_env_var, has_wildcards
+from completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
 from common import word_sep
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
@@ -237,7 +237,7 @@ class InputState:
             if not suggestions:
                 tokens = tokenize(self.before_cursor)
                 if len(tokens) > 1 and not tokens[-2] in seq_tokens and not has_wildcards(tokens[-1]):
-                    if tokens[-1].count('%') % 2 == 1:
+                    if ends_in_env_var(tokens[-1]):
                         completed, completions = complete_env_var(self.before_cursor)
                     else:
                         completed, completions = complete_file(self.before_cursor)
