@@ -460,7 +460,6 @@ def complete_env_var_linux(line):
     [lead, prefix] = token.strip('"').rsplit('$', 1)
     if len(prefix) > 0 and prefix[0] == '{':
         start_brace = '{'
-        end_brace = '}'
         prefix = prefix[1:]
     completions = [var for var in os.environ if var.lower().startswith(prefix.lower())]
     if completions != []:
@@ -472,6 +471,8 @@ def complete_env_var_linux(line):
             if contains_special_char(os.environ[completion]):
                 quote = '"'
                 break
+        if len(completions) == 1 and start_brace == '{':
+            end_brace = '}'
 
         result = line[0 : len(line) - len(token)] + quote + lead + '$' + start_brace + common_string + end_brace
         return (result, completions)
