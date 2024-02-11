@@ -1,4 +1,4 @@
-import sys, os, threading, time, tty, pty, fcntl, array, termios, tempfile
+import sys, os, threading, tty, pty, fcntl, array, termios, tempfile
 from common import debug
 
 input_processed = threading.Event()
@@ -16,7 +16,9 @@ MARKER_BASE = '_MARKER_'
 MARKER_RAW = r'\036' + MARKER_BASE
 MARKER = '\036' + MARKER_BASE
 MARKER_BYTES = bytearray(MARKER, 'utf-8')
-marker_acc = []
+output_acc = bytearray()
+marker_acc = bytearray()
+no_buffering = False
 input_buffer = []
 captured_prompt = None
 
@@ -41,7 +43,7 @@ def read_stdin(fd):
             return bytearray(chr(0), 'utf-8')
 
 def read_shell(fd):
-    global command_to_run, pass_through, marker_buffer, marker_acc, captured_prompt
+    global command_to_run, pass_through, captured_prompt, output_acc, marker_acc, no_buffering
 
     if command_to_run:
         # ensure terminal dimensions match the real terminal
@@ -59,40 +61,56 @@ def read_shell(fd):
         while remaining > 0:
             remaining -= len(os.read(fd, remaining))
         command_to_run = None
-        marker_acc = []
+        output_acc = bytearray()
+        marker_acc = bytearray()
+        no_buffering = False
         return bytearray(chr(0), 'utf-8')
     else:
         if pass_through:
             # Command is running, pass output through until a MARKER is detected
-            # TODO marker_acc and captured_prompt should be turned into bytearrays for efficiency
-            ch = os.read(fd, 1)[0]
-            marker_acc.append(ch)
-            while len(marker_acc) < len(MARKER_BYTES) and ch == MARKER_BYTES[len(marker_acc) - 1]:
-                ch = os.read(fd, 1)[0]
-                marker_acc.append(ch)
-
-            if len(marker_acc) == len(MARKER_BYTES):
-                # first MARKER (begin) has been detected; search for the next one (end)
-                captured_prompt = []
-                while captured_prompt[-len(MARKER_BYTES):] != list(MARKER_BYTES):
-                    ch = os.read(fd, 1)[0]
-                    if ch == 0x0D:
-                        # When the prompt is longer than $COLUMNS, some versions of bash re-print
-                        # the first overflowing character preceded by '\r'
-                        os.read(fd, 1)
-                        continue
-                    captured_prompt.append(ch)
-
-                captured_prompt = bytearray(captured_prompt[:-len(MARKER_BYTES)]).decode('utf-8')
-                pass_through = False
-                marker_acc = []
-                command_completed.set()
-                return bytearray(chr(0), 'utf-8')
-            else:
-                # this is not the MARKER, return the accumulated bytes
-                bytes = bytearray(marker_acc)
-                marker_acc = []
-                return bytes
+            while True:
+                ch = os.read(fd, 1)
+                if ch[0] == MARKER_BYTES[len(marker_acc)]:
+                    # this could still be the marker, push to marker accumulator
+                    marker_acc.extend(ch)
+                    if len(marker_acc) == len(MARKER_BYTES):
+                        # first MARKER (begin) has been detected; search for the next one (end)
+                        capture_buffer = bytearray()
+                        while capture_buffer[-len(MARKER_BYTES):] != MARKER_BYTES:
+                            ch = os.read(fd, 1)
+                            if ch[0] == ord('\r'):
+                                # When the prompt is longer than $COLUMNS, some versions of bash re-print
+                                # the first overflowing character preceded by '\r'
+                                os.read(fd, 1)
+                                continue
+                            capture_buffer.extend(ch)
+                        captured_prompt = capture_buffer[:-len(MARKER_BYTES)].decode('utf-8')
+                        pass_through = False
+                        command_completed.set()
+                        marker_acc = bytearray()
+                        no_buffering = False
+                        output = bytes(output_acc)
+                        output_acc = bytearray()
+                        return output + bytes(chr(0), 'utf-8')
+                else:
+                    # we no longer match a marker prefix, move whatever we might have matched already
+                    # into the output accumulator
+                    output_acc.extend(marker_acc)
+                    output_acc.extend(ch)
+                    marker_acc = bytearray()
+                    
+                    if ch[0] == 27:
+                        # This might be an escape sequence, we must disable buffering for this run
+                        no_buffering = True
+                    elif ch[0] == ord('\n'):
+                        # We encountered a newline, so we assume any escape sequence is by now completed
+                        no_buffering = False
+                        
+                    if ch[0] == ord('\n') or no_buffering:
+                        # return the content of the output accumulator to the tty
+                        output = bytes(output_acc)
+                        output_acc = bytearray()
+                        return output + bytes(chr(0), 'utf-8')
         else:
             return os.read(fd, 1)
 
