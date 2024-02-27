@@ -1,3 +1,7 @@
+ * Fix "Access is denied" printed after each command when %APPDATA% contains
+   whitespace
+   
+Release 20240206:
  * suggest commands as you type (inspired by the fish shell)
  * support pushd/popd (thanks @Spavid04)
  * cd now behaves more similar to cmd.exe (thanks @Spavid04)
