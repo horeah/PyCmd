@@ -715,9 +715,9 @@ def run_in_cmd(tokens):
             for var in pseudo_vars:
                 command += ' & echo ' + var + '="%' + var + '%" >> "' + tmpfile + '"'
             command += '& <nul (set /p xxx=CD=) >>"' + tmpfile + '" & cd >>"' + tmpfile + '"'
-        command += '& echo ===PUSHD STACK BEGIN=== >> ' + tmpfile
-        command += '& pushd >> ' + tmpfile
-        command += '& echo ===PUSHD STACK END=== >> ' + tmpfile
+        command += '& echo ===PUSHD STACK BEGIN=== >> ' + '"' + tmpfile + '"'
+        command += '& pushd >> ' + '"' + tmpfile + '"'
+        command += '& echo ===PUSHD STACK END=== >> ' + '"' + tmpfile + '"'
         command += '"'
         os.system(command)
 
