@@ -1,4 +1,5 @@
 import sys, os, threading, tty, pty, fcntl, array, termios, tempfile
+from select import select
 from common import debug
 
 input_processed = threading.Event()
@@ -18,7 +19,6 @@ MARKER = '\036' + MARKER_BASE
 MARKER_BYTES = bytearray(MARKER, 'utf-8')
 output_acc = bytearray()
 marker_acc = bytearray()
-no_buffering = False
 input_buffer = []
 captured_prompt = None
 
@@ -43,7 +43,7 @@ def read_stdin(fd):
             return bytearray(chr(0), 'utf-8')
 
 def read_shell(fd):
-    global command_to_run, pass_through, captured_prompt, output_acc, marker_acc, no_buffering
+    global command_to_run, pass_through, captured_prompt, output_acc, marker_acc
 
     if command_to_run:
         # ensure terminal dimensions match the real terminal
@@ -63,32 +63,33 @@ def read_shell(fd):
         command_to_run = None
         output_acc = bytearray()
         marker_acc = bytearray()
-        no_buffering = False
         return bytearray(chr(0), 'utf-8')
     else:
         if pass_through:
             # Command is running, pass output through until a MARKER is detected
             while True:
-                ch = os.read(fd, 1)
-                if ch[0] == MARKER_BYTES[len(marker_acc)]:
+                r, _, _ = select([fd], [], [], 0.03)
+                ch = os.read(fd, 1)[0] if r else 0
+
+                # debug('STDOUT %02X' % ch)
+                if ch == MARKER_BYTES[len(marker_acc)]:
                     # this could still be the marker, push to marker accumulator
-                    marker_acc.extend(ch)
+                    marker_acc.append(ch)
                     if len(marker_acc) == len(MARKER_BYTES):
                         # first MARKER (begin) has been detected; search for the next one (end)
                         capture_buffer = bytearray()
                         while capture_buffer[-len(MARKER_BYTES):] != MARKER_BYTES:
-                            ch = os.read(fd, 1)
-                            if ch[0] == ord('\r'):
+                            ch = os.read(fd, 1)[0]
+                            if ch == ord('\r'):
                                 # When the prompt is longer than $COLUMNS, some versions of bash re-print
                                 # the first overflowing character preceded by '\r'
                                 os.read(fd, 1)
                                 continue
-                            capture_buffer.extend(ch)
+                            capture_buffer.append(ch)
                         captured_prompt = capture_buffer[:-len(MARKER_BYTES)].decode('utf-8')
                         pass_through = False
                         command_completed.set()
                         marker_acc = bytearray()
-                        no_buffering = False
                         output = bytes(output_acc)
                         output_acc = bytearray()
                         return output + bytes(chr(0), 'utf-8')
@@ -96,21 +97,14 @@ def read_shell(fd):
                     # we no longer match a marker prefix, move whatever we might have matched already
                     # into the output accumulator
                     output_acc.extend(marker_acc)
-                    output_acc.extend(ch)
+                    output_acc.append(ch)
                     marker_acc = bytearray()
                     
-                    if ch[0] == 27:
-                        # This might be an escape sequence, we must disable buffering for this run
-                        no_buffering = True
-                    elif ch[0] == ord('\n'):
-                        # We encountered a newline, so we assume any escape sequence is by now completed
-                        no_buffering = False
-                        
-                    if ch[0] == ord('\n') or no_buffering:
+                    if ch == 10 or ch == 0:
                         # return the content of the output accumulator to the tty
                         output = bytes(output_acc)
                         output_acc = bytearray()
-                        return output + bytes(chr(0), 'utf-8')
+                        return output
         else:
             return os.read(fd, 1)
 
