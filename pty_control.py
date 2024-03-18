@@ -1,5 +1,4 @@
-import sys, os, threading, tty, pty, fcntl, array, termios, tempfile
-from select import select
+import sys, os, threading, tty, pty, fcntl, array, termios, tempfile, select
 from common import debug
 
 input_processed = threading.Event()
@@ -8,6 +7,7 @@ command_to_run = None
 pass_through = True
 command_completed = threading.Event()
 terminated = False
+poll = select.poll()
 
 # The "interpreted" MARKER (i.e. the string that bash will show when printing the
 # prompt) must be different from the "raw" MARKER, i.e. the actual value of the
@@ -43,7 +43,7 @@ def read_stdin(fd):
             return bytearray(chr(0), 'utf-8')
 
 def read_shell(fd):
-    global command_to_run, pass_through, captured_prompt, output_acc, marker_acc
+    global command_to_run, pass_through, captured_prompt, output_acc, marker_acc, poll
 
     if command_to_run:
         # ensure terminal dimensions match the real terminal
@@ -66,10 +66,11 @@ def read_shell(fd):
         return bytearray(chr(0), 'utf-8')
     else:
         if pass_through:
+            poll.register(fd, select.POLLIN)  # there's no obvious better time to do this
+            
             # Command is running, pass output through until a MARKER is detected
             while True:
-                r, _, _ = select([fd], [], [], 0.03)
-                ch = os.read(fd, 1)[0] if r else 0
+                ch = os.read(fd, 1)[0] if poll.poll(30) else 0
 
                 # debug('STDOUT %02X' % ch)
                 if ch == MARKER_BYTES[len(marker_acc)]:
