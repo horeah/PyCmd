@@ -163,6 +163,9 @@ class Window(object):
                     self.selected_column = 0
                 elif rec.VirtualKeyCode == 35 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 69: # END or CTRL+E
                     self.selected_column = self.num_columns
+                elif rec.VirtualKeyCode == 75 and is_ctrl_pressed(rec) and is_alt_pressed(rec) and can_zap: # CTRL+ALT+K
+                    self.erase()
+                    return 'zap', self.entries[self.selected_line + self.selected_column * self.num_lines]
 
                 self.selected_line = Window._bound(self.selected_line, 0, self.num_lines - 1)
                 num_columns_current_row = self.num_columns
@@ -170,9 +173,6 @@ class Window(object):
                     num_columns_current_row -= 1
                 self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
                 self._center_on_selection()
-            elif rec.VirtualKeyCode == 75 and is_ctrl_pressed(rec) and is_alt_pressed(rec) and can_zap: # CTRL+ALT+K
-                self.erase()
-                return 'zap', self.entries[self.selected_line + self.selected_column * self.num_lines]
             elif (rec.Char == chr(13) or rec.Char == '\t') and self.entries: # ENTER or TAB
                 self.erase()
                 return 'select', self.entries[self.selected_line + self.selected_column * self.num_lines]
