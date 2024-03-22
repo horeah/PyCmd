@@ -143,51 +143,56 @@ class Window(object):
             self.reset_cursor()
             self.display()
             rec = read_input()
-            if rec.Char == chr(0) \
-               or (not is_ctrl_pressed(rec) and not is_alt_pressed(rec) and rec.VirtualKeyCode in [37, 39, 40, 38, 34, 33, 36, 35]) \
-               or (is_ctrl_pressed(rec) and not is_alt_pressed(rec) and rec.VirtualKeyCode in [66, 70, 78, 80, 86, 65, 69]) \
-               or (not is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 86):
-                if rec.VirtualKeyCode == 37 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 66: # LEFT or CTRL+B
+            match ord(rec.Char), rec.VirtualKeyCode, is_ctrl_pressed(rec), is_alt_pressed(rec):
+                case (0, 37, False, False) | (_, 66, True, False): # Left arrow or Ctrl-B
                     self.selected_column -= 1
-                elif rec.VirtualKeyCode == 39 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 70: # RIGHT or CTRL+F
+                    self._update_selection()
+                case (0, 39, False, False) | (_, 70, True, False): # Right arrow or Ctrl-F
                     self.selected_column += 1
-                elif rec.VirtualKeyCode == 40 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 78: # DOWN or CTRL+N
+                    self._update_selection()
+                case (0, 40, False, False) | (_, 78, True, False): # Down arrow or Ctrl-N
                     self.selected_line += 1
-                elif rec.VirtualKeyCode == 38 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 80: # UP or CTRL+P
+                    self._update_selection()
+                case (0, 38, False, False) | (_, 80, True, False): # Up arrow or Ctrl-P
                     self.selected_line -= 1
-                elif rec.VirtualKeyCode == 34 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 86: # PAGE DOWN or CTRL+V
+                    self._update_selection()
+                case (0, 34, False, False) | (_, 86, True, False): # Page down or Ctrl-V
                     self.selected_line += self.height
-                elif rec.VirtualKeyCode == 33 or is_alt_pressed(rec) and rec.VirtualKeyCode == 86: # PAGE UP or ALT+V
+                    self._update_selection()
+                case (0, 33, False, False) | (_, 86, False, True): # Page up or Alt-V
                     self.selected_line -= self.height
-                elif rec.VirtualKeyCode == 36 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 65: # HOME or CTRL+A
+                    self._update_selection()
+                case (0, 36, False, False) | (_, 65, True, False): # Home or Ctrl-A
                     self.selected_column = 0
-                elif rec.VirtualKeyCode == 35 or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 69: # END or CTRL+E
+                    self._update_selection()
+                case (0, 35, False, False) | (_, 69, True, False): # End or Ctrl-E
                     self.selected_column = self.num_columns
-                elif rec.VirtualKeyCode == 75 and is_ctrl_pressed(rec) and is_alt_pressed(rec) and can_zap: # CTRL+ALT+K
-                    self.erase()
-                    return 'zap', self.entries[self.selected_line + self.selected_column * self.num_lines]
-
-                self.selected_line = Window._bound(self.selected_line, 0, self.num_lines - 1)
-                num_columns_current_row = self.num_columns
-                if self.selected_line + (self.num_columns - 1) * self.num_lines >=  len(self.entries):
-                    num_columns_current_row -= 1
-                self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
-                self._center_on_selection()
-            elif (rec.Char == chr(13) or rec.Char == '\t') and self.entries: # ENTER or TAB
-                self.erase()
-                return 'select', self.entries[self.selected_line + self.selected_column * self.num_lines]
-            elif rec.Char == chr(27) or is_ctrl_pressed(rec) and rec.VirtualKeyCode == 71: # ESC or CTRL+G
-                if self.filter:
+                    self._update_selection()
+                case (_, 75, True, True): # Ctrl-Alt-K
+                    if can_zap:
+                        self.erase()
+                        return 'zap', self.entries[self.selected_line + self.selected_column * self.num_lines]
+                case (13 | 9, _, False, False): # Enter or Tab
+                    if self.entries:
+                        self.erase()
+                        return 'select', self.entries[self.selected_line + self.selected_column * self.num_lines]
+                case (27, _, False, False) | (_, 71, True, False): # Esc or Ctrl-G
+                    if not self.filter:
+                        self.erase()
+                        return None, None
                     self.filter = ''
-                else:
-                    self.erase()
-                    return None, None
-            else:
-                if rec.Char == '\b':
+                case (8, _, False, False): # Del
                     self.filter = self.filter[:-1]
-                else:            
+                case (_char, _, _, _) if _char > 0:
                     self.filter += rec.Char
 
+    def _update_selection(self):
+        self.selected_line = Window._bound(self.selected_line, 0, self.num_lines - 1)
+        num_columns_current_row = self.num_columns
+        if self.selected_line + (self.num_columns - 1) * self.num_lines >=  len(self.entries):
+            num_columns_current_row -= 1
+        self.selected_column = Window._bound(self.selected_column, 0, num_columns_current_row - 1)
+        self._center_on_selection()
                 
     def _center_on_selection(self):
         self.offset = Window._bound(self.offset,
