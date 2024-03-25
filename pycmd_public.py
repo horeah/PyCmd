@@ -140,7 +140,7 @@ def git_prompt():
         dirty_files = lines[1:-1]
         mark = ''
         dirty = any(line[1] in ['M', 'D'] for line in dirty_files)
-        staged = any(line[0] in ['A', 'M', 'D'] for line in dirty_files)
+        staged = any(line[0] in ['A', 'M', 'D', 'R'] for line in dirty_files)
         if dirty:
             mark = color.Fore.RED + '*'
         if staged:
