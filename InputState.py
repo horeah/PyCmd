@@ -4,8 +4,8 @@ from completion import complete_file, complete_env_var, has_wildcards
 import win32clipboard as wclip
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
-    ['-', '.', '=', '\\', ';', ' ', '>', '<', '&', '|', '\0']
-EXTEND_SEPARATORS_INSIDE_QUOTES = ['-', ' ', '.', '&', '|', '\\', '"']
+    ['-', '.', '=', '\\', '/', ';', ' ', '>', '<', '&', '|', '\0']
+EXTEND_SEPARATORS_INSIDE_QUOTES = ['-', ' ', '.', '&', '|', '\\', '/', '"']
 
 class ActionCode:
     """
