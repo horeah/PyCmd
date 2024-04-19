@@ -312,6 +312,10 @@ def main():
                     else:                               # Ctrl-Shift-Z
                         state.handle(ActionCode.ACTION_REDO)
                     auto_select = False
+                elif rec.Char == chr(10):                # Ctrl-Enter
+                    state.handle(ActionCode.ACTION_END)          # Emulate "End"
+                    write_input(rec.VirtualKeyCode, chr(13), 0)  # followed by "Enter"
+                    continue
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec):      # Alt-Something
                 if rec.VirtualKeyCode in [37, 39] + list(range(49, 59)):
                     if state.before_cursor + state.after_cursor == '':  # Dir history
@@ -407,12 +411,8 @@ def main():
 
 
                 elif rec.Char == chr(13):               # Enter
-                    if state.search_substr is not None:
-                        state.search_substr = None
-                        state.reset_selection()
-                    else:
-                        state.history.reset()
-                        break
+                    state.history.reset()
+                    break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
                         scrolling = False
