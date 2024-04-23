@@ -13,6 +13,22 @@ import pty_control
 from .console_common import *
 from common import debug
 
+# We will try to use xlib to detect Ctrl-Enter (which is usually swallowed by X11)
+from ctypes import cdll, c_char, c_void_p
+xlib = cdll.LoadLibrary('libX11.so.6')
+xlib.XOpenDisplay.restype = c_void_p
+display = xlib.XOpenDisplay('')
+if display:
+    debug('X11 display detected')
+    xlib.XQueryKeymap.argtypes = (c_void_p, c_char * 32)
+    xkeymap = (c_char * 32)()
+    xlib.XKeycodeToKeysym.argtypes = (c_void_p, c_int)
+    XKEYSYM_CTRL_L = 0xffe3
+    XKEYSYM_CTRL_R = 0xffe4
+    XKEYCODE_CAPS_LOCK = 0x42
+    xkeysym_caps_lock = xlib.XKeycodeToKeysym(display, XKEYCODE_CAPS_LOCK, 0)
+
+
 # These are taken from the win32console
 LEFT_ALT_PRESSED = 0x0002
 LEFT_CTRL_PRESSED = 0x0008
@@ -63,7 +79,7 @@ KEYMAP = {
     0x00: PyINPUT_RECORDType(True, 32, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-Space
     0x04: PyINPUT_RECORDType(True, 0, chr(0x04), LEFT_CTRL_PRESSED),  # Ctrl-D
     0x7F: PyINPUT_RECORDType(True, 0, chr(8), 0),  # Backspace
-    0x0A: PyINPUT_RECORDType(True, 0, '\x0D', 0),  # Enter
+    0x0A: PyINPUT_RECORDType(True, 0, '\x0A', LEFT_CTRL_PRESSED),  # Ctrl-Enter
     0x0B: PyINPUT_RECORDType(True, 75, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-K
     0x01: PyINPUT_RECORDType(True, 65, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-A
     0x03: PyINPUT_RECORDType(True, 67, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-C
@@ -305,6 +321,21 @@ def read_input():
         pty_control.input_available.clear()
         ch = pty_control.input_buffer.pop()
         debug('CH=0x%02X' % ch)
+
+        if ch == 0x0D and display:  # Use xlib to detect Ctrl-Enter
+            xlib.XQueryKeymap(display, xkeymap)
+            ctrl_l_pressed = xkeymap.raw[4]  & (1<<5)
+            ctrl_r_pressed = xkeymap.raw[13] & (1<<1)
+            caps_lock_pressed = xkeymap.raw[8]  & (1<<2);
+            debug('Ctrl_L=%d Ctrl_R=%d Caps=%d CapsKeySym=0x%x' %
+                  (ctrl_l_pressed, ctrl_r_pressed, caps_lock_pressed, xkeysym_caps_lock))
+            if (ctrl_l_pressed or
+                ctrl_r_pressed or
+                # Also check if CapsLock is remapped to Ctrl
+                caps_lock_pressed and xkeysym_caps_lock in [XKEYSYM_CTRL_L, XKEYSYM_CTRL_R]):
+                debug('Ctrl-Enter detected')
+                ch = 0x0A
+
         mapped = keymap[ch]
         if isinstance(mapped, PyINPUT_RECORDType):
             return mapped
