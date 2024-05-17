@@ -1,3 +1,9 @@
+ * Accept&run suggested command with Ctrl-Enter
+ * Properly handle '/' when expanding selection (Shift-Up)
+ * Account for renamed files in the git prompt (thanks @ufo)
+ * Fix typing AltGr-combos on some keyboard layouts (thanks @ufo)
+
+Release 20240228
  * Fix "Access is denied" printed after each command when %APPDATA% contains
    whitespace
    

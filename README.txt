@@ -21,8 +21,10 @@ persistent history, etc.)
 
  b. Command suggestions
     - automatically suggest commands from history or from available
-      completions (accept with Right/End or partially with Ctrl-Right; or
-      Emacs-style)
+      completions:
+        - accept with Right/End
+        - accept partially with "forward-word" (Ctrl-Right etc.)
+        - accept & run with Ctrl-Enter
 
  b. Command history
     - the history is persistent across PyCmd sessions
