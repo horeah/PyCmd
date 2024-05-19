@@ -24,7 +24,7 @@
 # executed in PyCmd's Python context; therefore, you can do virtually anything
 # you want here, like play a song, format your hard-disk or show some custom
 # greeting:
-print '\n***  Hi, there!  ***'
+print('\n***  Hi, there!  ***')
 
 # pycmd_public is a collection of public functions, constants and objects that
 # PyCmd "exports" for use within init.py files; you can safely rely on these
@@ -176,8 +176,8 @@ behavior.completion_mode = 'zsh'
 #
 # Also note that you can directly output colored text via the color
 # specifications.
-print ('*** Enjoy ' +
-       color.Fore.TOGGLE_RED + color.Fore.TOGGLE_BLUE +
-       'PyCmd' +
-       color.Fore.DEFAULT +
-       '! ***')
+print('*** Enjoy ' +
+      color.Fore.TOGGLE_RED + color.Fore.TOGGLE_BLUE +
+      'PyCmd' +
+      color.Fore.DEFAULT +
+      '! ***')
