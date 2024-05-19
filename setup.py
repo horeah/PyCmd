@@ -1,10 +1,11 @@
 from cx_Freeze import setup, Executable
 from os.path import dirname
 import lib2to3
+from buildinfo import build_date
 
 setup(
     name = 'PyCmd',
-    version = '0.9',
+    version = build_date[:4] + '.' + build_date[4:6] + '.' + build_date[6:],
     description = 'Smart windows shell',
     executables = [Executable(script='PyCmd.py',
                               icon='PyCmd.ico')],
