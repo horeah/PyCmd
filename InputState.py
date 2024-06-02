@@ -222,7 +222,7 @@ class InputState:
                 self.undo_emacs.append((self.prev_before_cursor, self.prev_after_cursor))
                 self.undo_emacs_index = -1
 
-            if not self.history.filter:
+            if not self.history.trail:
                 self.update_suggestion()
 
         # print "\n", self.undo, "    ", self.redo, "\n"
