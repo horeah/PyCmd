@@ -390,13 +390,16 @@ class InputState:
 
     def key_right_word(self, select=False):
         """Move forward one word (Ctrl-Right)"""
+        path_sep = ['/', '\\', ':']
         if self.after_cursor:
             # Skip spaces
             while self.after_cursor != '' and self.after_cursor[0] in word_sep:
                 self.key_right(select)
-
             # Jump over word
             while self.after_cursor != '' and not self.after_cursor[0] in word_sep:
+                self.key_right(select)
+            # Jump over path separator
+            while self.after_cursor != '' and self.after_cursor[0] in path_sep:
                 self.key_right(select)
         else:
             if self.suggestion:  # Accept one word from suggestion
@@ -408,6 +411,11 @@ class InputState:
                 while self.suggestion != '' and not self.suggestion[0] in word_sep:
                     self.before_cursor += self.suggestion[0]
                     self.suggestion = self.suggestion[1:]
+                # Accept path separator
+                while self.suggestion != '' and self.suggestion[0] in path_sep:
+                    self.before_cursor += self.suggestion[0]
+                    self.suggestion = self.suggestion[1:]
+
                 if not select:
                     self.reset_selection()
 
