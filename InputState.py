@@ -417,7 +417,7 @@ class InputState:
 
     def key_right_word(self, select=False):
         """Move forward one word (Ctrl-Right)"""
-        path_sep = ['/', '\\', ':']
+        path_sep = ['/'] if sys.platform == 'linux' else ['/', '\\', ':']
         if self.after_cursor:
             # Skip spaces
             while self.after_cursor != '' and self.after_cursor[0] in word_sep:
