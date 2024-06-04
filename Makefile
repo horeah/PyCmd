@@ -69,7 +69,7 @@ dist_w64: clean $(SRC) doc
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
 dist_linux64: clean $(SRC) doc
-	echo build_date = '$(BUILD_DATE)' > buildinfo.py
+	echo build_date = \'$(BUILD_DATE)\' > buildinfo.py
 	python3 setup.py build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	$(CP) README.txt PyCmd
