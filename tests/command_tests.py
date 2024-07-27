@@ -73,6 +73,10 @@ class TestDelayedExpansion(TestCase):
         self.assertEqual(os.environ['ERRORLEVEL'], '0')
         PyCmd.run_command(['ipconfig', '2>NUL'])
         self.assertEqual(os.environ['ERRORLEVEL'], '9009')
+
+    def testSeparatorsInQutes(self):
+        PyCmd.run_command(['echo', '"a | b"', '>', 'NUL'])
+        self.assertEqual(os.environ['ERRORLEVEL'], '0')
         
     def tearDown(self):
         os.chdir(orig_cwd)
@@ -123,6 +127,8 @@ class TestNoDelayedExpansion(TestCase):
         PyCmd.run_command(['dir', '>NUL'])
         PyCmd.run_command(['ipconfig', '2>NUL'])
 
+    def testSeparatorsInQutes(self):
+        PyCmd.run_command(['echo', '"a | b"', '>', 'NUL'])
 
     def tearDown(self):
         os.chdir(orig_cwd)

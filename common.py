@@ -146,6 +146,19 @@ def tokenize(line):
     return tokens
 
 
+def escape_special_chars_in_quotes(string):
+    result = ''
+    in_quotes = False
+    for c in string:
+        if c == '"':
+            in_quotes = not in_quotes
+        if in_quotes and c in ['>', '<', '|', '&', '^']:
+            result += '^' + c
+        else:
+            result += c
+    return result
+
+
 def unescape(string):
     """Unescape string from ^ escaping. ^ inside double quotes is ignored"""
     if (string == None):

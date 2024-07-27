@@ -1,7 +1,7 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
 import win32console, win32gui, win32con, win32api
 
-from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex
@@ -678,6 +678,10 @@ def run_in_cmd(tokens):
             token_sane = token_sane.rstrip('\\')
         if token_sane.count('"') % 2 == 1:
             token_sane += '"'
+        if token_sane.count('"') > 0 and behavior.delayed_expansion:
+            # Escape certain special characters in quptes to compensate for our awkward
+            # command execution mechanism (based on cmd /C)
+            token_sane = escape_special_chars_in_quotes(token_sane)
         line_sanitized += token_sane + ' '
     line_sanitized = line_sanitized[:-1]
     if line_sanitized.endswith('&') and not line_sanitized.endswith('^&'):

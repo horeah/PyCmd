@@ -3,7 +3,7 @@
 #
 import os
 from unittest import TestCase, TestSuite, defaultTestLoader
-from common import parse_line, unescape, fuzzy_match
+from common import parse_line, escape_special_chars_in_quotes, unescape, fuzzy_match
 from common import associated_application, full_executable_path, is_gui_application
 from common import abbrev_tilde
 
@@ -182,6 +182,13 @@ class TestParseLine(TestCase):
         ('a"b^"c', 'a"b^"c'),
         ]
 
+    strings_to_escape = [
+        ('a|b', 'a|b'),
+        ('"a|b"', '"a^|b"'),
+        ('"echo a >> b.txt"', '"echo a ^>^> b.txt"'),
+        ('git log --author="horea <h@h.com>"', 'git log --author="horea ^<h@h.com^>"'),
+    ]
+
     def testParseLine(self):
         """Test that result of parse_line equals expected result."""
         for input, expected in self.lines_to_parse:
@@ -198,6 +205,13 @@ class TestParseLine(TestCase):
         """Test that result of unescape equals expected result."""
         for input, expected in self.strings_to_unescape:
             self.assertEqual(unescape(input), expected)
+
+    def testEscape(self):
+        """Check if we are correctly escaping special characters"""
+        for input, expected in self.strings_to_escape:
+            self.assertEqual(escape_special_chars_in_quotes(input), expected)
+
+
 
 class TestFuzzyMatch(TestCase):
     match_tests = [
