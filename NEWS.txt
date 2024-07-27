@@ -1,3 +1,10 @@
+ * Forward-word skips over path separator
+ * Fixed example-init.py (was broken since the migration to Python3)
+ * Suggestion is now properly cleared from screen when searching history
+ * [Windows] Fix handling of special characters within quotes (Issue #14)
+ * [Windows] Use the release date as version property for PyCmd.exe
+
+Release 20240517
  * Accept&run suggested command with Ctrl-Enter
  * Properly handle '/' when expanding selection (Shift-Up)
  * Account for renamed files in the git prompt (thanks @ufo)
