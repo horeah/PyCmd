@@ -38,7 +38,7 @@ def read_stdin(fd):
         debug('read_stdin got')
         input_processed.clear()
         if command_to_run:
-            return bytearray(command_to_run, 'utf-8')
+            return b'\x15\x0B' + bytes(command_to_run, 'utf-8') + b'\x0A'
         else:
             return bytearray(chr(0), 'utf-8')
 
@@ -56,10 +56,10 @@ def read_shell(fd):
         fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(fd, termios.TIOCSWINSZ, buf)
 
-        # bash outputs the command; we swallow it (incl. '\r\n')
-        remaining = len(command_to_run) + 1
-        while remaining > 0:
-            remaining -= len(os.read(fd, remaining))
+        # bash outputs the command; we swallow it (up to '\r\n')
+        while (b := os.read(fd, 1)[0]) != 10:
+            debug('Swallow `%s`' % b)
+            pass
         command_to_run = None
         output_acc = bytearray()
         marker_acc = bytearray()
@@ -107,7 +107,9 @@ def read_shell(fd):
                         output_acc = bytearray()
                         return output
         else:
-            return os.read(fd, 1)
+            b = os.read(fd, 1)
+            debug('Extra %s' % b)
+            return b
 
         
 def start(env_dump_file):

@@ -634,7 +634,7 @@ def run_command(tokens):
 def run_command_linux(tokens):
     #print('Running', tokens)
     pty_control.command_completed.clear()
-    pty_control.command_to_run = ' '.join(tokens) + '\n'
+    pty_control.command_to_run = ' '.join(tokens)
     pty_control.pass_through = True
     debug('run_command input_processed.set')
     pty_control.input_processed.set()
