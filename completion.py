@@ -70,16 +70,16 @@ def complete_file_simple(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) 
-                           if matcher.match(elem)]
+            completions = [elem for elem in os.scandir(dir_to_complete)
+                           if matcher.match(elem.name)]
         except OSError:
             # Cannot complete, probably access denied
             pass
         
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
+    completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
+    completions_files = [elem.name for elem in completions if elem.is_file()]
     completions = completions_dirs + completions_files
 
     if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
@@ -88,12 +88,12 @@ def complete_file_simple(line):
         for elem_in_path in os.environ['PATH'].split(';'):
             dir_to_complete = expand_env_vars(elem_in_path) + path_sep
             try:                
-                completions_path += [elem for elem in os.listdir(dir_to_complete) 
-                                     if matcher.match(elem)
-                                     and os.path.isfile(dir_to_complete + path_sep + elem)
-                                     and has_exec_extension(elem)
-                                     and not elem in completions
-                                     and not elem in completions_path]
+                completions_path += [elem.name for elem in os.scandir(dir_to_complete)
+                                     if matcher.match(elem.name)
+                                     and elem.is_file()
+                                     and has_exec_extension(elem.name)
+                                     and not elem.name in completions
+                                     and not elem.name in completions_path]
             except OSError:
                 # Cannot complete, probably access denied
                 pass
@@ -226,16 +226,16 @@ def complete_file_alternate(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) 
-                           if matcher.match(elem)]
+            completions = [elem for elem in os.scandir(dir_to_complete)
+                           if matcher.match(elem.name)]
         except OSError:
             # Cannot complete, probably access denied
             pass
         
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
+    completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
+    completions_files = [elem.name for elem in completions if elem.is_file()]
     completions = completions_dirs + completions_files
 
     if completions != []:
@@ -306,15 +306,15 @@ def complete_wildcard(line):
     completions = []
     if os.path.isdir(dir_to_complete):
         try:
-            completions = [elem for elem in os.listdir(dir_to_complete) if matcher.match(elem)]
+            completions = [elem for elem in os.scandir(dir_to_complete) if matcher.match(elem.name)]
         except OSError:
             # Cannot complete, probably access denied
             pass
 
 
     # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem + path_sep for elem in completions if os.path.isdir(dir_to_complete + path_sep + elem)]
-    completions_files = [elem for elem in completions if os.path.isfile(dir_to_complete + path_sep + elem)]
+    completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
+    completions_files = [elem.name for elem in completions if elem.is_file()]
     completions = completions_dirs + completions_files
 
     if completions != []:
