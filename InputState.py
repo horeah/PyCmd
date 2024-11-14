@@ -239,7 +239,7 @@ class InputState:
                     if tokens[-1].count('%') % 2 == 1:
                         completed, completions = complete_env_var(self.before_cursor)
                     else:
-                        completed, completions = complete_file(self.before_cursor)
+                        completed, completions = complete_file(self.before_cursor, timeout=0.1)
                     if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
                         suggestions = [completed]
         suggestion = suggestions[0][len(self.before_cursor + self.after_cursor):] if suggestions else ''
