@@ -168,9 +168,17 @@ def main():
             console.set_console_title(title_prefix + curdir + ' - PyCmd')
             os.environ['CD'] = curdir
 
+            # Update cursor appearance based on state
+            if state.search_substr is not None:
+                cursor_height = 30
+            elif state.overwrite:
+                cursor_height = 50
+            else:
+                cursor_height = 10
+
             if state.changed() or force_repaint:
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor + state.prev_suggestion)
-                set_cursor_attributes(50 if state.overwrite else 10, False)
+                set_cursor_attributes(cursor_height, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
                 stdout.write('\r')
 
@@ -204,12 +212,6 @@ def main():
                     cursor_backward(to_erase)
 
                 # Move cursor to the correct position
-                if state.search_substr is not None:
-                    cursor_height = 30
-                elif state.overwrite:
-                    cursor_height = 50
-                else:
-                    cursor_height = 10
                 set_cursor_attributes(cursor_height, True)
                 cursor_backward(len(state.after_cursor + state.suggestion))
 
@@ -420,6 +422,7 @@ def main():
                         state.handle(ActionCode.ACTION_ESCAPE)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
+                    set_cursor_attributes(cursor_height, False)
                     tokens = tokenize(state.before_cursor)
                     if tokens[-1].strip('"').count('%') % 2 == 1:
                         (completed, suggestions) = complete_env_var(state.before_cursor)
@@ -435,6 +438,7 @@ def main():
                     stdout.write(state.before_cursor + state.after_cursor)
                     stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                     cursor_backward(len(state.after_cursor) + len(state.suggestion))
+                    set_cursor_attributes(cursor_height, True)
                     state.step_line()
 
                     # Show multiple completions if available
