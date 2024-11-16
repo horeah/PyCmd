@@ -71,22 +71,21 @@ def complete_file_simple(line, timeout=None):
     matcher = wildcard_to_regex(prefix + '*')
 
     start = time.time()
-    completions = []
+    completions_dirs = []
+    completions_files = []
     if os.path.isdir(dir_to_complete):
         try:
-            for elem in  os.scandir(dir_to_complete):
+            for elem in os.scandir(dir_to_complete):
                 if matcher.match(elem.name):
-                    completions.append(elem)
+                    if elem.is_dir():
+                        completions_dirs.append(elem.name + path_sep)
+                    else:
+                        completions_files.append(elem.name)
                 if timeout is not None and time.time() - start > timeout:
                     return (line, [])
         except OSError:
             # Cannot complete, probably access denied
             pass
-        
-
-    # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
-    completions_files = [elem.name for elem in completions if elem.is_file()]
     completions = completions_dirs + completions_files
 
     if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
@@ -231,22 +230,21 @@ def complete_file_alternate(line, timeout=None):
     matcher = wildcard_to_regex(prefix + '*')
 
     start = time.time()
-    completions = []
+    completions_dirs = []
+    completions_files = []
     if os.path.isdir(dir_to_complete):
         try:
-            for elem in  os.scandir(dir_to_complete):
+            for elem in os.scandir(dir_to_complete):
                 if matcher.match(elem.name):
-                    completions.append(elem)
+                    if elem.is_dir():
+                        completions_dirs.append(elem.name + path_sep)
+                    else:
+                        completions_files.append(elem.name)
                 if timeout is not None and time.time() - start > timeout:
                     return (line, [])
         except OSError:
             # Cannot complete, probably access denied
             pass
-        
-
-    # Sort directories first, also append '\'; then, files
-    completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
-    completions_files = [elem.name for elem in completions if elem.is_file()]
     completions = completions_dirs + completions_files
 
     if completions != []:
