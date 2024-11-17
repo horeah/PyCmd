@@ -123,6 +123,7 @@ class Window(object):
 
     def erase(self):
         self.reset_cursor()
+        stdout.write('\n')  # Don't erase original line as we did not touch it
         erase_to(self.final_cursor)
         self.reset_cursor()
 
