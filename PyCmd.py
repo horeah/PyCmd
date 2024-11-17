@@ -431,9 +431,8 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
-                    stdout.write(' ' * len(state.suggestion))
-                    cursor_backward(len(state.suggestion))
-                    cursor_backward(len(state.before_cursor))
+                    stdout.write(state.after_cursor + ' ' * len(state.suggestion))
+                    cursor_backward(len(state.suggestion) + len(state.after_cursor) + len(state.before_cursor))
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
                     stdout.write(state.before_cursor + state.after_cursor)
                     stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
@@ -490,8 +489,8 @@ def main():
                                 if not is_control_only(r):
                                     break
                             if r.Char == chr(0) and r.VirtualKeyCode == 40 or is_ctrl_pressed(r) and r.VirtualKeyCode == 78:
-                                stdout.write(' ' * len(state.suggestion))  # Erase suggestion
-                                cursor_backward(len(state.suggestion))
+                                stdout.write(state.after_cursor + ' ' * len(state.suggestion))  # Erase suggestion
+                                cursor_backward(len(state.after_cursor) + len(state.suggestion))
                                 action, selection = w.interact()
                                 if action == 'select' and selection:
                                     orig_last_token = tokenize(state.before_cursor)[-1]
