@@ -1,3 +1,10 @@
+ * Tab-completion and auto-suggestion are faster, and have a timeout to avoid
+   hanging on slow filesystems such as network mounts (Issue #22, thanks
+   @jay-ramani)
+ * Improved repaint when completing: less flickering, cleanup leftover text
+ * Linux: ignore user input typed while a non-interactive command is running
+
+Release 20240924
  * Forward-word skips over path separator
  * Fixed example-init.py (was broken since the migration to Python3)
  * Suggestion is now properly cleared from screen when searching history
