@@ -31,6 +31,22 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.before_cursor, 'maX')
         self.assertEqual(self.state.suggestion, '')
 
+    def testSuggestMultiCommandFromHistory(self):
+        self.state.history.list = ['make clean && make',
+                                   'cd some_dir && make clean || exit 1']
+        self.state.before_cursor = 'make dist &&'
+        self.state.update_suggestion()
+        self.assertEqual(self.state.suggestion, '')
+        self.state.reset_selection()
+        self.state.key_insert(' ')
+        self.state.update_suggestion()
+        self.assertEqual(self.state.suggestion, 'make')
+
+        self.state.before_cursor = 'cd other_dir && make dist || ex'
+        self.state.update_suggestion()
+        self.assertEqual(self.state.before_cursor, 'cd other_dir && make dist || ex')
+        self.assertEqual(self.state.suggestion, 'it 1')
+
     def testDontSuggestFromPath(self):
         self.state.history.list = []
         self.state.before_cursor = 'promp'

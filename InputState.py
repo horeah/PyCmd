@@ -1,6 +1,7 @@
 from CommandHistory import CommandHistory
 from common import word_sep, tokenize, seq_tokens
 from completion import complete_file, complete_env_var, has_wildcards
+import re
 import win32clipboard as wclip
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
@@ -230,19 +231,43 @@ class InputState:
         self.last_action = action
 
     def update_suggestion(self):
-        suggestions = []
+        suggestion = None
         if self.before_cursor + self.after_cursor:
-            suggestions = [l for l in reversed(self.history.list) if l.startswith(self.before_cursor + self.after_cursor)]
-            if not suggestions:
-                tokens = tokenize(self.before_cursor)
+            # Try to suggest perfect match from history
+            prefix_suggestions = [l for l in reversed(self.history.list) if l.startswith(self.before_cursor + self.after_cursor)]
+            if prefix_suggestions:
+                suggestion = prefix_suggestions[0]
+
+            if not suggestion:
+                # Try to suggest similar multi-command match from history
+                tokens = tokenize(self.before_cursor + self.after_cursor)
+                seq_indexes = [i for i in range(len(tokens)) if tokens[i] in seq_tokens]
+                if seq_indexes:
+                    pattern = [re.escape(tokens[0] + ' ') + '.*']
+                    pattern += [re.escape(tokens[i] + ' ' + tokens[i + 1]) + ' .*' for i in seq_indexes[:-1]]
+                    pattern += ['(' + ' '.join(re.escape(t) for t in tokens[seq_indexes[-1]:]) + '.*' + ')']
+                    pattern = ' '.join(pattern)
+                    # print(pattern)
+                    for l in reversed(self.history.list):
+                        if m := re.match(pattern, l):
+                            last_typed_command = ' '.join(tokens[seq_indexes[-1]:])
+                            last_matched_command = m.group(1)
+                            # print((last_matched_command, last_typed_command))
+                            if (self.before_cursor + self.after_cursor).endswith(last_typed_command) and last_matched_command.startswith(last_typed_command):
+                                suggestion = self.before_cursor + self.after_cursor + last_matched_command[len(last_typed_command):]
+                                # print(suggestion)
+                                break
+
+            if not suggestion:
+                # Try to suggest a file or an environment variable
                 if len(tokens) > 1 and not tokens[-2] in seq_tokens and not has_wildcards(tokens[-1]):
                     if tokens[-1].count('%') % 2 == 1:
                         completed, completions = complete_env_var(self.before_cursor)
                     else:
                         completed, completions = complete_file(self.before_cursor, timeout=0.1)
                     if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
-                        suggestions = [completed]
-        suggestion = suggestions[0][len(self.before_cursor + self.after_cursor):] if suggestions else ''
+                        suggestion = completed
+        suggestion = suggestion[len(self.before_cursor + self.after_cursor):] if suggestion else ''
         self.prev_suggestion = self.suggestion
         self.suggestion = suggestion
 
