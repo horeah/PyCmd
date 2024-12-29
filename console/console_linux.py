@@ -110,6 +110,10 @@ KEYMAP = {
         0x76: PyINPUT_RECORDType(True, 86, chr(0), LEFT_ALT_PRESSED),   # Alt-V
         0x77: PyINPUT_RECORDType(True, 87, chr(0), LEFT_ALT_PRESSED),   # Alt-W
         0x0B: PyINPUT_RECORDType(True, 75, chr(0), LEFT_ALT_PRESSED | LEFT_CTRL_PRESSED),   # Ctrl-Alt-K
+        0x4F: {
+            **KEYMAP_IDENT,
+            0x52: PyINPUT_RECORDType(True, 114, chr(0), 0),  # F3
+        },
         0x5B: {  # [
             **KEYMAP_IDENT,
             **KEYMAP_NAVI,
@@ -132,6 +136,7 @@ KEYMAP = {
                         **KEYMAP_IDENT,
                         **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, SHIFT_PRESSED)
                            for k, v in KEYMAP_NAVI.items()},
+                        0x52: PyINPUT_RECORDType(True, 114, chr(0), SHIFT_PRESSED),  # Shift-F3
                     },
                 },
             },
