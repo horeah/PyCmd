@@ -89,6 +89,8 @@ def complete_file_simple(line, timeout=None):
         except OSError:
             # Cannot complete, probably access denied
             pass
+    completions_dirs.sort(key=str.lower)
+    completions_files.sort(key=str.lower)
     completions = completions_dirs + completions_files
 
     if (len(tokens) == 1 or tokens[-2] in seq_tokens) and path_to_complete == '':
@@ -273,6 +275,8 @@ def complete_file_alternate(line, timeout=None):
         except OSError:
             # Cannot complete, probably access denied
             pass
+    completions_dirs.sort(key=str.lower)
+    completions_files.sort(key=str.lower)
     completions = completions_dirs + completions_files
 
     if completions != []:
@@ -352,6 +356,8 @@ def complete_wildcard(line):
     # Sort directories first, also append '\'; then, files
     completions_dirs = [elem.name + path_sep for elem in completions if elem.is_dir()]
     completions_files = [elem.name for elem in completions if elem.is_file()]
+    completions_dirs.sort(key=str.lower)
+    completions_files.sort(key=str.lower)
     completions = completions_dirs + completions_files
 
     if completions != []:
