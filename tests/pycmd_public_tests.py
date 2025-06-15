@@ -1,6 +1,7 @@
 from unittest import TestCase, TestSuite, defaultTestLoader
 from pycmd_public import abbrev_path
 from os.path import join, expanduser
+import getpass
 
 class TestAbbrevPath(TestCase):
     def testAbbrevPath(self):
@@ -15,6 +16,12 @@ class TestAbbrevPath(TestCase):
         assert(sys32_abbrev_elems[2] == 'system32')
 
         assert(abbrev_path('C:\\') == 'C:\\')
+
+        # Listing C:\Documents and Settings is not allowed
+        userdir = f'C:\\Documents and Settings\\{getpass.getuser()}'
+        userdir_abbrev = f'C:\\DaS\\{getpass.getuser()}'
+        assert(abbrev_path(userdir) == userdir_abbrev)
+        assert(abbrev_path(userdir + r'\somedir') == userdir_abbrev + r'\somedir')
 
 
 def suite():

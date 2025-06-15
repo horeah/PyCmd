@@ -40,12 +40,16 @@ def abbrev_path(path = None):
 
     for elem in path.split('\\')[ : -1]:
         elem_abbrev = common.abbrev_string(elem)
-        for other in os.listdir(current_dir):
-            if os.path.isdir(current_dir + '\\' + other) and common.abbrev_string(other).lower() == elem_abbrev.lower() and other.lower() != elem.lower():
-                # Found other directory with the same abbreviation
-                # In this case, we use the entire name
-                elem_abbrev = elem
-                break
+        try:
+            for other in os.listdir(current_dir):
+                if os.path.isdir(current_dir + '\\' + other) and common.abbrev_string(other).lower() == elem_abbrev.lower() and other.lower() != elem.lower():
+                    # Found other directory with the same abbreviation
+                    # In this case, we use the entire name
+                    elem_abbrev = elem
+                    break
+        except PermissionError:
+            # we were unable to list parent directory to check for collisions
+            elem_abbrev = elem
         current_dir += '\\' + elem
         path_abbrev += '\\' + elem_abbrev
 
