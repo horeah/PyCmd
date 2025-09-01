@@ -1,6 +1,6 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
 from common import pycmd_data_dir, pycmd_install_dir
-from common import tokenize, unescape, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
 from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex, ends_in_env_var
