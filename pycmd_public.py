@@ -4,7 +4,7 @@ Public constants, objects and utilities exported by PyCmd.
 These are meant to be used in init.py files; users can rely on them being kept
 unchanged (interface-wise) throughout later versions.
 """
-import os, sys, common, console
+import os, sys, common, console, subprocess
 
 def abbrev_path(path = None):
     """
@@ -75,6 +75,23 @@ def find_updir(name, path=None):
     return found
 
 
+def __get_symbolic_git_name():
+    """
+    Try to get a nicer name for the current head.
+    This will output something that might contain a name relative to a revision (including tags).
+    Outputs the shortened commit hash in case it can't find anything, or empty string on error.
+    """
+    # weirdly enough, --always is not enough and needs --no-undefined
+    stdout = subprocess.Popen("git name-rev --name-only --always --no-undefined HEAD",
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=-1).communicate()[0].decode(sys.stdout.encoding)
+    if not stdout:
+        return ""
+    firstLine = stdout.split("\n")[0]
+    return firstLine.strip()
+
+
 def simple_prompt():
     """
     Return a prompt containg the current path (abbreviated) plus the ERRORLEVEL
@@ -119,7 +136,7 @@ def git_prompt():
     # manipulate the sys.path so that they can be found (just make sure that the
     # version is compatible with the one used to build PyCmd -- check
     # README.txt)
-    import subprocess, re
+    import re
 
     prompt = ''
 
@@ -135,7 +152,16 @@ def git_prompt():
         match_branch = re.match('## (.+)', lines[0])
 
     if match_branch:
+        head_name = ""
+
         branch_name = match_branch.group(1)
+        if branch_name == "HEAD (no branch)":
+            # detached HEAD state, try to get a symbolic/relative name
+            # (as git is invoked with --porcelain, i think it's safe to just string compare directly)
+            head_name = __get_symbolic_git_name()
+        if not head_name:
+            head_name = branch_name
+
         ahead = behind = ''
         match_ahead_behind = re.match('## .* \[(ahead (\d+))?(, )?(behind (\d+))?\]', lines[0])
         if match_ahead_behind:
@@ -153,7 +179,7 @@ def git_prompt():
         behind = '-' + behind if behind else ''
         prompt += (color.Fore.YELLOW + '[' +
                    mark +
-                   color.Fore.YELLOW + branch_name +
+                   color.Fore.YELLOW + head_name +
                    color.Fore.GREEN + ahead +
                    color.Fore.RED + behind +
                    color.Fore.YELLOW + ']' +
