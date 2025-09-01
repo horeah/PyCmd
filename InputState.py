@@ -234,15 +234,15 @@ class InputState:
 
     def update_suggestion(self):
         suggestion = None
-        if self.before_cursor + self.after_cursor:
+        if self.before_cursor and not self.after_cursor:
             # Try to suggest perfect match from history
-            prefix_suggestions = [l for l in reversed(self.history.list) if l.startswith(self.before_cursor + self.after_cursor)]
+            prefix_suggestions = [l for l in reversed(self.history.list) if l.startswith(self.before_cursor)]
             if prefix_suggestions:
                 suggestion = prefix_suggestions[0]
 
             if not suggestion:
                 # Try to suggest similar multi-command match from history
-                tokens = tokenize(self.before_cursor + self.after_cursor)
+                tokens = tokenize(self.before_cursor)
                 seq_indexes = [i for i in range(len(tokens)) if tokens[i] in seq_tokens]
                 if seq_indexes:
                     pattern = [re.escape(tokens[0] + ' ') + '.*']
@@ -255,8 +255,8 @@ class InputState:
                             last_typed_command = ' '.join(tokens[seq_indexes[-1]:])
                             last_matched_command = m.group(1)
                             # print((last_matched_command, last_typed_command))
-                            if (self.before_cursor + self.after_cursor).endswith(last_typed_command) and last_matched_command.startswith(last_typed_command):
-                                suggestion = self.before_cursor + self.after_cursor + last_matched_command[len(last_typed_command):]
+                            if (self.before_cursor).endswith(last_typed_command) and last_matched_command.startswith(last_typed_command):
+                                suggestion = self.before_cursor + last_matched_command[len(last_typed_command):]
                                 # print(suggestion)
                                 break
 
@@ -269,7 +269,7 @@ class InputState:
                         completed, completions = complete_file(self.before_cursor, timeout=0.1)
                     if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
                         suggestion = completed
-        suggestion = suggestion[len(self.before_cursor + self.after_cursor):] if suggestion else ''
+        suggestion = suggestion[len(self.before_cursor):] if suggestion else ''
         self.prev_suggestion = self.suggestion
         self.suggestion = suggestion
 
