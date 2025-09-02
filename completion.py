@@ -9,7 +9,7 @@ from common import tokenize, expand_env_vars, has_exec_extension, is_executable,
 from common import contains_special_char, starts_with_special_char
 from common import sep_chars, seq_tokens
 
-def complete_file(line, timeout=None):
+def complete_file(line, timeout=None, exactly_one=False):
     """
     Complete names of files and/or directories
 
@@ -27,16 +27,16 @@ def complete_file(line, timeout=None):
        b) and a list of possible subsequent completions
     """
     start = time.time()
-    (completed, completions) = complete_file_simple(line, timeout)
+    (completed, completions) = complete_file_simple(line, timeout, exactly_one)
     if completed == line and completions == []:
         # Try the alternate completion
         if timeout is not None:
             timeout -= time.time() - start
-        (completed, completions) = complete_file_alternate(line, timeout)
+        (completed, completions) = complete_file_alternate(line, timeout, exactly_one)
 
     return (completed, completions)
 
-def complete_file_simple(line, timeout=None):
+def complete_file_simple(line, timeout=None, exactly_one=False):
     """
     Complete names of files or directories
     This function tokenizes the line and computes file and directory
@@ -86,6 +86,8 @@ def complete_file_simple(line, timeout=None):
                         completions_files.append(elem.name)
                 if timeout is not None and time.time() - start > timeout:
                     return (line, [])
+                if exactly_one and len(completions_dirs) + len(completions_files) > 1:
+                    return (line, [])
         except OSError:
             # Cannot complete, probably access denied
             pass
@@ -110,6 +112,8 @@ def complete_file_simple(line, timeout=None):
                                      and is_executable(dir_to_complete + path_sep + elem.name)
                                      and not elem.name in completions
                                      and not elem.name in completions_path]
+                if exactly_one and len(completions) + len(completions_path) > 1:
+                    return (line, [])
             except OSError:
                 # Cannot complete, probably access denied
                 pass
@@ -156,6 +160,8 @@ def complete_file_simple(line, timeout=None):
                              and not elem in completions
                              and not elem in completions_path]
 
+        if exactly_one and len(completions) + len(completions_path) > 1:
+            return (line, [])
 
         # Sort in lexical order (case ignored)
         completions_path.sort(key=str.lower)
@@ -220,7 +226,7 @@ def complete_file_simple(line, timeout=None):
         return (line, [])
 
 
-def complete_file_alternate(line, timeout=None):
+def complete_file_alternate(line, timeout=None, exactly_one=False):
     """
     Complete names of files or directories using an alternate tokenization
 
@@ -271,6 +277,8 @@ def complete_file_alternate(line, timeout=None):
                     else:
                         completions_files.append(elem.name)
                 if timeout is not None and time.time() - start > timeout:
+                    return (line, [])
+                if exactly_one and len(completions_dirs) + len(completions_files) > 1:
                     return (line, [])
         except OSError:
             # Cannot complete, probably access denied

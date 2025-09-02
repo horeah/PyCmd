@@ -262,11 +262,11 @@ class InputState:
 
             if not suggestion:
                 # Try to suggest a file or an environment variable
-                if len(tokens) > 1 and not tokens[-2] in seq_tokens and not has_wildcards(tokens[-1]):
+                if not has_wildcards(tokens[-1]):
                     if ends_in_env_var(tokens[-1]):
                         completed, completions = complete_env_var(self.before_cursor)
                     else:
-                        completed, completions = complete_file(self.before_cursor, timeout=0.1)
+                        completed, completions = complete_file(self.before_cursor, timeout=0.1, exactly_one=True)
                     if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
                         suggestion = completed
         suggestion = suggestion[len(self.before_cursor):] if suggestion else ''
