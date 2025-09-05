@@ -9,10 +9,10 @@ from DirHistory import DirHistory
 import console
 import re
 from sys import stdout, stderr
-from console import move_cursor, get_cursor, cursor_backward, erase_to, set_cursor_attributes
+from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from console import read_input, write_input
 from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-from console import scroll_buffer, get_viewport, scroll_to_quarter, get_buffer_size
+from console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
 from console import remove_escape_sequences
 from Window import Window
 from pycmd_public import color, appearance, behavior
@@ -247,6 +247,9 @@ def main():
                                        pycmd_data_dir + '/history',
                                        save_history_limit)
                         auto_select = False
+                elif rec.VirtualKeyCode == 76:          # Ctrl-L
+                    console.clear_screen()
+                    force_repaint = True
                 elif rec.VirtualKeyCode == 82:          # Ctrl-R
                     w = Window(state.history.list, pattern=re.compile('(.*)$'),
                                height=optimal_window_height())

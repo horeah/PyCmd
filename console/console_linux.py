@@ -89,6 +89,7 @@ KEYMAP = {
     0x0E: PyINPUT_RECORDType(True, 78, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-N
     0x0F: PyINPUT_RECORDType(True, 79, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-O
     0x12: PyINPUT_RECORDType(True, 82, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-R
+    0x0C: PyINPUT_RECORDType(True, 76, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-L
     0x06: PyINPUT_RECORDType(True, 70, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-F
     0x02: PyINPUT_RECORDType(True, 66, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-B
     0x16: PyINPUT_RECORDType(True, 86, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-V
@@ -305,6 +306,13 @@ def scroll_to_quarter(line):
     viewport_height = get_viewport()[3] - get_viewport()[1]
     if lines < viewport_height / 4:
         scroll_buffer(lines - viewport_height / 4)
+
+def clear_screen():
+    """Clear the screen and move the cursor to the top-left corner"""
+    sys.__stdout__.write('\033[2J\033[H')
+    sys.__stdout__.flush()
+    current_cursor[0] = 0
+    current_cursor[1] = 0
 
 def read_input():
     """Read one input event from stdin and translate it to a structure similar to KEY_EVENT_RECORD"""

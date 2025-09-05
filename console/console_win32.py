@@ -103,6 +103,13 @@ def scroll_to_quarter(line):
     if lines < viewport_height / 4:
         scroll_buffer(lines - viewport_height / 4)
 
+def clear_screen():
+    """Clear the screen and move the cursor to the top-left corner"""
+    from pycmd_public import color
+    width, height = get_buffer_size()
+    sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * width * height)
+    move_cursor(0, 0)
+
 def read_input():
     """Read one input event from the console input buffer"""
     while True:
