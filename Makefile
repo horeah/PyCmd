@@ -55,7 +55,7 @@ dist_w32: clean $(SRC) doc
 	$(CP) README.txt PyCmd
 # cx_freeze fails to copy this
 	$(CP) "$(PYTHONHOME_W32)\Lib\site-packages\pywin32_system32\pywintypes310.dll" PyCmd\lib
-	(echo Release $(BUILD_DATE): && type NEWS.txt) > PyCmd\NEWS.txt
+	(echo Release $(BUILD_DATE) && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w32.zip PyCmd
 
 dist_w64: clean $(SRC) doc
@@ -65,7 +65,7 @@ dist_w64: clean $(SRC) doc
 	$(CP) README.txt PyCmd
 # cx_freeze fails to copy this
 	$(CP) "$(PYTHONHOME_W64)\Lib\site-packages\pywin32_system32\pywintypes310.dll" PyCmd\lib
-	(echo Release $(BUILD_DATE): && type NEWS.txt) > PyCmd\NEWS.txt
+	(echo Release $(BUILD_DATE) && type NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
 dist_linux64: clean $(SRC) doc
@@ -73,7 +73,7 @@ dist_linux64: clean $(SRC) doc
 	python3 setup.py build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	$(CP) README.txt PyCmd
-	(echo Release $(BUILD_DATE): && cat NEWS.txt) > PyCmd/NEWS.txt
+	(echo Release $(BUILD_DATE) && cat NEWS.txt) > PyCmd/NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-linux64.zip PyCmd
 
 .PHONY: clean

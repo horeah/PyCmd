@@ -13,11 +13,11 @@ persistent history, etc.)
     - when several completions are possible, list them (plain/bash- or
       interactive/zsh-style)
     - insert/remove quotes as needed
-    - complete executables from the PATH and internal CMD.exe commands
+    - complete executables from the PATH and internal CMD or bash commands
     - complete names of environment variables, including pseudo-variables
     - complete wildcards
     - expand values of environment variables when completing
-    - support both '/' and '\' as path separators
+    - [Windows] support both '/' and '\' as path separators
 
  b. Command suggestions
     - automatically suggest commands from history or from available
@@ -51,29 +51,36 @@ persistent history, etc.)
       - highlighted for readability
       - abbreviates path to save space
       - displays git and svn status
-      - displays ERRORLEVEL (if > 0)
+      - displays exit code of last command (if > 0)
       - customizable
     - configuration file (init.py) for customizing colors, prompt etc.
     - Shift-PgUp/PgDn to scroll the buffer
-    - expand/abbreviate ~ as %HOME% or %USERPROFILE%
+    - expand/abbreviate ~ as %HOME% or %USERPROFILE% [Windows] or $HOME [Linux]
     - Ctrl-D on an empty line closes PyCmd
-    - show the current working directory in the window title
+    - Ctrl-L clears the screen
+    - [Windows] show the current working directory in the window title
 
 
 3. Known problems
 -----------------
-    - when DelayedExpansion is disabled (PyCmd.exe /V:OFF), %ERRORLEVEL% is not
-      properly processed
-    - DOSKEY macros are not supported
-    - can NOT be used to fully replace cmd.exe as default shell (e.g. via 
-      %COMSPEC%)
+    a. Windows
+      - when DelayedExpansion is disabled (PyCmd.exe /V:OFF), %ERRORLEVEL% is not
+        properly processed
+      - DOSKEY macros are not supported
+      - can NOT be used to fully replace cmd.exe as default shell (e.g. via 
+        %COMSPEC%)
+    b. Linux
+      - '\' at the end of a command falls through to bash's multi-line command editing
+      - keys pressed while a command is running (before the prompt reappears) are lost
+      - commands producing copious stdout/stderr run slower
 
 
 4. Future plans
 ---------------
     - custom TAB-completion for the arguments of common commands
-    - clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
+    - [Windows] clean-up the mechanism that dispatches commands to cmd.exe (currently kind 
       of hacky)
+    - [Linux] clean-up the mechanism that dispatches commands to bash
 
 
 5. How do I download/install/run it?

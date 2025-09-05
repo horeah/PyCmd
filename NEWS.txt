@@ -1,3 +1,10 @@
+ * Ctrl-L to clear the screen
+ * Auto-suggestion now works with command pipelines (|, ||, &, &&)
+ * Nicer git label (via `git name-rev`) in prompt when not on a branch (thanks
+   @Spavid04)
+ * Fix crash due to "Acces is denied" when abbreviating the prompt (Issue #24)
+
+Release 20241122
  * Tab-completion and auto-suggestion are faster, and have a timeout to avoid
    hanging on slow filesystems such as network mounts (Issue #22, thanks
    @jay-ramani)
