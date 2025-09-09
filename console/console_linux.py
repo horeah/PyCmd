@@ -17,17 +17,68 @@ from common import debug
 from ctypes import cdll, c_char, c_void_p
 xlib = cdll.LoadLibrary('libX11.so.6')
 xlib.XOpenDisplay.restype = c_void_p
-display = xlib.XOpenDisplay('')
-if display:
+x11_display = xlib.XOpenDisplay(None)
+if x11_display:
     debug('X11 display detected')
-    xlib.XQueryKeymap.argtypes = (c_void_p, c_char * 32)
-    xkeymap = (c_char * 32)()
-    xlib.XKeycodeToKeysym.argtypes = (c_void_p, c_int)
-    XKEYSYM_CTRL_L = 0xffe3
-    XKEYSYM_CTRL_R = 0xffe4
-    XKEYCODE_CAPS_LOCK = 0x42
-    xkeysym_caps_lock = xlib.XKeycodeToKeysym(display, XKEYCODE_CAPS_LOCK, 0)
+    xlib.XkbQueryExtension.restype = ctypes.c_int
+    xlib.XkbQueryExtension.argtypes = [
+        c_void_p,
+        ctypes.POINTER(ctypes.c_int),  # opcode_rtrn
+        ctypes.POINTER(ctypes.c_int),  # event_rtrn
+        ctypes.POINTER(ctypes.c_int),  # error_rtrn
+        ctypes.POINTER(ctypes.c_int),  # major_in_out
+        ctypes.POINTER(ctypes.c_int),  # minor_in_out
+    ]
+    opcode = ctypes.c_int()
+    event = ctypes.c_int()
+    error = ctypes.c_int()
+    major = ctypes.c_int(1)
+    minor = ctypes.c_int(0)
+    xkb_available = False
+    if xlib.XkbQueryExtension(x11_display, 
+                              ctypes.byref(opcode),
+                              ctypes.byref(event),
+                              ctypes.byref(error),
+                              ctypes.byref(major),
+                              ctypes.byref(minor)):
+        debug('XkbQueryExtension succeeded')
+        xkb_available = True
+        class XkbStateRec(ctypes.Structure):
+            _fields_ = [
+                ("group", ctypes.c_ubyte),
+                ("locked_group", ctypes.c_ubyte),
+                ("base_group", ctypes.c_ushort),
+                ("latched_group", ctypes.c_ushort),
+                ("mods", ctypes.c_ubyte),
+                ("base_mods", ctypes.c_ubyte),
+                ("latched_mods", ctypes.c_ubyte),
+                ("locked_mods", ctypes.c_ubyte),
+                ("compat_state", ctypes.c_ubyte),
+                ("grab_mods", ctypes.c_ubyte),
+                ("compat_grab_mods", ctypes.c_ubyte),
+                ("lookup_mods", ctypes.c_ubyte),
+                ("compat_lookup_mods", ctypes.c_ubyte),
+                ("ptr_buttons", ctypes.c_ushort),
+            ]
 
+        xlib.XkbGetState.restype = ctypes.c_int
+        xlib.XkbGetState.argtypes = [
+            c_void_p,
+            ctypes.c_uint,                 # device_spec (use XkbUseCoreKbd)
+            ctypes.POINTER(XkbStateRec),
+        ]
+
+        XkbUseCoreKbd = 0x0100
+        ControlMask = 1 << 2
+
+        def xkb_is_ctrl_pressed():
+            state = XkbStateRec()
+            if xlib.XkbGetState(x11_display, XkbUseCoreKbd, ctypes.byref(state)) == 0:
+                debug(f'XkbGetState state.mods={state.mods:08b}')
+                return bool(state.mods & ControlMask)
+            else:
+                debug('XkbGetState failed')
+                return False
 
 # These are taken from the win32console
 LEFT_ALT_PRESSED = 0x0002
@@ -335,17 +386,9 @@ def read_input():
         ch = pty_control.input_buffer.pop()
         debug('CH=0x%02X' % ch)
 
-        if ch == 0x0D and display:  # Use xlib to detect Ctrl-Enter
-            xlib.XQueryKeymap(display, xkeymap)
-            ctrl_l_pressed = xkeymap.raw[4]  & (1<<5)
-            ctrl_r_pressed = xkeymap.raw[13] & (1<<1)
-            caps_lock_pressed = xkeymap.raw[8]  & (1<<2);
-            debug('Ctrl_L=%d Ctrl_R=%d Caps=%d CapsKeySym=0x%x' %
-                  (ctrl_l_pressed, ctrl_r_pressed, caps_lock_pressed, xkeysym_caps_lock))
-            if (ctrl_l_pressed or
-                ctrl_r_pressed or
-                # Also check if CapsLock is remapped to Ctrl
-                caps_lock_pressed and xkeysym_caps_lock in [XKEYSYM_CTRL_L, XKEYSYM_CTRL_R]):
+        if ch == 0x0D and x11_display:  # Use xlib to detect Ctrl-Enter
+            debug('Try to detect Ctrl-Enter')
+            if xkb_available and xkb_is_ctrl_pressed():
                 debug('Ctrl-Enter detected')
                 ch = 0x0A
 
