@@ -78,19 +78,21 @@ def complete_file_simple(line, timeout=None, exactly_one=False):
     completions_files = []
     if os.path.isdir(dir_to_complete):
         try:
-            for elem in os.scandir(dir_to_complete):
-                if matcher.match(elem.name):
-                    if elem.is_dir():
-                        completions_dirs.append(elem.name + path_sep)
-                    else:
-                        completions_files.append(elem.name)
-                if timeout is not None and time.time() - start > timeout:
-                    return (line, [])
-                if exactly_one and len(completions_dirs) + len(completions_files) > 1:
-                    return (line, [])
+            with os.scandir(dir_to_complete) as it:
+                for elem in it:
+                    if matcher.match(elem.name):
+                        if elem.is_dir():
+                            completions_dirs.append(elem.name + path_sep)
+                        else:
+                            completions_files.append(elem.name)
+                    if timeout is not None and time.time() - start > timeout:
+                        return (line, [])
+                    if exactly_one and len(completions_dirs) + len(completions_files) > 1:
+                        return (line, [])
         except OSError:
             # Cannot complete, probably access denied
             pass
+
     completions_dirs.sort(key=str.lower)
     completions_files.sort(key=str.lower)
     completions = completions_dirs + completions_files
@@ -270,16 +272,17 @@ def complete_file_alternate(line, timeout=None, exactly_one=False):
     completions_files = []
     if os.path.isdir(dir_to_complete):
         try:
-            for elem in os.scandir(dir_to_complete):
-                if matcher.match(elem.name):
-                    if elem.is_dir():
-                        completions_dirs.append(elem.name + path_sep)
-                    else:
-                        completions_files.append(elem.name)
-                if timeout is not None and time.time() - start > timeout:
-                    return (line, [])
-                if exactly_one and len(completions_dirs) + len(completions_files) > 1:
-                    return (line, [])
+            with os.scandir(dir_to_complete) as it:
+                for elem in it:
+                    if matcher.match(elem.name):
+                        if elem.is_dir():
+                            completions_dirs.append(elem.name + path_sep)
+                        else:
+                            completions_files.append(elem.name)
+                    if timeout is not None and time.time() - start > timeout:
+                        return (line, [])
+                    if exactly_one and len(completions_dirs) + len(completions_files) > 1:
+                        return (line, [])
         except OSError:
             # Cannot complete, probably access denied
             pass

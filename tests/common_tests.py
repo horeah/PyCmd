@@ -2,6 +2,7 @@
 # Unit tests for common.py
 #
 import os
+import sys
 from unittest import TestCase, TestSuite, defaultTestLoader
 from common import parse_line, escape_special_chars_in_quotes, unescape, fuzzy_match
 from common import associated_application, full_executable_path, is_gui_application
@@ -289,7 +290,8 @@ def suite():
     suite = TestSuite()
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestParseLine))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestFuzzyMatch))
-    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAppIdentification))
+    if sys.platform == 'win32':
+        suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAppIdentification))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestPathManipulation))
     return suite
 

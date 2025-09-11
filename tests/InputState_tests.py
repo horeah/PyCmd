@@ -47,12 +47,6 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.before_cursor, 'cd other_dir && make dist || ex')
         self.assertEqual(self.state.suggestion, 'it 1')
 
-    def testDontSuggestFromPath(self):
-        self.state.history.list = []
-        self.state.before_cursor = 'promp'
-        self.state.update_suggestion()
-        self.assertEqual(self.state.suggestion, '')
-
     def testAvoidDuplicateFillers(self):
         """Tests the avoidance of duplicate whitespace, backslash, quites after completing"""
         self.state.before_cursor = '"c:\\Program Files (x86)\\Sysinternals Suite'

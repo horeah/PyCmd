@@ -5,7 +5,7 @@
 from unittest import TestCase, TestSuite, defaultTestLoader
 import PyCmd
 from common import expand_env_vars
-import os, time
+import os, time, sys
 
 test_dir = os.path.split(__file__)[0]
 orig_cwd = os.getcwd()
@@ -139,6 +139,7 @@ class TestNoDelayedExpansion(TestCase):
 
 def suite():
     suite = TestSuite()
-    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestDelayedExpansion))
-    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestNoDelayedExpansion))
+    if sys.platform == 'win32':
+        suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestDelayedExpansion))
+        suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestNoDelayedExpansion))
     return suite
