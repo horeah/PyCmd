@@ -23,8 +23,12 @@ def complete_file(line, timeout=None, exactly_one=False):
       character
 
       The return value is a tuple containing 
-       a) the updated line (includes the completed suffix and quotes if needed) 
-       b) and a list of possible subsequent completions
+       a) the updated line
+          * includes the completed suffix
+          * includes prepended quotes if needed
+          * does not include ending quotes
+          * does not include trailing whitespace
+       b) a list of possible subsequent completions
     """
     start = time.time()
     (completed, completions) = complete_file_simple(line, timeout, exactly_one)
@@ -44,18 +48,13 @@ def complete_file_simple(line, timeout=None, exactly_one=False):
     
     It returns a pair:
       - the line expanded up to the longest common sequence among the
-        completions
+        completions; quotes are prepended to the last token if needed
       - the list of all possible completions (first dirs, then files)
     """
     tokens = tokenize(line)
     token = tokens[-1].replace('"', '')
 
-    if sys.platform == 'win32':
-        pos_fwd = expand_env_vars(token).rfind('/')
-        pos_bck = expand_env_vars(token).rfind('\\')
-        path_sep = '\\' if pos_bck >= pos_fwd else '/'
-    else:
-        path_sep = '/'
+    path_sep = '/' if '/' in expand_env_vars(token) else os.sep
     
     (path_to_complete, _, prefix) = token.rpartition(path_sep)
     if path_to_complete == '' and token != '' and token[0] == path_sep:
@@ -207,26 +206,10 @@ def complete_file_simple(line, timeout=None, exactly_one=False):
         # Build the result
         result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
 
-        if len(completions) == 1:
-            # We can close the quotes if we have completed to a unique filename
-            if start_quote == '"':
-                end_quote = '"'
-            else:
-                end_quote = ''
-                
-            if result[-1] == path_sep:
-                # Directory -- we want the backslash (if any) AFTER the closing quote
-                result = result[ : -1] + end_quote + path_sep
-            else:
-                # File -- add space if the completion is unique
-                result += end_quote
-                result += ' '
-
         return (result, completions)
     else:
         # No expansion was made, return original line
         return (line, [])
-
 
 def complete_file_alternate(line, timeout=None, exactly_one=False):
     """
@@ -247,7 +230,7 @@ def complete_file_alternate(line, timeout=None, exactly_one=False):
     paths = last_token.split(os.pathsep)
     token = paths[-1]
 
-    path_sep = '/' if '/' in expand_env_vars(token) else '\\'
+    path_sep = '/' if '/' in expand_env_vars(token) else os.sep
 
     # print '\n\nTokens:', tokens, '\n\nCompleting:', token, '\n\n'
 
@@ -405,24 +388,7 @@ def complete_wildcard(line):
 
         # Build the result
         result = line[0 : len(line) - len(tokens[-1])] + start_quote + completed_file
-        if len(completions) == 1 or \
-                not common_string.endswith('*') and \
-                max([len(c) for c in completed_suffixes]) == len(common_string) - len(prefix):
-            # We can close the quotes if all the completions have the same suffix or 
-            # there exists only one matching file
-            if start_quote == '"':
-                end_quote = '"'
-            else:
-                end_quote = ''
-                
-            if result[-1] == path_sep:
-                # Directory -- we want the backslash (if any) AFTER the closing quote
-                result = result[ : -1] + end_quote + path_sep
-            else:
-                # File -- add space if the completion is unique
-                result += end_quote
-                result += ' '
-
+        
         return (result, completions)
     else:
         # No expansion was made, return original line
@@ -437,7 +403,7 @@ def complete_env_var_win(line):
     
     It returns a pair:
       - the line expanded up to the longest common sequence among the
-        completions
+        completions (does not include the ending %)
       - the list of all possible completions
     """
     tokens = tokenize(line)
@@ -469,20 +435,25 @@ def complete_env_var_win(line):
                 break
             
         result = line[0 : len(line) - len(token_orig)] + quote + lead + '%' + common_string
-        
-        if len(completions) == 1:
-            result += '%' + quote
-            return (result, [result])
-        else:
-            return (result, completions)
+        return (result, completions)
     else:
         # No completion possible, return original line
         return (line, [])
 
 
 def complete_env_var_linux(line):
+    """
+    Complete names of environment variables
+    This function tokenizes the line and computes completions
+    based on environment variables starting with the last token
+
+    It returns a pair:
+      - the line expanded up to the longest common sequence among the
+        completions (does not include the ending })
+      - the list of all possible completions
+    """
     token = tokenize(line)[-1]
-    start_brace = end_brace = ''
+    start_brace = ''
     [lead, prefix] = token.strip('"').rsplit('$', 1)
     if len(prefix) > 0 and prefix[0] == '{':
         start_brace = '{'
@@ -497,10 +468,8 @@ def complete_env_var_linux(line):
             if contains_special_char(os.environ[completion]):
                 quote = '"'
                 break
-        if len(completions) == 1 and start_brace == '{':
-            end_brace = '}'
 
-        result = line[0 : len(line) - len(token)] + quote + lead + '$' + start_brace + common_string + end_brace
+        result = line[0 : len(line) - len(token)] + quote + lead + '$' + start_brace + common_string
         return (result, completions)
     else:
         # No completion possible, return original line
@@ -508,6 +477,56 @@ def complete_env_var_linux(line):
 
 
 complete_env_var = complete_env_var_win if sys.platform == 'win32' else complete_env_var_linux
+
+def adjust_completion(completed, after_cursor, unique):
+    token_before = tokenize(completed)[-1]
+    path_sep = '/' if '/' in expand_env_vars(token_before) else os.sep
+    
+    token_after = tokenize(after_cursor)[0]
+    first_path_elem_after = token_after.split(path_sep)[0].rstrip('"')
+    #print(f'Adjusting: {completed=} {after_cursor=} {token_before=} {token_after=} {first_path_elem_after=}')
+    if completed.rstrip(path_sep).endswith(first_path_elem_after.rstrip(path_sep).rstrip('"')):
+        after_cursor = after_cursor[len(first_path_elem_after):]
+    
+    if unique: 
+        completed = finalize_env_var(completed)
+        token_before = finalize_env_var(token_before)
+
+        # print(f'\n{expand_env_vars(token_before)=}, {token_before=}\n')
+        if os.path.isdir(expand_env_vars(token_before).strip('"')) and not token_before.endswith(path_sep):
+            completed += path_sep
+            token_before += path_sep
+
+        if token_before.startswith('"') and completed.endswith(path_sep) and after_cursor.startswith('"' + path_sep):
+            after_cursor = after_cursor[2:]
+
+        path_sep_follows = after_cursor.startswith(path_sep)
+        if completed.endswith(path_sep) and path_sep_follows:
+            after_cursor = after_cursor[1:]
+
+        if token_before.startswith('"') and not path_sep_follows:
+            if completed.endswith(path_sep):
+                completed = completed[:-1] + '"' + path_sep
+            else:
+                completed += '"' 
+
+        if not completed.rstrip('"').endswith(path_sep):
+            completed += ' '
+            if after_cursor.startswith(' '):
+                after_cursor = after_cursor[1:]
+
+    return completed, after_cursor
+
+def finalize_env_var(line):
+    """Add closing % (windows) or closing } (linux) if the line ends with an unfinished env-var"""
+    last_token = tokenize(line)[-1]
+    if sys.platform == 'win32': 
+        if ends_in_env_var(last_token):
+            line += '%'
+    else:
+        if last_token.lstrip('"').startswith('${'):
+            line += '}'
+    return line
 
 
 def find_common_prefix(original, completions):

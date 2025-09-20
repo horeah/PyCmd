@@ -3,7 +3,8 @@ from common import pycmd_data_dir, pycmd_install_dir
 from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
-from completion import complete_file, complete_wildcard, complete_env_var, find_common_prefix, has_wildcards, wildcard_to_regex, ends_in_env_var
+from completion import complete_file, complete_wildcard, complete_env_var, adjust_completion
+from completion import find_common_prefix, has_wildcards, wildcard_to_regex, ends_in_env_var
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
@@ -439,10 +440,19 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
+                    prev_len = len(state.before_cursor + state.after_cursor)
                     stdout.write(state.after_cursor + ' ' * len(state.suggestion))
                     cursor_backward(len(state.suggestion) + len(state.after_cursor) + len(state.before_cursor))
+
+                    completed, state.after_cursor = adjust_completion(completed, state.after_cursor, len(suggestions) == 1)
+                    # debug(f'{completed=} {suggestions=} {state.after_cursor=}')
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
+                    while (state.after_cursor and state.after_cursor[0] != '\\' 
+                           and state.before_cursor.rstrip('"\\').endswith(state.after_cursor.rstrip(' ').split('\\')[0])):
+                        state.after_cursor = state.after_cursor[1:]
                     stdout.write(state.before_cursor + state.after_cursor)
+                    stdout.write(' ' * (prev_len - len(state.before_cursor + state.after_cursor)))
+                    cursor_backward(prev_len - len(state.before_cursor + state.after_cursor))
                     stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                     cursor_backward(len(state.after_cursor) + len(state.suggestion))
                     set_cursor_attributes(cursor_height, True)
@@ -514,25 +524,13 @@ def main():
                                 if action == 'select' and selection:
                                     orig_last_token = tokenize(state.before_cursor)[-1]
 
-                                    # Replace initial completion prefix with selection,
-                                    # add quotes and slashes as needed
+                                    # Replace initial completion prefix with selection
                                     pos = state.before_cursor.lower().rfind(prefix.lower())
                                     state.before_cursor = (state.before_cursor[:pos]
                                                            + selection
                                                            + state.before_cursor[pos + len(prefix):])
 
-                                    # Ensure proper terminating (%, quotes, whitespaces)
-                                    if orig_last_token.count('%') % 2 == 1:
-                                        state.before_cursor += '%'
-                                    if orig_last_token.startswith('"'):
-                                        state.before_cursor += '"'
-                                    elif ' ' in selection:
-                                        pos = state.before_cursor.rfind(orig_last_token)
-                                        state.before_cursor = state.before_cursor[:pos] + '"' + state.before_cursor[pos:] + '"'
-                                    if (not selection.endswith(path_sep)
-                                        and not orig_last_token.count('%') % 2 == 1
-                                        and not completed.endswith(' ')):
-                                        state.before_cursor += ' '
+                                    state.before_cursor, state.after_cursor = adjust_completion(state.before_cursor, state.after_cursor, True)
                                     state.reset_selection()
                                     state.update_suggestion()
                             else:

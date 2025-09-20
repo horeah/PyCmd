@@ -47,14 +47,6 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.before_cursor, 'cd other_dir && make dist || ex')
         self.assertEqual(self.state.suggestion, 'it 1')
 
-    def testAvoidDuplicateFillers(self):
-        """Tests the avoidance of duplicate whitespace, backslash, quites after completing"""
-        self.state.before_cursor = '"c:\\Program Files (x86)\\Sysinternals Suite'
-        self.state.after_cursor = '"\\'
-        self.state.key_complete('"c:\\Program Files (x86)\\Sysinternals Suite"\\')
-        self.assertEqual(self.state.before_cursor, '"c:\\Program Files (x86)\\Sysinternals Suite"\\')
-        self.assertEqual(self.state.after_cursor, '')
-
     def testExtendSelection1(self):
         self.state.before_cursor = 'cd d:\\Work\\bui'
         self.state.after_cursor = 'ld && make'
