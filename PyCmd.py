@@ -236,6 +236,8 @@ def main():
                     auto_select = False
                 elif rec.VirtualKeyCode == 75:          # Ctrl-K
                     state.handle(ActionCode.ACTION_KILL_EOL)
+                elif rec.VirtualKeyCode == 85:          # Ctrl-U
+                    state.handle(ActionCode.ACTION_KILL_BOL)
                 elif rec.VirtualKeyCode == 32:          # Ctrl-Space
                     auto_select = True
                     state.reset_selection()

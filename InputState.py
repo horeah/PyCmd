@@ -1,3 +1,4 @@
+from enum import Enum, auto
 import sys, subprocess
 from CommandHistory import CommandHistory
 from common import word_sep, tokenize, seq_tokens
@@ -10,40 +11,41 @@ EXTEND_SEPARATORS_OUTSIDE_QUOTES = \
     ['-', '.', '=', '\\', '/', ';', ' ', '>', '<', '&', '|', '\0']
 EXTEND_SEPARATORS_INSIDE_QUOTES = ['-', ' ', '.', '&', '|', '\\', '/', '"']
 
-class ActionCode:
+class ActionCode(Enum):
     """
-    Enum-like class that defines codes for input manipulation actions
+    Enum that defines codes for input manipulation actions
     """
-    ACTION_none = 0
-    ACTION_LEFT = 1
-    ACTION_RIGHT = 2
-    ACTION_LEFT_WORD = 3
-    ACTION_RIGHT_WORD = 4
-    ACTION_HOME = 5
-    ACTION_END = 6
-    ACTION_COPY = 7
-    ACTION_CUT = 8
-    ACTION_PASTE = 9
-    ACTION_PREV = 10
-    ACTION_NEXT = 11
-    ACTION_INSERT = 12
-    ACTION_COMPLETE = 13
-    ACTION_DELETE = 14
-    ACTION_DELETE_WORD = 15
-    ACTION_BACKSPACE = 16
-    ACTION_BACKSPACE_WORD = 17
-    ACTION_KILL_EOL = 18
-    ACTION_ESCAPE = 19
-    ACTION_UNDO = 20
-    ACTION_REDO = 21
-    ACTION_UNDO_EMACS = 22
-    ACTION_EXPAND = 23
-    ACTION_TOGGLE_OVERWRITE = 24
-    ACTION_SEARCH_RIGHT = 25
-    ACTION_SEARCH_LEFT = 26
-    ACTION_SELECT_UP = 27
-    ACTION_SELECT_DOWN = 28
-    ACTION_ZAP = 29
+    ACTION_none = auto()
+    ACTION_LEFT = auto()
+    ACTION_RIGHT = auto()
+    ACTION_LEFT_WORD = auto()
+    ACTION_RIGHT_WORD = auto()
+    ACTION_HOME = auto()
+    ACTION_END = auto()
+    ACTION_COPY = auto()
+    ACTION_CUT = auto()
+    ACTION_PASTE = auto()
+    ACTION_PREV = auto()
+    ACTION_NEXT = auto()
+    ACTION_INSERT = auto()
+    ACTION_COMPLETE = auto()
+    ACTION_DELETE = auto()
+    ACTION_DELETE_WORD = auto()
+    ACTION_BACKSPACE = auto()
+    ACTION_BACKSPACE_WORD = auto()
+    ACTION_KILL_EOL = auto()
+    ACTION_KILL_BOL = auto()
+    ACTION_ESCAPE = auto()
+    ACTION_UNDO = auto()
+    ACTION_REDO = auto()
+    ACTION_UNDO_EMACS = auto()
+    ACTION_EXPAND = auto()
+    ACTION_TOGGLE_OVERWRITE = auto()
+    ACTION_SEARCH_RIGHT = auto()
+    ACTION_SEARCH_LEFT = auto()
+    ACTION_SELECT_UP = auto()
+    ACTION_SELECT_DOWN = auto()
+    ACTION_ZAP = auto()
 
 
 class InputState:
@@ -128,7 +130,8 @@ class InputState:
             ActionCode.ACTION_DELETE_WORD: self.key_del_word,
             ActionCode.ACTION_BACKSPACE: self.key_backspace,
             ActionCode.ACTION_BACKSPACE_WORD: self.key_backspace_word,
-            ActionCode.ACTION_KILL_EOL: self.key_kill_line,
+            ActionCode.ACTION_KILL_EOL: self.key_kill_to_end,
+            ActionCode.ACTION_KILL_BOL: self.key_kill_to_begin,
             ActionCode.ACTION_ESCAPE: self.key_esc,
             ActionCode.ACTION_UNDO: self.key_undo,
             ActionCode.ACTION_REDO: self.key_redo,
@@ -144,7 +147,8 @@ class InputState:
                                ActionCode.ACTION_DELETE_WORD,
                                ActionCode.ACTION_BACKSPACE,
                                ActionCode.ACTION_BACKSPACE_WORD,
-                               ActionCode.ACTION_KILL_EOL]
+                               ActionCode.ACTION_KILL_EOL,
+                               ActionCode.ACTION_KILL_BOL]
         self.navigate_actions = [ActionCode.ACTION_LEFT,
                                  ActionCode.ACTION_LEFT_WORD,
                                  ActionCode.ACTION_RIGHT,
@@ -481,12 +485,21 @@ class InputState:
             self.history.reset()
             self.reset_selection()
 
-    def key_kill_line(self):
+    def key_kill_to_end(self):
         """Kill the rest of the current line"""
         if self.get_selection() != '':
             self.delete_selection()
         else:
             self.after_cursor = ''
+        self.history.reset()
+
+    def key_kill_to_begin(self):
+        """Delete the characters before the cursor"""
+        if self.get_selection() != '':
+            self.delete_selection()
+        else:
+            self.before_cursor = ''
+            self.reset_selection()
         self.history.reset()
 
     def key_up(self):

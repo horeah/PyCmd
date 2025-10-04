@@ -132,6 +132,7 @@ KEYMAP = {
     0x7F: PyINPUT_RECORDType(True, 0, chr(8), 0),  # Backspace
     0x0A: PyINPUT_RECORDType(True, 0, '\x0A', LEFT_CTRL_PRESSED),  # Ctrl-Enter
     0x0B: PyINPUT_RECORDType(True, 75, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-K
+    0x15: PyINPUT_RECORDType(True, 85, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-U
     0x01: PyINPUT_RECORDType(True, 65, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-A
     0x03: PyINPUT_RECORDType(True, 67, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-C
     0x05: PyINPUT_RECORDType(True, 69, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-E
