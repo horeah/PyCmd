@@ -66,20 +66,21 @@ class Window(object):
             self._center_on_selection()
 
 
-    def display(self):
-        def shorten(s):
+    def shorten(self, s):
             half_len = self.width // 2 - 2
-            return s if len(s) <= self.width else s[0:half_len] + '\u00b7' * 3 + s[len(s) - half_len:]
+            return s if len(s) < self.width else s[0:half_len] + '\u00b7' * 3 + s[len(s) - half_len:]
 
+
+    def display(self):
+        set_cursor_attributes(10, False)
         default_color = color.Fore.DEFAULT + color.Back.DEFAULT
         stdout.write('\n')
-        set_cursor_attributes(10, False)
         for line in range(self.offset, self.offset + self.height):
             # Print one line
             stdout.write('\r')
             for column in range(0, self.num_columns):
                 if line < self.num_lines and line + column * self.num_lines < len(self.entries):
-                    s = shorten(self.entries[line + column * self.num_lines])
+                    s = self.shorten(self.entries[line + column * self.num_lines])
                     if self.selected_line == line and self.selected_column == column:
                         # Highlight selected line
                         stdout.write(appearance.colors.selection + s + default_color)
@@ -111,10 +112,10 @@ class Window(object):
         if self.interactive:
             stdout.write(appearance.colors.prompt + ' Filter: ' + default_color + self.filter)
             
-        erase_to((self.width - 1, get_cursor()[1]))
-
-        if (get_cursor()[1], get_cursor()[0]) > (self.final_cursor[1], self.final_cursor[0]):
-            self.final_cursor = get_cursor()
+        cursor = get_cursor()
+        erase_to((self.width - 1, cursor[1]))
+        if cursor[::-1] > self.final_cursor[::-1]:
+            self.final_cursor = cursor
         # correct orig cursor if we have overflown the buffer height
         self.orig_cursor = (self.orig_cursor[0], self.final_cursor[1] - self.height - 1)
             

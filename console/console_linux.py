@@ -331,7 +331,7 @@ def get_buffer_size():
 
 def get_viewport():
     """Get the current viewport position"""
-    return (0, 0, *get_buffer_size())
+    return (0, 0, get_buffer_size()[0] - 1, get_buffer_size()[1] - 1)
 
 def set_cursor_attributes(size, visibility):
     """Set the cursor visibility (setting the size is not possible on Linux)"""
