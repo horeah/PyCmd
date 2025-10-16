@@ -271,7 +271,8 @@ class InputState:
                         completed, completions = complete_env_var(self.before_cursor)
                     else:
                         completed, completions = complete_file(self.before_cursor, timeout=0.1, exactly_one=True)
-                    if completed.lower().startswith(self.before_cursor.lower()) and len(completions) == 1:
+                    normalize_case = lambda s: s.lower() if sys.platform == 'win32' else s
+                    if normalize_case(completed).startswith(normalize_case(self.before_cursor)) and len(completions) == 1:
                         suggestion = completed
         suggestion = suggestion[len(self.before_cursor):] if suggestion else ''
         self.prev_suggestion = self.suggestion
