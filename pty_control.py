@@ -21,7 +21,7 @@ output_acc = bytearray()
 marker_acc = bytearray()
 input_buffer = []
 captured_prompt = None
-
+first_command = True
 
 def read_stdin(fd):
     global pass_through
@@ -38,7 +38,16 @@ def read_stdin(fd):
         debug('read_stdin got')
         input_processed.clear()
         if command_to_run:
-            return b'\x15\x0B' + bytes(command_to_run, 'utf-8') + b'\x0A'
+            global first_command
+            if first_command:
+                # For unknown reasons, Ctrl-U and Ctrl-K right after starting bash
+                # sometimes makes bash reprint the prompt, and this messes up our
+                # prompt detection.
+                bash_clear_prefix = b''
+                first_command = False
+            else:
+                bash_clear_prefix = b'\x15\x0B'  # Ctrl-U, Ctrl-K
+            return bash_clear_prefix + bytes(command_to_run, 'utf-8') + b'\x0A'
         else:
             return bytearray(chr(0), 'utf-8')
 
