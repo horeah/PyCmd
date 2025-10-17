@@ -266,7 +266,7 @@ def main():
                         state.history.reset()
                     elif action == 'zap':
                         state.zap(selection)
-                        update_history('remove', selection, pycmd_data_dir + '\\history', save_history_limit)
+                        update_history('remove', selection, pycmd_data_dir + '/history', save_history_limit)
                 elif rec.VirtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.VirtualKeyCode == 69:          # Ctrl-E
@@ -380,7 +380,7 @@ def main():
             elif is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 75: # Ctrl-Alt-K
                 line = state.before_cursor + state.after_cursor
                 state.handle(ActionCode.ACTION_ZAP)
-                update_history('remove', line, pycmd_data_dir + '\\history', save_history_limit)
+                update_history('remove', line, pycmd_data_dir + '/history', save_history_limit)
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
