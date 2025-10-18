@@ -9,6 +9,7 @@ from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
 import re
+import shlex
 from sys import stdout, stderr
 from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from console import read_input, write_input
@@ -420,11 +421,20 @@ def main():
 
 
                 elif rec.Char == chr(13):               # Enter
-                    state.history.reset()
-                    if (state.before_cursor + state.after_cursor).strip() == '':
-                        if sys.platform == 'linux':
+                    if sys.platform == 'linux':
+                        if (state.before_cursor + state.after_cursor).strip() == '':
                             debug('Empty line input_processed.set')
                             pty_control.input_processed.set()
+                        else:
+                            try:
+                                shlex.split(state.line)
+                            except ValueError:
+                                # Incomplete command, refuse to execute (bash would enter multi-line mode)
+                                state.bell = True
+                                debug('Multi-line input_processed.set')
+                                pty_control.input_processed.set()
+                                continue
+                    state.history.reset()
                     break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
