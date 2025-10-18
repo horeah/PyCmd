@@ -13,6 +13,11 @@ sep_chars = [' ', '|', '&', '>', '<']
 # Command sequencing tokens
 seq_tokens = ['|', '||', '&', '&&']
 
+# Characters that require quoting
+special_chars = [' ', '&', '|', '>', '<']
+if sys.platform == 'linux':
+    special_chars += ['\\', '*', '?', '(', ')', ';', '"', "'"]
+
 # Redirection tokens
 digit_chars = list(string.digits)
 redir_file_simple = ['>', '>>', '<']
@@ -299,12 +304,12 @@ def strip_extension(file_name):
 
 def contains_special_char(string):
     """Check whether the string contains a character that requires quoting"""
-    return string.find(' ') >= 0 or string.find('&') >= 0
+    return any(c in string for c in special_chars)
 
 
 def starts_with_special_char(string):
     """Check whether the string STARTS with a character that requires quoting"""
-    return string.find(' ') == 0 or string.find('&') == 0
+    return any(string.startswith(c) for c in special_chars)
 
 
 def associated_application(ext):
