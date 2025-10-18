@@ -179,9 +179,20 @@ KEYMAP = {
                         **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_ALT_PRESSED)
                            for k, v in KEYMAP_NAVI.items()},
                     },
+                    0x34: {
+                        **KEYMAP_IDENT,
+                        **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_ALT_PRESSED | SHIFT_PRESSED)
+                           for k, v in KEYMAP_NAVI.items()},
+                    },
                     0x35: {
                         **KEYMAP_IDENT,
                         **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_ALT_PRESSED)
+                           for k, v in KEYMAP_NAVI.items()},
+
+                    },
+                    0x36: {
+                        **KEYMAP_IDENT,
+                        **{k: PyINPUT_RECORDType(v.KeyDown, v.VirtualKeyCode, v.Char, LEFT_CTRL_PRESSED | SHIFT_PRESSED)
                            for k, v in KEYMAP_NAVI.items()},
 
                     },
