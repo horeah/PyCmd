@@ -181,7 +181,7 @@ def main():
                 stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt +
                           state.prompt +
                           color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
-                line = state.before_cursor + state.after_cursor
+                line = state.line
                 if state.history.filter == '':
                     sel_start, sel_end = state.get_selection_range()
                     stdout.write(line[:sel_start] +
@@ -201,7 +201,7 @@ def main():
                     stdout.write(colored_line)
 
                 # Erase remaining chars from old line
-                to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.before_cursor + state.after_cursor + state.suggestion)
+                to_erase = prev_total_len - len(remove_escape_sequences(state.prompt) + state.line + state.suggestion)
                 if to_erase > 0:
                     stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
                     cursor_backward(to_erase)
@@ -228,7 +228,7 @@ def main():
             #print('\n\n', rec.KeyDown, rec.Char, rec.VirtualKeyCode, rec.ControlKeyState, '\n\n')
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.Char == chr(4):                  # Ctrl-D
-                    if state.before_cursor + state.after_cursor == '':
+                    if state.line == '':
                         internal_exit('\nBye!')
                     else:
                         state.handle(ActionCode.ACTION_DELETE)
@@ -258,7 +258,7 @@ def main():
                     w = Window(state.history.list, pattern=re.compile('(.*)$'),
                                height=optimal_window_height())
                     w.display()
-                    w.filter = state.history.filter if state.history.filter else state.before_cursor + state.after_cursor
+                    w.filter = state.history.filter if state.history.filter else state.line
                     action, selection = w.interact(default_selection_last=True, can_zap=True)
                     if action == 'select':
                         state.before_cursor = selection
@@ -321,7 +321,7 @@ def main():
                     continue
             elif is_alt_pressed(rec) and not is_ctrl_pressed(rec):      # Alt-Something
                 if rec.VirtualKeyCode in [37, 39] + list(range(49, 59)):
-                    if state.before_cursor + state.after_cursor == '':  # Dir history
+                    if state.line == '':  # Dir history
                         state.reset_prev_line()
                         if rec.VirtualKeyCode == 37:            # Alt-Left
                             dir_hist.go_left()
@@ -340,7 +340,7 @@ def main():
                         elif rec.VirtualKeyCode == 39:          # Alt-Right
                             state.handle(ActionCode.ACTION_RIGHT_WORD, select)
                 elif rec.VirtualKeyCode == 38:          # Alt-Up
-                    if state.before_cursor + state.after_cursor == '':
+                    if state.line == '':
                         os.chdir('..')
                         dir_hist.visit_cwd()
                         apply_cwd()
@@ -354,7 +354,7 @@ def main():
                 elif rec.VirtualKeyCode == 78:          # Alt-N
                     state.handle(ActionCode.ACTION_NEXT)
                 elif rec.VirtualKeyCode == 68:          # Alt-D
-                    if state.before_cursor + state.after_cursor == '':
+                    if state.line == '':
                         w = Window(dir_hist.locations, pattern=re.compile('(.*)$'),
                                    height=optimal_window_height())
                         w.display()
@@ -379,9 +379,8 @@ def main():
                 elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
             elif is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 75: # Ctrl-Alt-K
-                line = state.before_cursor + state.after_cursor
                 state.handle(ActionCode.ACTION_ZAP)
-                update_history('remove', line, pycmd_data_dir + '/history', save_history_limit)
+                update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
@@ -422,7 +421,7 @@ def main():
 
                 elif rec.Char == chr(13):               # Enter
                     if sys.platform == 'linux':
-                        if (state.before_cursor + state.after_cursor).strip() == '':
+                        if state.line.strip() == '':
                             debug('Empty line input_processed.set')
                             pty_control.input_processed.set()
                         else:
@@ -452,7 +451,7 @@ def main():
                     else:
                         (completed, suggestions)  = complete_file(state.before_cursor)
 
-                    prev_len = len(state.before_cursor + state.after_cursor)
+                    prev_len = len(state.line)
                     stdout.write(state.after_cursor + ' ' * len(state.suggestion))
                     cursor_backward(len(state.suggestion) + len(state.after_cursor) + len(state.before_cursor))
 
@@ -462,9 +461,9 @@ def main():
                     while (state.after_cursor and state.after_cursor[0] != '\\' 
                            and state.before_cursor.rstrip('"\\').endswith(state.after_cursor.rstrip(' ').split('\\')[0])):
                         state.after_cursor = state.after_cursor[1:]
-                    stdout.write(state.before_cursor + state.after_cursor)
-                    stdout.write(' ' * (prev_len - len(state.before_cursor + state.after_cursor)))
-                    cursor_backward(prev_len - len(state.before_cursor + state.after_cursor))
+                    stdout.write(state.line)
+                    stdout.write(' ' * (prev_len - len(state.line)))
+                    cursor_backward(prev_len - len(state.line))
                     stdout.write(appearance.colors.suggestion + state.suggestion + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.text)
                     cursor_backward(len(state.after_cursor) + len(state.suggestion))
                     set_cursor_attributes(cursor_height, True)

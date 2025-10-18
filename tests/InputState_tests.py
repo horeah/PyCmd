@@ -52,22 +52,22 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'ld && make'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd d:\\Work\\')
         self.assertEqual(self.state.after_cursor, 'build && make')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('build'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd ')
         self.assertEqual(self.state.after_cursor, 'd:\\Work\\build && make')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('d:\\Work\\build'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd d:\\Work\\build && make')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('cd d:\\Work\\build '))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd d:\\Work\\build && make')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
@@ -77,22 +77,22 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'e clean > NUL'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd test && ')
         self.assertEqual(self.state.after_cursor, 'make clean > NUL')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('make'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd test &&')
         self.assertEqual(self.state.after_cursor, ' make clean > NUL')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' make clean '))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd test &&')
         self.assertEqual(self.state.after_cursor, ' make clean > NUL')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' make clean > NUL'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd test && make clean > NUL')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
@@ -102,22 +102,22 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'it.py'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i dev-')
         self.assertEqual(self.state.after_cursor, 'init.py')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('init'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i ')
         self.assertEqual(self.state.after_cursor, 'dev-init.py')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('dev-init'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'python PyCmd.py -i ')
         self.assertEqual(self.state.after_cursor, 'dev-init.py')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('dev-init.py'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'python PyCmd.py -i dev-init.py')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
@@ -128,35 +128,35 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'nals Suite" && ls -l'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd "c:\\Program Files (x86)\\')
         self.assertEqual(self.state.after_cursor, 'Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Sysinternals'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd "c:\\Program Files (x86)\\')
         self.assertEqual(self.state.after_cursor, 'Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Sysinternals Suite'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd "')
         self.assertEqual(self.state.after_cursor, 'c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start,
                          len(self.state.before_cursor) + len('C:\\Program Files (x86)\\Sysinternals Suite'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'cd ')
         self.assertEqual(self.state.after_cursor, '"c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start,
                          len(self.state.before_cursor) + len('"C:\\Program Files (x86)\\Sysinternals Suite"'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd "c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start,
                          len(self.state.before_cursor) + len('cd "C:\\Program Files (x86)\\Sysinternals Suite" '))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'cd "c:\\Program Files (x86)\\Sysinternals Suite" && ls -l')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
@@ -166,32 +166,32 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'ver-Sizer.exe"'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '"d:\\Util\\KDE ')
         self.assertEqual(self.state.after_cursor, 'Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Mover'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '"d:\\Util\\KDE ')
         self.assertEqual(self.state.after_cursor, 'Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('Mover-Sizer'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '"d:\\Util\\')
         self.assertEqual(self.state.after_cursor, 'KDE Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('KDE Mover-Sizer'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '"d:\\Util\\')
         self.assertEqual(self.state.after_cursor, 'KDE Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('KDE Mover-Sizer.exe'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '"')
         self.assertEqual(self.state.after_cursor, 'd:\\Util\\KDE Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('d:\\Util\\KDE Mover-Sizer.exe'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, '"d:\\Util\\KDE Mover-Sizer.exe"')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"d:\\Util\\KDE Mover-Sizer.exe"'))
@@ -201,27 +201,27 @@ class TestInputState(TestCase):
         self.state.after_cursor = ''
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'ls "c:\\Program Files (x86)\\scenview.')
         self.assertEqual(self.state.after_cursor, 'py" ')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('py'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'ls "c:\\Program Files (x86)\\')
         self.assertEqual(self.state.after_cursor, 'scenview.py" ')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('scenview.py'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'ls "')
         self.assertEqual(self.state.after_cursor, 'c:\\Program Files (x86)\\scenview.py" ')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('c:\\Program Files (x86)\\scenview.py'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'ls ')
         self.assertEqual(self.state.after_cursor, '"c:\\Program Files (x86)\\scenview.py" ')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"c:\\Program Files (x86)\\scenview.py"'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, '')
         self.assertEqual(self.state.after_cursor, 'ls "c:\\Program Files (x86)\\scenview.py" ')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(self.state.after_cursor))
@@ -233,21 +233,44 @@ class TestInputState(TestCase):
         self.state.after_cursor = 'og | grep error'
         self.state.reset_selection()
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'make || cat ')
         self.assertEqual(self.state.after_cursor, 'log | grep error')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('log'))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         self.assertEqual(self.state.before_cursor, 'make ||')
         self.assertEqual(self.state.after_cursor, ' cat log | grep error')
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' cat log '))
 
-        self.state.key_extend_selection(None)
+        self.state.key_extend_selection()
         # This fails, since our extension is approximate (no semantics)!
         # self.assertEqual(self.state.before_cursor, 'make ||')
         # self.assertEqual(self.state.after_cursor, ' cat log | grep error')
         # self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len(' cat log | grep error'))
+
+    def testSearchText(self):
+        """Test searching for text in the command line"""
+        self.state.before_cursor = 'make clean && make'
+        self.state.after_cursor = ''
+
+        self.state.key_search_left()
+        self.state.key_insert('m')
+        self.assertEqual(self.state.before_cursor, 'make clean && m')
+        self.assertEqual(self.state.after_cursor, 'ake')
+        self.state.key_insert('a')
+        self.assertEqual(self.state.before_cursor, 'make clean && ma')
+        self.assertEqual(self.state.after_cursor, 'ke')
+        self.state.key_search_left()
+        self.assertEqual(self.state.before_cursor, 'ma')
+        self.assertEqual(self.state.after_cursor, 'ke clean && make')
+
+        self.state.key_search_right()
+        self.assertEqual(self.state.before_cursor, 'make clean && ma')
+        self.assertEqual(self.state.after_cursor, 'ke')
+        self.state.key_search_right()
+        self.assertEqual(self.state.before_cursor, 'make clean && ma')
+        self.assertEqual(self.state.after_cursor, 'ke')
 
 def suite():
     suite = TestSuite()

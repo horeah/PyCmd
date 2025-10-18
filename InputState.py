@@ -168,7 +168,9 @@ class InputState:
         self.batch_actions = [ActionCode.ACTION_DELETE_WORD,
                               ActionCode.ACTION_BACKSPACE_WORD,
                               ActionCode.ACTION_KILL_EOL] + self.manip_actions
-
+    @property
+    def line(self):
+        return self.before_cursor + self.after_cursor
 
     def step_line(self):
         """Prepare for a new key event"""
@@ -200,19 +202,9 @@ class InputState:
                or self.after_cursor != self.prev_after_cursor \
                or self.suggestion != self.prev_suggestion
 
-    def handle(self, action, arg = None):
+    def handle(self, action, *args):
         """Handle a keyboard action"""
-        handler = self.handlers[action]
-        if action in self.navigate_actions:
-            # Navigation actions have a "select" argument
-            handler(arg)
-        elif action in self.insert_actions:
-            # Insert actions have a "text" argument
-            handler(arg)
-        else:
-            # Other actions don't have arguments
-            handler()
-
+        self.handlers[action](*args)
 
         if self.changed():
             # Add the previous state as an undo state if needed
@@ -313,7 +305,7 @@ class InputState:
         Home key
         Also handle text selection according to flag
         """
-        self.after_cursor = self.before_cursor + self.after_cursor
+        self.after_cursor = self.line
         self.before_cursor = ''
         if not select:
             self.reset_selection()
@@ -326,7 +318,7 @@ class InputState:
         Also handle text selection according to flag
         """
         if self.after_cursor:
-            self.before_cursor = self.before_cursor + self.after_cursor
+            self.before_cursor = self.line
             self.after_cursor = ''
             self.history.reset()
             self.search_substr = None
@@ -337,11 +329,11 @@ class InputState:
             self.reset_selection()
 
 
-    def key_search_right(self, _):
+    def key_search_right(self):
         """
         Search for text to the right of the cursor
         """
-        if (self.before_cursor + self.after_cursor).strip() == '':
+        if self.line.strip() == '':
             self.bell = True
             return
         self.search_rev = False
@@ -350,11 +342,11 @@ class InputState:
         elif self.search_substr:
             self.search_right_next()
 
-    def key_search_left(self, _):
+    def key_search_left(self):
         """
         Search for text to the left of the cursor
         """
-        if (self.before_cursor + self.after_cursor).strip() == '':
+        if self.line.strip() == '':
             self.bell = True
             return
         self.search_rev = True
@@ -363,7 +355,7 @@ class InputState:
         elif self.search_substr:
             self.search_left_prev()
 
-    def key_extend_selection(self, _):
+    def key_extend_selection(self):
         """
         Extend the selection "lexically, i.e. select an increasingly larger chunk going
         from: word -> filename/extension -> full filename + extension -> full file path ->
@@ -513,7 +505,7 @@ class InputState:
         # print '\n\n', history, history_index, '\n\n'
         if not self.history.trail:
             # Start search
-            self.history.start(self.before_cursor + self.after_cursor)
+            self.history.start(self.line)
         if not self.history.up():
             self.bell = True
         self.before_cursor = self.history.current()[0]
@@ -541,7 +533,7 @@ class InputState:
 
     def key_zap(self):
         """Remove current command from current state and from history"""
-        self.zap(self.before_cursor + self.after_cursor)
+        self.zap(self.line)
         self.before_cursor = ''
         self.after_cursor = ''
 
@@ -555,7 +547,7 @@ class InputState:
                 self.history.reset()
             else:
                 # Clear current line (we keep it in the history though)
-                self.history.add(self.before_cursor + self.after_cursor)
+                self.history.add(self.line)
                 self.before_cursor = ''
                 self.after_cursor = ''
 
@@ -688,7 +680,7 @@ class InputState:
             self.after_cursor = after
             self.selection_start = len(before)
 
-    def key_expand(self, text):
+    def key_expand(self):
         """
         Dynamically expand the word at the cursor.
 
@@ -764,7 +756,7 @@ class InputState:
     def get_selection(self):
         """Return the current selected text"""
         start, end = self.get_selection_range()
-        return (self.before_cursor + self.after_cursor)[start: end]
+        return self.line[start: end]
 
     def advance_search(self):
         if not self.search_rev:
@@ -793,7 +785,7 @@ class InputState:
             self.before_cursor[:pos], self.before_cursor[pos:] + self.after_cursor
 
     def extend_selection(self):
-        line = self.before_cursor + self.after_cursor
+        line = self.line
         extend_begin = len(self.before_cursor)
         extend_end = max(self.selection_start, extend_begin)
         separators = list(self.extend_separators)
