@@ -70,6 +70,9 @@ class TestAdjustCompletion(TestCase):
         (('copy file1.txt', '.txt C:\\Users', True), ('copy file1.txt ', 'C:\\Users')),
         (('set PATH=%PATH', '', False), ('set PATH=%PATH', '')),
         (('ls "C:\\Program Files\\7-Zip\\', 'Zip"\\', True), ('ls "C:\\Program Files\\7-Zip"\\', '')),
+        (('ls "C:\\Windows\\', '', True), ('ls C:\\Windows\\', '')),
+        (('ls "~\\Desktop\\', '', True), ('ls ~\\Desktop\\', '')),
+        (('ls "~\\with space\\', '', True), ('ls "~\\with space"\\', '')),
     ]
 
     results_linux = [
@@ -85,7 +88,10 @@ class TestAdjustCompletion(TestCase):
         (('cp file1.txt', '.txt ~/docs', True), ('cp file1.txt ', '~/docs')),
         (('export PATH=${PATH', '', False), ('export PATH=${PATH', '')),
         (('echo "${PATH', '', True), ('echo "${PATH}" ', '')),
-        (('ls "/mnt/c/Program Files/7-Zip/', 'Zip"/', True), ('ls "/mnt/c/Program Files/7-Zip"/', ''))
+        (('ls "/mnt/c/Program Files/7-Zip/', 'Zip"/', True), ('ls "/mnt/c/Program Files/7-Zip"/', '')),
+        (('ls "/mnt/c/Windows/', '', True), ('ls /mnt/c/Windows/', '')),
+        (('ls "~/work/', '', True), ('ls ~/work/', '')),
+        (('ls "~/with space/', '', True), ('ls ~/"with space"/', '')),
     ]
 
     results = results_win if sys.platform == 'win32' else results_linux

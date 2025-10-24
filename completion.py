@@ -192,9 +192,9 @@ def complete_file_simple(line, timeout=None, exactly_one=False):
         else:
             completed_file = path_to_complete + path_sep + common_string
 
-        if expand_env_vars(completed_file).find(' ') >= 0 or \
-                (prefix != '' and [elem for elem in completions if contains_special_char(elem)] != []) or \
-                (prefix == '' and [elem for elem in completions if starts_with_special_char(elem)] != []):
+        if (expand_env_vars(completed_file).find(' ') >= 0 or 
+                any(elem for elem in completions if contains_special_char(elem)) or 
+                any(elem for elem in completions if starts_with_special_char(elem))):
             # We add quotes if one of the following holds:
             #   * the (env-expanded) completed string contains whitespace
             #   * there is a prefix and at least one of the valid completions contains whitespace
@@ -479,41 +479,56 @@ def complete_env_var_linux(line):
 complete_env_var = complete_env_var_win if sys.platform == 'win32' else complete_env_var_linux
 
 def adjust_completion(completed, after_cursor, unique):
-    token_before = tokenize(completed)[-1]
-    path_sep = '/' if '/' in expand_env_vars(token_before) else os.sep
+    last_token = tokenize(completed)[-1]
+    if last_token == '':
+        return completed, after_cursor
+    final_whitespace = ''
+    orig_line_before_last_token = completed[:-len(last_token)]
+    path_sep = '/' if '/' in expand_env_vars(last_token) else os.sep
     
-    token_after = tokenize(after_cursor)[0]
-    first_path_elem_after = token_after.split(path_sep)[0].rstrip('"')
-    #print(f'Adjusting: {completed=} {after_cursor=} {token_before=} {token_after=} {first_path_elem_after=}')
-    if completed.rstrip(path_sep).endswith(first_path_elem_after.rstrip(path_sep).rstrip('"')):
+    first_token_after = tokenize(after_cursor)[0]
+    first_path_elem_after = first_token_after.split(path_sep)[0].rstrip('"')
+    # print(f'Adjusting: {completed=} {after_cursor=} {last_token=} {first_token_after=} {first_path_elem_after=}')
+    if last_token.rstrip(path_sep).endswith(first_path_elem_after.rstrip(path_sep).rstrip('"')):
         after_cursor = after_cursor[len(first_path_elem_after):]
     
+    if sys.platform == 'linux' and last_token.startswith('~/"'):
+        last_token = '"~/' + last_token[3:]
+
     if unique: 
-        completed = finalize_env_var(completed)
-        token_before = finalize_env_var(token_before)
+        last_token = finalize_env_var(last_token)
+
+        if last_token.startswith('"') and not contains_special_char(expand_env_vars(last_token[1:])):
+            # Remove quotes if not needed
+            last_token = last_token[1:]
+            # print(f'{completed=}')
 
         # print(f'\n{expand_env_vars(token_before)=}, {token_before=}\n')
-        if os.path.isdir(expand_env_vars(token_before).strip('"')) and not token_before.endswith(path_sep):
-            completed += path_sep
-            token_before += path_sep
+        if os.path.isdir(expand_env_vars(last_token).strip('"')) and not last_token.endswith(path_sep):
+            last_token += path_sep
 
-        if token_before.startswith('"') and completed.endswith(path_sep) and after_cursor.startswith('"' + path_sep):
+        if last_token.startswith('"') and last_token.endswith(path_sep) and after_cursor.startswith('"' + path_sep):
             after_cursor = after_cursor[2:]
 
         path_sep_follows = after_cursor.startswith(path_sep)
-        if completed.endswith(path_sep) and path_sep_follows:
+        if last_token.endswith(path_sep) and path_sep_follows:
             after_cursor = after_cursor[1:]
 
-        if token_before.startswith('"') and not path_sep_follows:
-            if completed.endswith(path_sep):
-                completed = completed[:-1] + '"' + path_sep
+        if last_token.startswith('"') and not path_sep_follows:
+            if last_token.endswith(path_sep):
+                last_token = last_token[:-1] + '"' + path_sep
             else:
-                completed += '"' 
+                last_token += '"'
 
-        if not completed.rstrip('"').endswith(path_sep):
-            completed += ' '
+        if not last_token.rstrip('"').endswith(path_sep):
+            final_whitespace = ' '
             if after_cursor.startswith(' '):
                 after_cursor = after_cursor[1:]
+
+    if sys.platform == 'linux' and last_token.startswith('"~/'):
+        last_token = '~/"' + last_token[3:]
+
+    completed = orig_line_before_last_token + last_token + final_whitespace
 
     return completed, after_cursor
 
