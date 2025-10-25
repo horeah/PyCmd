@@ -5,6 +5,7 @@
 import sys
 from unittest import TestCase, TestSuite, defaultTestLoader
 from completion import wildcard_to_regex, find_common_prefix, adjust_completion
+from completion import  complete_file, complete_wildcard, complete_env_var
 
 class TestWildcardMatching(TestCase):
     matches = [
@@ -52,6 +53,60 @@ class TestFindCommonPrefix(TestCase):
         """Test the computation of a common prefix"""
         for original, completions, result in self.results:
             self.assertEqual(find_common_prefix(original, completions), result)
+
+
+class TestFileCompletion(TestCase):
+    def test_file_completion(self):
+        """Test file completion on bench directory"""
+
+        completed, suggestions = complete_file('tests/bench/')
+        self.assertEqual(completed, 'tests/bench/dir')
+        self.assertEqual(suggestions, ['dir1/', 'dir2/'])
+
+        completed, suggestions = complete_file('tests/bench/dir1/f1')
+        self.assertEqual(completed, 'tests/bench/dir1/f1.txt')
+        self.assertEqual(suggestions, ['f1.txt'])
+
+        completed, suggestions = complete_file('tests/bench/dir2/')
+        self.assertEqual(completed, '"tests/bench/dir2/f')
+        self.assertEqual(suggestions, ['f with space.txt', 'f1.txt', 'f2.txt'])
+
+        completed, suggestions = complete_file('"tests/bench/dir2/f with')
+        self.assertEqual(completed, '"tests/bench/dir2/f with space.txt')
+        self.assertEqual(suggestions, ['f with space.txt'])
+
+    def test_wildcard_completion(self):
+        """Test file completion with wildcards on bench directory"""
+
+        completed, suggestions = complete_wildcard('tests/bench/*d')
+        self.assertEqual(completed, 'tests/bench/*dir')
+        self.assertEqual(suggestions, ['dir1/', 'dir2/'])
+
+        completed, suggestions = complete_wildcard('tests/bench/*1')
+        self.assertEqual(completed, 'tests/bench/dir1/')
+        self.assertEqual(suggestions, ['dir1/'])
+
+class TestEnvCompletion(TestCase):
+    def test_env_completion(self):
+        """Test environment variable completion"""
+
+        if sys.platform == 'win32':
+            completed, suggestions = complete_env_var('%LOCALAPPD')
+            self.assertEqual(completed, '%LOCALAPPDATA%\\')
+            self.assertEqual(suggestions, ['%LOCALAPPDATA%'])
+
+            completed, suggestions = complete_env_var('%PROGRAMF')
+            self.assertEqual(completed, '%PROGRAMFILES')
+            self.assertEqual(suggestions, ['%PROGRAMFILES%', '%PROGRAMFILES(X86)%'])
+        else:
+            completed, suggestions = complete_file('$PWD')
+            self.assertEqual(completed, '$PWD/')
+            self.assertEqual(suggestions, ['$PWD'])
+
+            completed, suggestions = complete_file('${PWD')
+            self.assertEqual(completed, '${PWD}/')
+            self.assertEqual(suggestions, ['${PWD}'])
+
 
 class TestAdjustCompletion(TestCase):
     results_win = [
@@ -106,5 +161,6 @@ def suite():
     suite = TestSuite()
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestWildcardMatching))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestFindCommonPrefix))
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestFileCompletion))
     suite.addTest(defaultTestLoader.loadTestsFromTestCase(TestAdjustCompletion))
     return suite
