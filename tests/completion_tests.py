@@ -68,8 +68,8 @@ class TestFileCompletion(TestCase):
         self.assertEqual(suggestions, ['f1.txt'])
 
         completed, suggestions = complete_file('tests/bench/dir2/')
-        self.assertEqual(completed, '"tests/bench/dir2/f')
-        self.assertEqual(suggestions, ['f with space.txt', 'f1.txt', 'f2.txt'])
+        self.assertEqual(completed, '"tests/bench/dir2/')
+        self.assertEqual(suggestions, ['subdir with space/', 'f with space.txt', 'f1.txt', 'f2.txt'])
 
         completed, suggestions = complete_file('"tests/bench/dir2/f with')
         self.assertEqual(completed, '"tests/bench/dir2/f with space.txt')
@@ -115,19 +115,20 @@ class TestAdjustCompletion(TestCase):
         (('C:\\Windows\\', '\\System32', True), ('C:\\Windows\\', 'System32')),
         (('C:\\Windows\\', 'ows\\', True), ('C:\\Windows\\', '')),
         (('C:\\Windows\\', 'ows', True), ('C:\\Windows\\', '')),
-        (('PyCmd-20250906-w32.zip', '.zip', True), ('PyCmd-20250906-w32.zip ', '')),
+        (('tests\\bench\\dir1\\f1.txt', '.txt', True), ('tests\\bench\\dir1\\f1.txt ', '')),
         (('"C:\\Program Files', 'Files\\', False), ('"C:\\Program Files', '\\')),
         (('"C:\\Program Files (x86)\\', '86)\\Microsoft', True), ('"C:\\Program Files (x86)\\', 'Microsoft')),
-        (('dirname','Users', True), ('dirname ', 'Users')),
+        (('dir','Users', True), ('dir ', 'Users')),
         (('"%PROGRAMFILES%', '', True), ('"%PROGRAMFILES%"\\', '')),
         (('"%PROGRAMFILES', '', True), ('"%PROGRAMFILES%"\\', '')),
         (('"%PROGRAMFILES', '', False), ('"%PROGRAMFILES', '')),
-        (('copy file1.txt', '.txt C:\\Users', True), ('copy file1.txt ', 'C:\\Users')),
+        (('copy tests\\bench\\dir1\\f1.txt', '.txt C:\\Users', True), ('copy tests\\bench\\dir1\\f1.txt ', 'C:\\Users')),
         (('set PATH=%PATH', '', False), ('set PATH=%PATH', '')),
-        (('ls "C:\\Program Files\\7-Zip\\', 'Zip"\\', True), ('ls "C:\\Program Files\\7-Zip"\\', '')),
+        (('ls "tests\\bench\\dir2\subdir with space\\subsubdir', 'subsubdir"\\', True), ('ls "tests\\bench\\dir2\\subdir with space\\subsubdir"\\', '')),
         (('ls "C:\\Windows\\', '', True), ('ls C:\\Windows\\', '')),
         (('ls "~\\Desktop\\', '', True), ('ls ~\\Desktop\\', '')),
         (('ls "~\\with space\\', '', True), ('ls "~\\with space"\\', '')),
+        (('ls "tests\\bench\\dir2\\f with space.txt', '.txt" ', True), ('ls "tests\\bench\\dir2\\f with space.txt" ', '')),
     ]
 
     results_linux = [
@@ -136,17 +137,21 @@ class TestAdjustCompletion(TestCase):
         (('/usr/bin/', 'python3', True), ('/usr/bin/', 'python3')),
         (('/usr/bin/', 'n/python3', True), ('/usr/bin/', 'python3')),
         (('/usr/bin/', 'n', True), ('/usr/bin/', '')),
-        (('file.tar.gz', '.tar.gz', True), ('file.tar.gz ', '')),
+        (('tests/bench/dir1/f1.txt', '.txt', True), ('tests/bench/dir1/f1.txt ', '')),
+        (('cp tests/bench/dir1/f1.txt', '.txt ~/docs', True), ('cp tests/bench/dir1/f1.txt ', '~/docs')),
         (('$HOME', '', True), ('$HOME/', '')),
         (('${HOME', '', True), ('${HOME}/', '')),
+        (('ls ${HOME}/.profile', '', True), ('ls ${HOME}/.profile ', '')),
+        (('ls /home/${USER}/.profile', '', True), ('ls /home/${USER}/.profile ', '')),
         (('$BASH_VERSION', '', True), ('$BASH_VERSION ', '')),
-        (('cp file1.txt', '.txt ~/docs', True), ('cp file1.txt ', '~/docs')),
         (('export PATH=${PATH', '', False), ('export PATH=${PATH', '')),
         (('echo "${PATH', '', True), ('echo "${PATH}" ', '')),
-        (('ls "/mnt/c/Program Files/7-Zip/', 'Zip"/', True), ('ls "/mnt/c/Program Files/7-Zip"/', '')),
-        (('ls "/mnt/c/Windows/', '', True), ('ls /mnt/c/Windows/', '')),
-        (('ls "~/work/', '', True), ('ls ~/work/', '')),
+        (('ls "tests/bench/dir2/subdir with space/subsubdir/', 'subsubdir"/', True), ('ls "tests/bench/dir2/subdir with space/subsubdir"/', '')),
+        (('ls "tests/bench/dir1/', '', True), ('ls tests/bench/dir1/', '')),
+        (('ls "~/.config/', '', True), ('ls ~/.config/', '')),
         (('ls "~/with space/', '', True), ('ls ~/"with space"/', '')),
+        (('ls "tests/bench/dir2/f with space.txt', '.txt" ', True), ('ls "tests/bench/dir2/f with space.txt" ', '')),
+        (('ls /usr/local/', 'lib/', True), ('ls /usr/local/', 'lib/')),
     ]
 
     results = results_win if sys.platform == 'win32' else results_linux

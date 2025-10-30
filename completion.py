@@ -486,11 +486,19 @@ def adjust_completion(completed, after_cursor, unique):
     orig_line_before_last_token = completed[:-len(last_token)]
     path_sep = '/' if '/' in expand_env_vars(last_token) else os.sep
     
-    first_token_after = tokenize(after_cursor)[0]
-    first_path_elem_after = first_token_after.split(path_sep)[0].rstrip('"')
-    # print(f'Adjusting: {completed=} {after_cursor=} {last_token=} {first_token_after=} {first_path_elem_after=}')
-    if last_token.rstrip(path_sep).endswith(first_path_elem_after.rstrip(path_sep).rstrip('"')):
-        after_cursor = after_cursor[len(first_path_elem_after):]
+    last_token_stripped = last_token.rstrip(' ').rstrip(path_sep)
+    before_overlap = 0
+    while (before_overlap < len(last_token_stripped)
+           and not after_cursor.startswith(last_token_stripped[before_overlap:])):
+        before_overlap +=1
+
+    # print(f'Adjusting: {completed=} {last_token_stripped=} {after_cursor=} {before_overlap=}')
+
+    after_cursor_swallowed = after_cursor[len(last_token_stripped)-before_overlap:]
+    last_token_updated = tokenize(last_token + after_cursor_swallowed)[0]
+    # print(f'  {after_cursor_swallowed=} {last_token_updated=}')
+    if os.path.exists(expand_env_vars(last_token_updated).rstrip(path_sep).strip('"')):
+        after_cursor = after_cursor_swallowed
     
     if sys.platform == 'linux' and last_token.startswith('~/"'):
         last_token = '"~/' + last_token[3:]
@@ -519,6 +527,8 @@ def adjust_completion(completed, after_cursor, unique):
                 last_token = last_token[:-1] + '"' + path_sep
             else:
                 last_token += '"'
+                if after_cursor.startswith('"'):
+                    after_cursor = after_cursor[1:]
 
         if not last_token.rstrip('"').endswith(path_sep):
             final_whitespace = ' '
@@ -539,7 +549,7 @@ def finalize_env_var(line):
         if ends_in_env_var(last_token):
             line += '%'
     else:
-        if last_token.lstrip('"').startswith('${'):
+        if ends_in_env_var(last_token) and last_token.count('{') % 2 == 1:
             line += '}'
     return line
 
