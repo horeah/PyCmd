@@ -9,6 +9,20 @@ from common import tokenize, expand_env_vars, has_exec_extension, is_executable,
 from common import contains_special_char, starts_with_special_char
 from common import sep_chars, seq_tokens
 
+def complete_universal(line):
+    """
+    Universal completion function
+    """
+    tokens = tokenize(line)
+    if ends_in_env_var(tokens[-1]):
+        (completed, suggestions) = complete_env_var(line)
+    elif has_wildcards(tokens[-1]):
+        (completed, suggestions)  = complete_wildcard(line)
+    else:
+        (completed, suggestions)  = complete_file(line)
+
+    return (completed, suggestions)
+
 def complete_file(line, timeout=None, exactly_one=False):
     """
     Complete names of files and/or directories

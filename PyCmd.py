@@ -3,13 +3,13 @@ from common import pycmd_data_dir, pycmd_install_dir
 from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
 from common import associated_application, full_executable_path, is_gui_application
-from completion import complete_file, complete_wildcard, complete_env_var, adjust_completion
-from completion import find_common_prefix, has_wildcards, wildcard_to_regex, ends_in_env_var
+from completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
 from InputState import ActionCode, InputState
 from DirHistory import DirHistory
 import console
 import re
 import shlex
+import threading
 from sys import stdout, stderr
 from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from console import read_input, write_input
@@ -443,18 +443,10 @@ def main():
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
                     set_cursor_attributes(cursor_height, False)
-                    tokens = tokenize(state.before_cursor)
-                    if ends_in_env_var(tokens[-1]):
-                        (completed, suggestions) = complete_env_var(state.before_cursor)
-                    elif has_wildcards(tokens[-1]):
-                        (completed, suggestions)  = complete_wildcard(state.before_cursor)
-                    else:
-                        (completed, suggestions)  = complete_file(state.before_cursor)
-
                     prev_len = len(state.line)
+                    (completed, suggestions) = run_with_busy_indicator(lambda: complete_universal(state.before_cursor))
                     stdout.write(state.after_cursor + ' ' * len(state.suggestion))
                     cursor_backward(len(state.suggestion) + len(state.after_cursor) + len(state.before_cursor))
-
                     completed, state.after_cursor = adjust_completion(completed, state.after_cursor, len(suggestions) == 1)
                     # debug(f'{completed=} {suggestions=} {state.after_cursor=}')
                     state.handle(ActionCode.ACTION_COMPLETE, completed)
@@ -475,6 +467,7 @@ def main():
                         state.bell = True
                     elif len(suggestions) > 1:
                         # Multiple completions possible
+                        tokens = tokenize(state.before_cursor)
                         path_sep = '/' if '/' in expand_env_vars(tokens[-1]) else os.sep
                         if tokens[-1]:
                             # Tokenize again in case the original line has been appended to
@@ -913,6 +906,35 @@ def update_dir_history():
                    dir_hist.locations[-1],
                    pycmd_data_dir + '/dir_history',
                    dir_hist.max_len)
+    
+def run_with_busy_indicator(func):
+    """Run a function while showing a progress indicator"""
+
+    def busy_indicator(stop_event):
+        stop_event.wait(0.5)
+        if stop_event.is_set():
+            return
+        visible = True
+        x, y = get_cursor()
+        while True:
+            sys.stdout.write('\u00b7' if visible else ' ')
+            move_cursor(x, y)
+            stop_event.wait(0.2)
+            if stop_event.is_set():
+                if visible:
+                    sys.stdout.write(' ')
+                    move_cursor(x, y)
+                break
+            visible = not visible
+
+    stop_event = threading.Event()
+    t = threading.Thread(target=busy_indicator, args=(stop_event,))
+    t.start()
+    try:
+        return func()
+    finally:
+        stop_event.set()
+        t.join()
 
 
 def print_usage():
