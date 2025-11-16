@@ -1,3 +1,15 @@
+ * Ctrl-U to delete text to the beginning of the line
+ * Busy indicator for slow completions
+ * Improved completion ergonomics
+ * Fix some repaint bugs
+ * Linux: support word-wise text selection (Ctrl/Alt-Shift-arrows)
+ * Linux: refuse multi-line editing
+ * Linux: fix crash when exiting PyCmd w/out running any command
+ * Linux: fix zapping command from history (Ctrl-Alt-K)
+ * Linux: suggestion from file completion is now case-sensitive
+ * Linux: more robust detection of Ctrl-Enter in X11
+
+Release 20250905
  * Ctrl-L to clear the screen
  * Auto-suggestion now works with command pipelines (|, ||, &, &&)
  * Nicer git label (via `git name-rev`) in prompt when not on a branch (thanks

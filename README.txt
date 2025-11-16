@@ -38,6 +38,7 @@ persistent history, etc.)
     - Copy-Paste using the keyboard (Ctrl-C/X/V or Emacs-style)
     - Undo/Redo with Ctrl-[Shift-]Z (regular style) or Ctrl-_ (Emacs-style)
     - dynamic, context-sensitive token expansion with Alt-/ (Emacs-style)
+    - delete to end of line (Ctrl-K) and beginning of line (Ctrl-U)
     - search string ([Shift-]F3)
     - smart word-by-word navigation
     - lexical selection (Shift-Up/Down)
@@ -70,9 +71,9 @@ persistent history, etc.)
       - can NOT be used to fully replace cmd.exe as default shell (e.g. via 
         %COMSPEC%)
     b. Linux
-      - '\' at the end of a command falls through to bash's multi-line command editing
       - keys pressed while a command is running (before the prompt reappears) are lost
       - commands producing copious stdout/stderr run slower
+      - setting $PS1 breaks PyCmd
 
 
 4. Future plans
