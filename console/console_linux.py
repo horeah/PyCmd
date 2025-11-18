@@ -163,6 +163,7 @@ KEYMAP = {
         0x76: PyINPUT_RECORDType(True, 86, chr(0), LEFT_ALT_PRESSED),   # Alt-V
         0x77: PyINPUT_RECORDType(True, 87, chr(0), LEFT_ALT_PRESSED),   # Alt-W
         0x0B: PyINPUT_RECORDType(True, 75, chr(0), LEFT_ALT_PRESSED | LEFT_CTRL_PRESSED),   # Ctrl-Alt-K
+        0x09: PyINPUT_RECORDType(True, 73, chr(0), LEFT_ALT_PRESSED | LEFT_CTRL_PRESSED),   # Ctrl-Alt-I
         0x4F: {
             **KEYMAP_IDENT,
             0x52: PyINPUT_RECORDType(True, 114, chr(0), 0),  # F3

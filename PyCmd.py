@@ -25,6 +25,8 @@ if sys.platform == 'linux':
     import pty_control
 
 
+state_command = None
+state_chat = None
 state = None
 dir_hist = None
 pushd_stack = []
@@ -35,12 +37,19 @@ def init():
     # Determine the "installation" directory
     global pycmd_install_dir
 
-    # Current state of the input (prompt, entered chars, history)
-    global state
-    state = InputState()
+    # State of the "command" input (prompt, entered chars, history)
+    global state_command
+    state_command = InputState()
+    state_command.history.list = read_history(pycmd_data_dir + '/history')
 
-    # Read/initialize command history
-    state.history.list = read_history(pycmd_data_dir + '/history')
+    # State of the "chat" input (prompt, entered chars, history)
+    global state_chat
+    state_chat = InputState()
+    state_chat.history.list = read_history(pycmd_data_dir + '/chat_history')
+
+    # Start in command mode
+    global state
+    state = state_command
 
     # Read/initialize directory history
     global dir_hist
@@ -149,9 +158,14 @@ def main():
         print()
 
     # Main loop
+    global state
     while True:
         # Prepare buffer for reading one line
-        state.reset_line(appearance.prompt())
+        prompt = appearance.prompt()
+        state_command.reset_line(prompt)
+        pre, _, post = prompt.rpartition('>')
+        state_chat.reset_line(pre + '?' + post)
+        change_state = state
         scrolling = False
         auto_select = False
         force_repaint = True
@@ -176,6 +190,12 @@ def main():
                 prev_total_len = len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor + state.prev_after_cursor + state.prev_suggestion)
                 set_cursor_attributes(cursor_height, False)
                 cursor_backward(len(remove_escape_sequences(state.prev_prompt) + state.prev_before_cursor))
+
+                # Switch state if needed
+                if state != change_state:
+                    state.before_cursor = state.after_cursor = ''
+                    state = change_state
+                    state.reset_selection()
 
                 # Write current line
                 stdout.write(u'\r' + color.Fore.DEFAULT + color.Back.DEFAULT + appearance.colors.prompt +
@@ -378,9 +398,14 @@ def main():
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
                 elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
-            elif is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 75: # Ctrl-Alt-K
-                state.handle(ActionCode.ACTION_ZAP)
-                update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
+            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):  # Ctrl-Alt-Something 
+                if rec.VirtualKeyCode == 75:                # Ctrl-Alt-K
+                    state.handle(ActionCode.ACTION_ZAP)
+                    update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
+                elif rec.VirtualKeyCode == 73:              # Ctrl-Alt-I
+                    change_state = state_chat if state == state_command else state_command
+                    force_repaint = True
+                    auto_select = False
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
@@ -420,11 +445,23 @@ def main():
 
 
                 elif rec.Char == chr(13):               # Enter
-                    if sys.platform == 'linux':
-                        if state.line.strip() == '':
+                    if state.line.strip() == '':
+                        if sys.platform == 'linux':
                             debug('Empty line input_processed.set')
                             pty_control.input_processed.set()
-                        else:
+                        break
+                    state.history.reset()
+                    if state == state_chat:
+                        state.history.add(state.line)
+                        update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
+                        state_command.before_cursor = '# ' + state_chat.line
+                        change_state = state_command
+                        if sys.platform == 'linux':
+                            debug('Exit chat input_processed.set')
+                            pty_control.input_processed.set()
+                        continue
+                    else:
+                        if sys.platform == 'linux':
                             try:
                                 shlex.split(state.line)
                             except ValueError:
@@ -433,8 +470,7 @@ def main():
                                 debug('Multi-line input_processed.set')
                                 pty_control.input_processed.set()
                                 continue
-                    state.history.reset()
-                    break
+                        break
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
                         scrolling = False
