@@ -10,6 +10,7 @@ import console
 import re
 import shlex
 import threading
+import copy
 from sys import stdout, stderr
 from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from console import read_input, write_input
@@ -145,6 +146,26 @@ def main():
     color.Fore.DEFAULT = console.get_current_foreground()
     color.Back.DEFAULT = console.get_current_background()
 
+    # Prepare chat system
+    from chatlas import ChatAuto
+    provider = 'openai' if 'OPENAI_API_KEY' in os.environ else 'google' if 'GOOGLE_API_KEY' in os.environ else None
+    if provider:
+        print(f'''
+API key for provider `{provider}` found in environment -- chat support is enabled.
+{color.Fore.TOGGLE_BLUE}Warning{color.Fore.TOGGLE_BLUE}: This feature is experimental. Use with caution!''')
+        system_prompt = 'Generate a shell command based on the user request.\n'
+        if sys.platform == 'linux':
+            system_prompt += 'The command will be executed in a bash shell in Linux.\n'
+        else:
+            system_prompt += 'The command will be executed in a Windows command prompt.\n'
+        system_prompt += 'Produce just the command text, without any markup or explanation.\n'
+        chat = ChatAuto(provider, system_prompt=system_prompt)
+    else:
+        class ChatDisabled:
+            def chat(self, message, echo='none'):
+                return 'echo "Chat support is not configured. Please set OPENAI_API_KEY or GOOGLE_API_KEY environment variable."'
+        chat = ChatDisabled()
+
     if not behavior.quiet_mode:
         # Print some splash text
         arch_names = { '32bit': 'x86', '64bit': 'x64' }
@@ -193,7 +214,7 @@ def main():
 
                 # Switch state if needed
                 if state != change_state:
-                    state.before_cursor = state.after_cursor = ''
+                    state.before_cursor = state.after_cursor = state.suggestion = ''
                     state = change_state
                     state.reset_selection()
 
@@ -454,7 +475,9 @@ def main():
                     if state == state_chat:
                         state.history.add(state.line)
                         update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
-                        state_command.before_cursor = '# ' + state_chat.line
+                        new_chat = copy.deepcopy(chat)
+                        response = new_chat.chat(state.line, echo='none')
+                        state_command.before_cursor = str(response)
                         change_state = state_command
                         if sys.platform == 'linux':
                             debug('Exit chat input_processed.set')
@@ -478,6 +501,9 @@ def main():
                         state.handle(ActionCode.ACTION_ESCAPE)
                         auto_select = False
                 elif rec.Char == '\t':                  # Tab
+                    if state == state_chat:
+                        state.bell = True  # No completion in chat mode
+                        continue
                     set_cursor_attributes(cursor_height, False)
                     prev_len = len(state.line)
                     (completed, suggestions) = run_with_busy_indicator(lambda: complete_universal(state.before_cursor))
