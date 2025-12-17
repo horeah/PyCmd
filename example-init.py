@@ -171,6 +171,12 @@ behavior.quiet_mode = False
 #
 behavior.completion_mode = 'zsh'
 
+# Create a "chat" template modeled after chatlas.Chat 
+# 
+# This object is expected to have a `chat(prompt)` method.
+import chatlas
+behavior.chat.template = chatlas.ChatAuto(provider='google') 
+
 
 # Remember, you can do whatever you want in this Python script!
 #

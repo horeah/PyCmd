@@ -147,24 +147,14 @@ def main():
     color.Back.DEFAULT = console.get_current_background()
 
     # Prepare chat system
-    from chatlas import ChatAuto
-    provider = 'openai' if 'OPENAI_API_KEY' in os.environ else 'google' if 'GOOGLE_API_KEY' in os.environ else None
-    if provider:
-        print(f'''
-API key for provider `{provider}` found in environment -- chat support is enabled.
-{color.Fore.TOGGLE_BLUE}Warning{color.Fore.TOGGLE_BLUE}: This feature is experimental. Use with caution!''')
+    if behavior.chat.template:
         system_prompt = 'Generate a shell command based on the user request.\n'
         if sys.platform == 'linux':
             system_prompt += 'The command will be executed in a bash shell in Linux.\n'
         else:
             system_prompt += 'The command will be executed in a Windows command prompt.\n'
         system_prompt += 'Produce just the command text, without any markup or explanation.\n'
-        chat = ChatAuto(provider, system_prompt=system_prompt)
-    else:
-        class ChatDisabled:
-            def chat(self, message, echo='none'):
-                return 'echo "Chat support is not configured. Please set OPENAI_API_KEY or GOOGLE_API_KEY environment variable."'
-        chat = ChatDisabled()
+        behavior.chat.template.system_prompt = system_prompt
 
     if not behavior.quiet_mode:
         # Print some splash text
@@ -424,9 +414,12 @@ API key for provider `{provider}` found in environment -- chat support is enable
                     state.handle(ActionCode.ACTION_ZAP)
                     update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
                 elif rec.VirtualKeyCode == 73:              # Ctrl-Alt-I
-                    change_state = state_chat if state == state_command else state_command
-                    force_repaint = True
-                    auto_select = False
+                    if not behavior.chat.template:
+                        state.bell = True
+                    else:
+                        change_state = state_chat if state == state_command else state_command
+                        force_repaint = True
+                        auto_select = False
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
@@ -475,8 +468,8 @@ API key for provider `{provider}` found in environment -- chat support is enable
                     if state == state_chat:
                         state.history.add(state.line)
                         update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
-                        new_chat = copy.deepcopy(chat)
-                        response = new_chat.chat(state.line, echo='none')
+                        chat = copy.deepcopy(behavior.chat.template)
+                        response = chat.chat(state.line, echo='none')
                         state_command.before_cursor = str(response)
                         change_state = state_command
                         if sys.platform == 'linux':
@@ -503,6 +496,9 @@ API key for provider `{provider}` found in environment -- chat support is enable
                 elif rec.Char == '\t':                  # Tab
                     if state == state_chat:
                         state.bell = True  # No completion in chat mode
+                        if sys.platform == 'linux':
+                            debug('Tab bell input_processed.set')
+                            pty_control.input_processed.set()
                         continue
                     set_cursor_attributes(cursor_height, False)
                     prev_len = len(state.line)

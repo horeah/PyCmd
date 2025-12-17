@@ -417,10 +417,18 @@ class Behavior(_Settings):
         # Select the completion mode; currently supported: 'bash' and 'zsh'
         self.completion_mode = 'zsh'
 
+        self.chat = Chat()
+
     def sanitize(self):
         if not self.completion_mode in ['bash', 'zsh']:
             print('Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "zsh"')
             self.completion_mode = 'zsh'
+
+class Chat(_Settings):
+    """Chat-related settings"""
+    def __init__(self):
+        # Chat template object (should have a `chat(prompt)` method)
+        self.template = None
 
 
 # Initialize global configuration instances with default values
