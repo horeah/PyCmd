@@ -276,11 +276,10 @@ def main():
                 elif rec.VirtualKeyCode == 71:          # Ctrl-G
                     if scrolling:
                         scrolling = False
+                    elif state == state_chat and not state.line:
+                        change_state = state_command
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
-                        update_history('add', state.history.list[-1],
-                                       pycmd_data_dir + '/history',
-                                       save_history_limit)
                         auto_select = False
                 elif rec.VirtualKeyCode == 76:          # Ctrl-L
                     console.clear_screen()
@@ -414,7 +413,7 @@ def main():
                     state.handle(ActionCode.ACTION_ZAP)
                     update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
                 elif rec.VirtualKeyCode == 73:              # Ctrl-Alt-I
-                    if not behavior.chat.template:
+                    if state.line or not behavior.chat.template:
                         state.bell = True
                     else:
                         change_state = state_chat if state == state_command else state_command
@@ -490,6 +489,8 @@ def main():
                 elif rec.Char == chr(27):               # Esc
                     if scrolling:
                         scrolling = False
+                    elif state == state_chat and not state.line:
+                        change_state = state_command
                     else:
                         state.handle(ActionCode.ACTION_ESCAPE)
                         auto_select = False
