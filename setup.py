@@ -12,5 +12,6 @@ setup(
             'include_files': ['example-init.py',
                               'pycmd_public.html'],
             'excludes': ['lib2to3', 'Tkinter', 'Tk', 'Tcl', 'test'],
+            "packages": ["chatlas", "google"],
         }
     })
