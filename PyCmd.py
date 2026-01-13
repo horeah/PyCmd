@@ -297,7 +297,7 @@ def main():
                         state.history.reset()
                     elif action == 'zap':
                         state.zap(selection)
-                        update_history('remove', selection, pycmd_data_dir + '/history', save_history_limit)
+                        update_history('remove', selection, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
                 elif rec.VirtualKeyCode == 65:          # Ctrl-A
                     state.handle(ActionCode.ACTION_HOME, select)
                 elif rec.VirtualKeyCode == 69:          # Ctrl-E
@@ -410,8 +410,8 @@ def main():
                     state.handle(ActionCode.ACTION_EXPAND)
             elif is_ctrl_pressed(rec) and is_alt_pressed(rec):  # Ctrl-Alt-Something 
                 if rec.VirtualKeyCode == 75:                # Ctrl-Alt-K
+                    update_history('remove', state.line, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
                     state.handle(ActionCode.ACTION_ZAP)
-                    update_history('remove', state.line, pycmd_data_dir + '/history', save_history_limit)
                 elif rec.VirtualKeyCode == 73:              # Ctrl-Alt-I
                     if state.line or not behavior.chat.template:
                         state.bell = True
