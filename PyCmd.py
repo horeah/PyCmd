@@ -465,12 +465,15 @@ def main():
                         break
                     state.history.reset()
                     if state == state_chat:
+                        set_cursor_attributes(cursor_height, False)
+                        stdout.write(state.after_cursor)
                         state.history.add(state.line)
                         update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
                         chat = copy.deepcopy(behavior.chat.template)
-                        response = chat.chat(state.line, echo='none')
+                        response = run_with_busy_indicator(lambda: chat.chat(state.line, echo='none'))
                         state_command.before_cursor = str(response)
                         change_state = state_command
+                        set_cursor_attributes(cursor_height, True)
                         if sys.platform == 'linux':
                             debug('Exit chat input_processed.set')
                             pty_control.input_processed.set()
