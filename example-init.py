@@ -171,11 +171,34 @@ behavior.quiet_mode = False
 #
 behavior.completion_mode = 'zsh'
 
-# Create a "chat" template modeled after chatlas.Chat 
+
+# Specify a "chat" template object to be used for the chat mode
 # 
-# This object is expected to have a `chat(prompt)` method.
-import chatlas
-behavior.chat.template = chatlas.ChatAuto(provider='google') 
+# You can directly use chatlas (bundled with PyCmd) or create your own 
+# chatlas.Chat-like object. More precisely, PyCmd expects an object that
+# has:
+#  1. a `chat(prompt, echo) method
+#  2. a `system_prompt` attribute/property.
+#
+# Example: 
+#   import chatlas
+#   behavior.chat.template = chatlas.ChatAuto(provider='openai', api_key='YOUR_API_KEY_HERE') 
+# 
+# If not specified, behavior.chat.template defaults to None and chat mode
+# is disabled.
+behavior.chat.template = None
+
+
+# Customize the system prompt used by the chat template
+#
+# PyCmd sets a default system prompt (you can print it here if you want to see 
+# it!) that instructs the chat model to generate shell commands based on the 
+# provided description. 
+# 
+# You can modify or extend this prompt in order to tweak the results.
+# Example:
+#   behavior.chat.system_prompt += 'Make sure to always include necessary flags.\n'
+behavior.chat.system_prompt = behavior.chat.system_prompt
 
 
 # Remember, you can do whatever you want in this Python script!

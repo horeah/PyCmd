@@ -148,13 +148,7 @@ def main():
 
     # Prepare chat system
     if behavior.chat.template:
-        system_prompt = 'Generate a shell command based on the user request.\n'
-        if sys.platform == 'linux':
-            system_prompt += 'The command will be executed in a bash shell in Linux.\n'
-        else:
-            system_prompt += 'The command will be executed in a Windows command prompt.\n'
-        system_prompt += 'Produce just the command text, without any markup or explanation.\n'
-        behavior.chat.template.system_prompt = system_prompt
+        behavior.chat.template.system_prompt = behavior.chat.system_prompt
 
     if not behavior.quiet_mode:
         # Print some splash text

@@ -403,6 +403,22 @@ class _Appearance(_Settings):
 
 class Behavior(_Settings):
     """Behavior settings"""
+
+    class Chat(_Settings):
+        """Chat-related settings"""
+        def __init__(self):
+            # Chat template object (should have a `chat(prompt)` method and a `system_prompt` 
+            # attribute/property)
+            self.template = None
+
+            # System prompt to be used in chat mode
+            self.system_prompt = 'Generate a shell command based on the user request.\n'
+            if sys.platform == 'linux':
+                self.system_prompt += 'The command will be executed in a bash shell in Linux.\n'
+            else:
+                self.system_prompt += 'The command will be executed in a Windows command prompt.\n'
+            self.system_prompt += 'Produce just the command text, without any markup or explanation.\n'
+
     def __init__(self):
         # Skip splash message (welcome and bye).
         # This can be also overriden with the '-Q' command line argument'
@@ -417,18 +433,13 @@ class Behavior(_Settings):
         # Select the completion mode; currently supported: 'bash' and 'zsh'
         self.completion_mode = 'zsh'
 
-        self.chat = Chat()
+        # Chat-related settings
+        self.chat = self.Chat()
 
     def sanitize(self):
         if not self.completion_mode in ['bash', 'zsh']:
             print('Invalid setting "' + self.completion_mode + '" for "completion_mode" -- using default "zsh"')
             self.completion_mode = 'zsh'
-
-class Chat(_Settings):
-    """Chat-related settings"""
-    def __init__(self):
-        # Chat template object (should have a `chat(prompt)` method)
-        self.template = None
 
 
 # Initialize global configuration instances with default values
