@@ -461,17 +461,25 @@ def main():
                     if state == state_chat:
                         set_cursor_attributes(cursor_height, False)
                         stdout.write(state.after_cursor)
+                        stdout.write(' ' * len(state.suggestion))
+                        cursor_backward(len(state.suggestion))
                         state.history.add(state.line)
                         update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
                         chat = copy.deepcopy(behavior.chat.template)
-                        response = run_with_busy_indicator(lambda: chat.chat(state.line, echo='none'))
-                        state_command.before_cursor = str(response)
+                        try:
+                            response = run_with_busy_indicator(lambda: chat.chat(state.line, echo='none'))
+                        except Exception as e:
+                            # Erase current line and write an error message instead
+                            cursor_backward(len(state.line))
+                            sys.stdout.write(' ' * len(state.line))
+                            cursor_backward(len(state.line))
+                            sys.stdout.write(f'{color.Fore.RED + color.Fore.SET_BRIGHT}ERROR{color.Fore.DEFAULT}: {str(e)}\n')
+                            # Prevent the above error message from being erased by next repaint
+                            sys.stdout.write(' ' * len(remove_escape_sequences(state.prompt) + state.line + state.suggestion))
+                            response = ''
+                            state_command.bell = True
                         change_state = state_command
-                        set_cursor_attributes(cursor_height, True)
-                        if sys.platform == 'linux':
-                            debug('Exit chat input_processed.set')
-                            pty_control.input_processed.set()
-                        continue
+                        state_command.before_cursor = str(response)
                     else:
                         if sys.platform == 'linux':
                             try:
