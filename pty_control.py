@@ -137,6 +137,8 @@ def start(env_dump_file):
         rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"\n'.encode('utf-8'))
         rc.write('HISTCONTROL=ignorespace\n'.encode('utf-8'))
         rc.write("bind 'set enable-bracketed-paste off'\n".encode('utf-8'))
+        rc.write(''.join([f'bind -r "\e{i}"\n' for i in range(10)]).encode('utf-8'))
+        rc.write('bind -r "\e."\n'.encode('utf-8'))
         rc.flush()
     except OSError as e:
         pass
