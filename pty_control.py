@@ -131,14 +131,14 @@ def start(env_dump_file):
     # to read it!
     global rc      
     try:
-        rc = tempfile.NamedTemporaryFile()
-        rc.write(open(os.path.expanduser('~/.bashrc'), 'rb').read())
-        rc.write(f"PS1='{ps1}'\n".encode('utf-8'))
-        rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"\n'.encode('utf-8'))
-        rc.write('HISTCONTROL=ignorespace\n'.encode('utf-8'))
-        rc.write("bind 'set enable-bracketed-paste off'\n".encode('utf-8'))
-        rc.write(''.join([f'bind -r "\e{i}"\n' for i in range(10)]).encode('utf-8'))
-        rc.write('bind -r "\e."\n'.encode('utf-8'))
+        rc = tempfile.NamedTemporaryFile(mode='w', encoding='utf-8')
+        rc.write(open(os.path.expanduser('~/.bashrc'), 'r', encoding='utf-8').read())
+        rc.write(f"PS1='{ps1}'\n")
+        rc.write(f'PROMPT_COMMAND="printenv > {env_dump_file}"\n')
+        rc.write('HISTCONTROL=ignorespace\n')
+        rc.write("bind 'set enable-bracketed-paste off'\n")
+        rc.write(''.join(f'bind -r "\e{i}"\n' for i in range(10)))
+        rc.write('bind -r "\e."\n')
         rc.flush()
     except OSError as e:
         pass
