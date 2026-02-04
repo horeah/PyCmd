@@ -35,30 +35,6 @@ tmpfile = None
 save_history_limit = 2000
 
 def init():
-    # Determine the "installation" directory
-    global pycmd_install_dir
-
-    # State of the "command" input (prompt, entered chars, history)
-    global state_command
-    state_command = InputState()
-    state_command.history.list = read_history(pycmd_data_dir + '/history')
-
-    # State of the "chat" input (prompt, entered chars, history)
-    global state_chat
-    state_chat = InputState()
-    state_chat.history.list = read_history(pycmd_data_dir + '/chat_history')
-
-    # Start in command mode
-    global state
-    state = state_command
-
-    # Read/initialize directory history
-    global dir_hist
-    dir_hist = DirHistory()
-    dir_hist.locations = read_history(pycmd_data_dir + '/dir_history')
-    dir_hist.index = len(dir_hist.locations) - 1
-    dir_hist.visit_cwd()
-
     # Create temporary file
     global tmpfile
     (handle, tmpfile) = tempfile.mkstemp(dir = pycmd_data_dir + '/tmp')
@@ -72,6 +48,30 @@ def deinit():
         os.remove(tmpfile)
     if sys.platform == 'linux':
         os.system('reset -I')
+
+def init_state():
+    # State of the "command" input (prompt, entered chars, history)
+    global state_command
+    state_command = InputState()
+    state_command.history.list = read_history(pycmd_data_dir + '/history')
+
+    # State of the "chat" input (prompt, entered chars, history)
+    global state_chat
+    state_chat = InputState()
+    if behavior.chat.template:
+        state_chat.history.list = read_history(pycmd_data_dir + '/chat_history')
+
+    # Start in command mode
+    global state
+    state = state_command
+
+def init_dir_history():
+    # Read/initialize directory history
+    global dir_hist
+    dir_hist = DirHistory()
+    dir_hist.locations = read_history(pycmd_data_dir + '/dir_history')
+    dir_hist.index = len(dir_hist.locations) - 1
+    dir_hist.visit_cwd()
 
 def main():
     title_prefix = ""
@@ -141,6 +141,9 @@ def main():
             print_usage()
             internal_exit()
         arg += 1
+
+    init_state()
+    init_dir_history()
 
     # Re-scan console colors in case the -k command has changed them
     color.Fore.DEFAULT = console.get_current_foreground()
