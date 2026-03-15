@@ -105,7 +105,10 @@ def scroll_to_quarter(line):
 
 def clear_screen():
     """Clear the screen and move the cursor to the top-left corner"""
-    from pycmd_public import color
+    if getattr(sys, "frozen", False):
+        from pycmd_public import color
+    else:
+        from .pycmd_public import color
     width, height = get_buffer_size()
     sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * width * height)
     move_cursor(0, 0)

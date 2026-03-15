@@ -1,28 +1,50 @@
 import sys, os, tempfile, signal, time, traceback, codecs, platform
-from common import pycmd_data_dir, pycmd_install_dir
-from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
-from common import expand_tilde, expand_env_vars
-from common import associated_application, full_executable_path, is_gui_application
-from completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
-from InputState import ActionCode, InputState
-from DirHistory import DirHistory
-import console
 import re
 import shlex
 import threading
-from sys import stdout, stderr
-from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
-from console import read_input, write_input
-from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-from console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
-from console import remove_escape_sequences
-from Window import Window
-from pycmd_public import color, appearance, behavior
-from common import apply_settings, sanitize_settings
-from common import debug
 
-if sys.platform == 'linux':
-    import pty_control
+if __package__:
+    from .common import pycmd_data_dir, pycmd_install_dir
+    from .common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+    from .common import expand_tilde, expand_env_vars
+    from .common import associated_application, full_executable_path, is_gui_application
+    from .completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
+    from .InputState import ActionCode, InputState
+    from .DirHistory import DirHistory
+    from . import console
+    from .console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
+    from .console import read_input, write_input
+    from .console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+    from .console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
+    from .console import remove_escape_sequences
+    from .Window import Window
+    from .pycmd_public import color, appearance, behavior
+    from .common import apply_settings, sanitize_settings
+    from .common import debug
+    if sys.platform == 'linux':
+        from . import pty_control
+else:
+    from common import pycmd_data_dir, pycmd_install_dir
+    from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+    from common import expand_tilde, expand_env_vars
+    from common import associated_application, full_executable_path, is_gui_application
+    from completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
+    from InputState import ActionCode, InputState
+    from DirHistory import DirHistory
+    import console
+    from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
+    from console import read_input, write_input
+    from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+    from console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
+    from console import remove_escape_sequences
+    from Window import Window
+    from pycmd_public import color, appearance, behavior
+    from common import apply_settings, sanitize_settings
+    from common import debug
+    if sys.platform == 'linux':
+        import pty_control
+
+from sys import stdout, stderr
 
 
 state = None
@@ -141,7 +163,10 @@ def main():
         arch_names = { '32bit': 'x86', '64bit': 'x64' }
         bits = platform.architecture()[0]
         try:
-            from buildinfo import build_date
+            if __package__:
+                from .buildinfo import build_date
+            else:
+                from buildinfo import build_date
         except ImportError as ie:
             build_date = '<no build date>'
         print()
@@ -952,13 +977,8 @@ def print_usage():
     print('Note that you can use \'/\' instead of \'-\', uppercase instead of ')
     print('lowercase and \'/?\' instead of \'-h\'')
 
-    
-# cx_freeze sometimes messes this (no idea why...)
-if __name__ == 'pycmd__main__':
-    __name__ = '__main__'
 
-# Entry point
-if __name__ == '__main__':
+def _main(*args, **kwargs):
     try:
         init()
         main()
@@ -983,3 +1003,12 @@ if __name__ == '__main__':
             print('************************************')
             read_input()
         internal_exit()
+
+    
+# cx_freeze sometimes messes this (no idea why...)
+if __name__ == 'pycmd__main__':
+    __name__ = '__main__'
+
+# Entry point
+if __name__ == '__main__':
+    _main()

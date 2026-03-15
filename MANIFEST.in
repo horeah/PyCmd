@@ -1,0 +1,3 @@
+exclude src/pycmd/run_tests.py
+exclude src/pycmd/setup.py
+prune src/pycmd/tests

@@ -1,10 +1,15 @@
 from enum import Enum, auto
 import sys, subprocess
-from CommandHistory import CommandHistory
-from common import word_sep, tokenize, seq_tokens
-from completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
-from common import word_sep
 import re
+
+if __package__:
+    from .CommandHistory import CommandHistory
+    from .common import word_sep, tokenize, seq_tokens
+    from .completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
+else:
+    from CommandHistory import CommandHistory
+    from common import word_sep, tokenize, seq_tokens
+    from completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
 
 
 EXTEND_SEPARATORS_OUTSIDE_QUOTES = \

@@ -28,7 +28,14 @@ else
 	PYTHON = python3
 endif
 
-SRC = PyCmd.py InputState.py DirHistory.py common.py completion.py console/*.py fsm.py
+SRC = \
+    src/pycmd/PyCmd.py \
+	src/pycmd/InputState.py \
+	src/pycmd/DirHistory.py \
+	src/pycmd/common.py \
+	src/pycmd/completion.py \
+	src/pycmd/console/*.py \
+	src/pycmd/fsm.py
 SRC_TEST = common_tests.py
 
 
@@ -39,19 +46,20 @@ all:
 	$(MAKE) dist_w32 
 	$(MAKE) clean
 	$(MAKE) dist_w64
+	$(MAKE) dist_whl
 else
 all:
 	$(MAKE) clean
 	$(MAKE) dist_linux64
 endif
 
-doc: pycmd_public.py
-	$(PYTHON) -c "import pycmd_public, pydoc; pydoc.writedoc('pycmd_public')"
+doc: src/pycmd/pycmd_public.py
+	cd src/pycmd && $(PYTHON) -c "import pycmd_public, pydoc; pydoc.writedoc('pycmd_public')"
 
 dist_w32: clean $(SRC) doc
-	echo build_date = '$(BUILD_DATE)' > buildinfo.py
-	$(PYTHON_W32) setup.py build
-	$(MV) build\exe.win32-3.10 PyCmd
+	echo build_date = '$(BUILD_DATE)' > src/pycmd/buildinfo.py
+	cd src/pycmd &&	$(PYTHON_W32) setup.py build
+	$(MV) src/pycmd/build/exe.win32-3.10 PyCmd
 	$(CP) README.txt PyCmd
 # cx_freeze fails to copy this
 	$(CP) "$(PYTHONHOME_W32)\Lib\site-packages\pywin32_system32\pywintypes310.dll" PyCmd\lib
@@ -59,9 +67,9 @@ dist_w32: clean $(SRC) doc
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w32.zip PyCmd
 
 dist_w64: clean $(SRC) doc
-	echo build_date = '$(BUILD_DATE)' > buildinfo.py
-	$(PYTHON_W64) setup.py build
-	$(MV) build\exe.win-amd64-3.10 PyCmd
+	echo build_date = '$(BUILD_DATE)' > src/pycmd/buildinfo.py
+	cd src/pycmd &&	$(PYTHON_W64) setup.py build
+	$(MV) src/pycmd/build/exe.win-amd64-3.10 PyCmd
 	$(CP) README.txt PyCmd
 # cx_freeze fails to copy this
 	$(CP) "$(PYTHONHOME_W64)\Lib\site-packages\pywin32_system32\pywintypes310.dll" PyCmd\lib
@@ -69,17 +77,21 @@ dist_w64: clean $(SRC) doc
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
 dist_linux64: clean $(SRC) doc
-	echo build_date = \'$(BUILD_DATE)\' > buildinfo.py
-	python3 setup.py build
-	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
+	echo build_date = \'$(BUILD_DATE)\' > src/pycmd/buildinfo.py
+	cd src/pycmd &&	python3 setup.py build
+	$(MV) src/pycmd/build/exe.linux-x86_64-3.10/ PyCmd
 	$(CP) README.txt PyCmd
 	(echo Release $(BUILD_DATE) && cat NEWS.txt) > PyCmd/NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-linux64.zip PyCmd
 
+dist_whl: clean $(SRC) doc
+	echo build_date = '$(BUILD_DATE)' > src/pycmd/buildinfo.py
+	$(PYTHON_W64) -m build
+
 .PHONY: clean
 clean:
-	$(RM) buildinfo.*
+	$(RM) src/pycmd/buildinfo.*
 	$(RM) $(SRC:%.py=%.pyc)
-	$(RM) pycmd_public.html
-	cd tests && $(RM) $(SRC_TEST:%.py=%.pyc) && $(RM) __init__.pyc
-	$(RM) -r build PyCmd
+	$(RM) src/pycmd/pycmd_public.html
+	cd src/pycmd/tests && $(RM) $(SRC_TEST:%.py=%.pyc) && $(RM) __init__.pyc
+	$(RM) -r build PyCmd dist

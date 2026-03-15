@@ -1,8 +1,13 @@
 #
 # Common utility functions
 #
-import os, string, fsm, mmap, sys, traceback, threading
+import os, string, mmap, sys, traceback, threading
 import re
+
+if __package__:
+    from . import fsm
+else:
+    import fsm
 
 # Stop points when navigating one word at a time
 word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';', '"']
@@ -428,7 +433,10 @@ def debug(message):
         debug_file.flush()
 
 
-import pycmd_public
+if __package__:
+    from . import pycmd_public
+else:
+    import pycmd_public
 
 def apply_settings(settings_file):
     """

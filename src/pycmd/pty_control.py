@@ -1,5 +1,9 @@
 import sys, os, threading, tty, pty, fcntl, array, termios, tempfile, select
-from common import debug
+
+if __package__:
+    from .common import debug
+else:
+    from common import debug
 
 input_processed = threading.Event()
 input_available = threading.Event()

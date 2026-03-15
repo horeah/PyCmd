@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [
+  {name = "Horea Haitonic", email = "horeah@gmail.com"},
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: System :: Shells",
+  "Topic :: Terminals",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "patchelf; platform_system!='Windows'",
+  "pefile; platform_system=='Windows'",
+  "pywin32; platform_system=='Windows'",
+]
+description = "Improved interactive experience for Windows' cmd.exe"
+dynamic = ["version"]
+keywords = ["cmd"]
+license = "GPL-3.0-only"
+license-files = ["LICENSE.txt"]
+maintainers = [
+  {name = "Horea Haitonic", email = "horeah@gmail.com"},
+]
+name = "py-cmd"
+readme = "README.txt"
+requires-python = ">=3.10"
+
+[project.scripts]
+pycmd = "pycmd.PyCmd:_main"
+
+[project.urls]
+Changelog = "https://github.com/horeah/PyCmd/blob/master/NEWS.txt"
+Documentation = "https://github.com/horeah/PyCmd/blob/master/README.txt"
+Homepage = "https://github.com/horeah/PyCmd"
+Issues = "https://github.com/horeah/PyCmd/issues"
+Repository = "https://github.com/horeah/PyCmd"
+
+[tool.setuptools.dynamic]
+version = {attr = "pycmd.buildinfo.build_date"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
