@@ -108,7 +108,7 @@ def clear_screen():
     if getattr(sys, "frozen", False):
         from pycmd_public import color
     else:
-        from .pycmd_public import color
+        from ..pycmd_public import color
     width, height = get_buffer_size()
     sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * width * height)
     move_cursor(0, 0)
@@ -135,7 +135,10 @@ def remove_escape_sequences(s):
     Remove color escape sequences from the given string
     
     """
-    from pycmd_public import color
+    if getattr(sys, "frozen", False):
+        from pycmd_public import color
+    else:
+        from ..pycmd_public import color
     escape_sequences_fore = [v for (k, v) in chain(color.Fore.__dict__.items(),
                                                    color.Back.__dict__.items())
                              if not k in ['__dict__', '__doc__', '__weakref__', '__module__']]
