@@ -1,4 +1,4 @@
-import sys, os, tempfile, signal, time, traceback, codecs, platform
+import sys, os, tempfile, signal, time, traceback, platform
 from common import pycmd_data_dir, pycmd_install_dir
 from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
 from common import expand_tilde, expand_env_vars
@@ -867,7 +867,7 @@ def update_history(action, line, filename, length):
     """
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
-        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
+        history_file = open(filename, 'r', encoding='utf8', errors='replace')
         history_to_save = [l.rstrip(u'\n') for l in history_file.readlines()]
         history_file.close()
         if line in history_to_save:
@@ -882,7 +882,7 @@ def update_history(action, line, filename, length):
         history_to_save = history_to_save[-length :]    # Limit history file
 
     # Write merged history to history file
-    history_file = codecs.open(filename, 'w', 'utf8')
+    history_file = open(filename, 'w', encoding='utf8')
     history_file.writelines([l + u'\n' for l in history_to_save])
     history_file.close()
 
@@ -892,7 +892,7 @@ def read_history(filename):
     Read and return a list of lines from a history file
     """
     if os.path.isfile(filename):
-        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
+        history_file = open(filename, 'r', encoding='utf8', errors='replace')
         history = [line.rstrip(u'\n\r') for line in history_file.readlines()]
         history_file.close()
     else:
