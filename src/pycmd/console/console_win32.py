@@ -105,7 +105,7 @@ def scroll_to_quarter(line):
 
 def clear_screen():
     """Clear the screen and move the cursor to the top-left corner"""
-    if getattr(sys, "frozen", False):
+    if getattr(sys, "frozen", False) or __package__ == "console":
         from pycmd_public import color
     else:
         from ..pycmd_public import color
@@ -135,7 +135,7 @@ def remove_escape_sequences(s):
     Remove color escape sequences from the given string
     
     """
-    if getattr(sys, "frozen", False):
+    if getattr(sys, "frozen", False) or __package__ == "console":
         from pycmd_public import color
     else:
         from ..pycmd_public import color
