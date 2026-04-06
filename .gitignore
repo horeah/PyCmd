@@ -3,10 +3,11 @@
 /dist
 /PyCmd/
 /PyCmd-*-w??.zip
+/freeze/PyCmd.egg-info
 /src/py_cmd.egg-info
 /src/pycmd/buildinfo.py
 /src/pycmd/PyCmd.egg-info
-/src/pycmd/pycmd_public.html
+/src/pycmd/pycmd.pycmd_public.html
 
 # no leading `/' means anywhere
 *.pyc

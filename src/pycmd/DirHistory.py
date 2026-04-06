@@ -2,14 +2,9 @@ import os, sys
 import os.path
 from sys import stdout
 
-if __package__:
-    from .console import get_cursor, move_cursor, get_buffer_size
-    from .common import abbrev_tilde
-    from .pycmd_public import appearance, color
-else:
-    from console import get_cursor, move_cursor, get_buffer_size
-    from common import abbrev_tilde
-    from pycmd_public import appearance, color
+from .console import get_cursor, move_cursor, get_buffer_size
+from .common import abbrev_tilde
+from .pycmd_public import appearance, color
 
 def _norm(path):
     return os.path.normcase(os.path.expanduser(path))

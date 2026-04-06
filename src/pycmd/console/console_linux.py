@@ -10,12 +10,8 @@ import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
 from .console_common import *
-if "." in __name__:
-    from .. import pty_control
-    from ..common import debug
-else:
-    import pty_control
-    from common import debug
+from .. import pty_control
+from ..common import debug
 
 # We will try to use xlib to detect Ctrl-Enter (which is usually swallowed by X11)
 from ctypes import cdll, c_char, c_void_p

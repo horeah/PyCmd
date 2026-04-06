@@ -6,14 +6,9 @@
 
 import sys, os, re, time
 
-if __package__:
-    from .common import tokenize, expand_env_vars, has_exec_extension, is_executable, strip_extension
-    from .common import contains_special_char, starts_with_special_char
-    from .common import sep_chars, seq_tokens
-else:
-    from common import tokenize, expand_env_vars, has_exec_extension, is_executable, strip_extension
-    from common import contains_special_char, starts_with_special_char
-    from common import sep_chars, seq_tokens
+from .common import tokenize, expand_env_vars, has_exec_extension, is_executable, strip_extension
+from .common import contains_special_char, starts_with_special_char
+from .common import sep_chars, seq_tokens
 
 def complete_universal(line):
     """

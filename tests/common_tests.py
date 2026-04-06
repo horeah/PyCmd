@@ -4,9 +4,9 @@
 import os
 import sys
 from unittest import TestCase, TestSuite, defaultTestLoader
-from common import parse_line, escape_special_chars_in_quotes, unescape, fuzzy_match
-from common import associated_application, full_executable_path, is_gui_application
-from common import abbrev_tilde
+from pycmd.common import parse_line, escape_special_chars_in_quotes, unescape, fuzzy_match
+from pycmd.common import associated_application, full_executable_path, is_gui_application
+from pycmd.common import abbrev_tilde
 
 class TestParseLine(TestCase):
 

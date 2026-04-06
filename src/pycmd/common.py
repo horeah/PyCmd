@@ -4,10 +4,7 @@
 import os, string, mmap, sys, traceback, threading
 import re
 
-if __package__:
-    from . import fsm
-else:
-    import fsm
+from . import fsm
 
 # Stop points when navigating one word at a time
 word_sep = [' ', '\t', '\\', '-', '_', '.', '/', '$', '&', '=', '+', '@', ':', ';', '"']

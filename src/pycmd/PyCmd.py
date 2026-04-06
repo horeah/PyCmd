@@ -3,46 +3,25 @@ import re
 import shlex
 import threading
 
-if __package__:
-    from .common import pycmd_data_dir, pycmd_install_dir
-    from .common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
-    from .common import expand_tilde, expand_env_vars
-    from .common import associated_application, full_executable_path, is_gui_application
-    from .completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
-    from .InputState import ActionCode, InputState
-    from .DirHistory import DirHistory
-    from . import console
-    from .console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
-    from .console import read_input, write_input
-    from .console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-    from .console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
-    from .console import remove_escape_sequences
-    from .Window import Window
-    from .pycmd_public import color, appearance, behavior
-    from .common import apply_settings, sanitize_settings
-    from .common import debug
-    if sys.platform == 'linux':
-        from . import pty_control
-else:
-    from common import pycmd_data_dir, pycmd_install_dir
-    from common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
-    from common import expand_tilde, expand_env_vars
-    from common import associated_application, full_executable_path, is_gui_application
-    from completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
-    from InputState import ActionCode, InputState
-    from DirHistory import DirHistory
-    import console
-    from console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
-    from console import read_input, write_input
-    from console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
-    from console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
-    from console import remove_escape_sequences
-    from Window import Window
-    from pycmd_public import color, appearance, behavior
-    from common import apply_settings, sanitize_settings
-    from common import debug
-    if sys.platform == 'linux':
-        import pty_control
+from .common import pycmd_data_dir, pycmd_install_dir
+from .common import tokenize, unescape, escape_special_chars_in_quotes, sep_tokens, sep_chars, exec_extensions, pseudo_vars
+from .common import expand_tilde, expand_env_vars
+from .common import associated_application, full_executable_path, is_gui_application
+from .completion import find_common_prefix, has_wildcards, wildcard_to_regex, complete_universal, adjust_completion
+from .InputState import ActionCode, InputState
+from .DirHistory import DirHistory
+from . import console
+from .console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
+from .console import read_input, write_input
+from .console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+from .console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
+from .console import remove_escape_sequences
+from .Window import Window
+from .pycmd_public import color, appearance, behavior
+from .common import apply_settings, sanitize_settings
+from .common import debug
+if sys.platform == 'linux':
+    from . import pty_control
 
 from sys import stdout, stderr
 

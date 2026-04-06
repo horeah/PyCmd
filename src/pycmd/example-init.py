@@ -29,15 +29,12 @@ print('\n***  Hi, there!  ***')
 # pycmd_public is a collection of public functions, constants and objects that
 # PyCmd "exports" for use within init.py files; you can safely rely on these
 # being maintained throughout following versions. The documentation for this module
-# can be found in pycmd_public.html.
+# can be found in pycmd.pycmd_public.html.
 #
 # Note that importing symbols from pycmd_public is optional, as PyCmd automatically
 # makes them available within the init.py files; still, having them explicitly
 # imported might help you get coding assistance from your Python environment
-if __package__:
-    from .pycmd_public import appearance, behavior, abbrev_path        # Redundant
-else:
-    from pycmd_public import appearance, behavior, abbrev_path        # Redundant
+from .pycmd_public import appearance, behavior, abbrev_path        # Redundant
 
 # Color configuration is performed by including color specification sequences
 # (defined by pycmd_public.color) in your strings, similarly to the ANSI escape
@@ -57,10 +54,7 @@ else:
 #
 # The console's default color attributes are available as color.Fore.DEFAULT and
 # color.Back.DEFAULT.
-if __package__:
-    from .pycmd_public import color        # Redundant
-else:
-    from pycmd_public import color        # Redundant
+from .pycmd_public import color        # Redundant
 
 # The color of the regular user text (relative to the console's default)
 #

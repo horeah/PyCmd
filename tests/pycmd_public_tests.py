@@ -1,6 +1,6 @@
 import sys
 from unittest import TestCase, TestSuite, defaultTestLoader
-from pycmd_public import abbrev_path
+from pycmd.pycmd_public import abbrev_path
 from os.path import join, expanduser
 import getpass
 
