@@ -98,6 +98,8 @@ persistent history, etc.)
                - Python 3.10+ from http://www.python.org/download/
                - The pywin32 package (pip install pywin32)
                - The pefile package (pip install pefile)
+               - The chatlas package (pip install chatlas)
+               - The google package (pip install google)
        (3) `make` to to build a binary distribution
            You will also need:
                - cx_freeze (pip install cx_freeze)
