@@ -1,4 +1,4 @@
-import sys, os, tempfile, signal, time, traceback, codecs, platform
+import sys, os, tempfile, signal, time, traceback, platform
 import re
 import shlex
 import threading
@@ -871,7 +871,7 @@ def update_history(action, line, filename, length):
     """
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
-        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
+        history_file = open(filename, 'r', encoding='utf8', errors='replace')
         history_to_save = [l.rstrip(u'\n') for l in history_file.readlines()]
         history_file.close()
         if line in history_to_save:
@@ -886,7 +886,7 @@ def update_history(action, line, filename, length):
         history_to_save = history_to_save[-length :]    # Limit history file
 
     # Write merged history to history file
-    history_file = codecs.open(filename, 'w', 'utf8')
+    history_file = open(filename, 'w', encoding='utf8')
     history_file.writelines([l + u'\n' for l in history_to_save])
     history_file.close()
 
@@ -896,7 +896,7 @@ def read_history(filename):
     Read and return a list of lines from a history file
     """
     if os.path.isfile(filename):
-        history_file = codecs.open(filename, 'r', 'utf8', 'replace')
+        history_file = open(filename, 'r', encoding='utf8', errors='replace')
         history = [line.rstrip(u'\n\r') for line in history_file.readlines()]
         history_file.close()
     else:
