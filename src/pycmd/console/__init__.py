@@ -47,10 +47,7 @@ def cursor_backward(count):
     move_cursor(x, y)
 
 def erase_to(end):
-    if "." in __name__:
-        from ..pycmd_public import color
-    else:
-        from pycmd_public import color
+    from ..pycmd_public import color
     to_erase = count_chars(get_cursor(), end)
     sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
     cursor_backward(to_erase)
@@ -103,10 +100,7 @@ def write_str(s):
             else:
                 operator = lambda x, y: x ^ y
 
-            if "." in __name__:
-                from .. import console
-            else:
-                import console
+            from .. import console
             # We use the bit masks defined at the end of console.py by computing
             # the name and accessing the module's dictionary (FOREGROUND_RED,
             # BACKGROUND_BRIGHT etc)

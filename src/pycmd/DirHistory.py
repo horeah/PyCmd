@@ -1,8 +1,7 @@
 import os, sys
 import os.path
-from sys import stdout
-
 from .console import get_cursor, move_cursor, get_buffer_size
+from sys import stdout
 from .common import abbrev_tilde
 from .pycmd_public import appearance, color
 

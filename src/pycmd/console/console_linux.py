@@ -9,8 +9,8 @@ from dataclasses import dataclass
 import ctypes, sys, locale, time
 from ctypes import Structure, Union, c_int, c_long, c_char, c_wchar, c_short, pointer, byref
 from ctypes.wintypes import BOOL, WORD, DWORD
-from .console_common import *
 from .. import pty_control
+from .console_common import *
 from ..common import debug
 
 # We will try to use xlib to detect Ctrl-Enter (which is usually swallowed by X11)
@@ -422,13 +422,10 @@ def remove_escape_sequences(s):
     Remove color escape sequences from the given string
     
     """
-    if "." in __name__:
-        from ..pycmd_public import color
-    else:
-        from pycmd_public import color
+    from ..pycmd_public import color
     escape_sequences_fore = [v for (k, v) in chain(color.Fore.__dict__.items(),
                                                    color.Back.__dict__.items())
-                             if not k in ['__dict__', '__doc__', '__weakref__', '__module__']]
+                             if not k.startswith('__')]
     return reduce(lambda x, y: x.replace(y, ''), 
                   escape_sequences_fore,
                   s)

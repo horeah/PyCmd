@@ -430,10 +430,7 @@ def debug(message):
         debug_file.flush()
 
 
-if __package__:
-    from . import pycmd_public
-else:
-    import pycmd_public
+from . import pycmd_public
 
 def apply_settings(settings_file):
     """
