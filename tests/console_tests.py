@@ -3,10 +3,10 @@
 #
 
 from unittest import TestCase, TestSuite, defaultTestLoader
-import console
+from pycmd import console
 from sys import stdout
-from console import get_text_attributes, set_text_attributes
-from pycmd_public import color
+from pycmd.console import get_text_attributes, set_text_attributes
+from pycmd.pycmd_public import color
 
 class TestColors(TestCase):
     """Test the manipulation of color attributes"""

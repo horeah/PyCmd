@@ -3,9 +3,9 @@
 #
 
 from unittest import TestCase, TestSuite, defaultTestLoader
-from Window import Window
-from completion import wildcard_to_regex
-from console import get_buffer_size
+from pycmd.Window import Window
+from pycmd.completion import wildcard_to_regex
+from pycmd.console import get_buffer_size
 
 class TestWindow(TestCase):
     """Test the Window class"""

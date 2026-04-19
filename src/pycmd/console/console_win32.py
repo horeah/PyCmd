@@ -10,7 +10,7 @@ from win32console import GetStdHandle, STD_INPUT_HANDLE, PyINPUT_RECORDType, KEY
 from win32con import LEFT_CTRL_PRESSED, RIGHT_CTRL_PRESSED
 from win32con import LEFT_ALT_PRESSED, RIGHT_ALT_PRESSED
 from win32con import SHIFT_PRESSED
-from .console_common import *
+from pycmd.console.console_common import *
 
 def get_text_attributes():
     """Get the current foreground/background RGB components"""
@@ -105,7 +105,7 @@ def scroll_to_quarter(line):
 
 def clear_screen():
     """Clear the screen and move the cursor to the top-left corner"""
-    from pycmd_public import color
+    from pycmd.pycmd_public import color
     width, height = get_buffer_size()
     sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * width * height)
     move_cursor(0, 0)
@@ -132,7 +132,7 @@ def remove_escape_sequences(s):
     Remove color escape sequences from the given string
     
     """
-    from pycmd_public import color
+    from pycmd.pycmd_public import color
     escape_sequences_fore = [v for (k, v) in chain(color.Fore.__dict__.items(),
                                                    color.Back.__dict__.items())
                              if not k.startswith('__')]
