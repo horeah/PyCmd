@@ -26,8 +26,7 @@ dependencies = [
   "patchelf; platform_system!='Windows'",
   "pefile; platform_system=='Windows'",
   "pywin32; platform_system=='Windows'",
-  "chatlas",
-  "google",
+  "chatlas[google]",
 ]
 description = "Improved interactive shell"
 dynamic = ["version"]
@@ -76,4 +75,4 @@ include_files = [
     "src/pycmd/example-init.py",
     "src/pycmd/pycmd_public.html",
 ]
-packages = ["chatlas", "googlesearch"]
+packages = ["chatlas", "google"]

@@ -45,25 +45,25 @@ doc: src/pycmd/pycmd_public.py
 	$(PYTHON) -c "import sys; sys.path.append('src');from pycmd import pycmd_public; import pydoc; pydoc.writedoc(pycmd_public)"
 	$(MV) pycmd.pycmd_public.html src/pycmd/pycmd_public.html
 
-dist_w32: clean $(SRC) doc
+dist_w32: clean doc
 	$(PYTHON_W32) -m cx_Freeze build
 	$(MV) build/exe.win32-3.10 PyCmd
 	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w32.zip PyCmd
 
-dist_w64: clean $(SRC) doc
+dist_w64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.win-amd64-3.10 PyCmd
 	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
 
-dist_linux64: clean $(SRC) doc
+dist_linux64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
 	$(ZIP) -r PyCmd-$(BUILD_DATE)-linux64.zip PyCmd
 
-dist_whl: clean $(SRC) doc
+dist_whl: clean doc
 	($(CAT) README.txt && echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > README-WHL.txt
 	$(PYTHON) -m build
 
