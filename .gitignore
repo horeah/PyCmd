@@ -1,10 +1,14 @@
 # leading `/' means at top level only
+/.venv
 /build/
+/dist
 /PyCmd/
-/buildinfo.py
 /PyCmd-*-w??.zip
-/pycmd_public.html
-/PyCmd.egg-info/
+/README-WHL.txt
+/src/py_cmd.egg-info
+/src/pycmd/buildinfo.py
+/src/pycmd/PyCmd.egg-info
+/src/pycmd/pycmd_public.html
 
 # no leading `/' means anywhere
 *.pyc

@@ -1,13 +1,13 @@
-from console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes
-from console import read_input, erase_to, is_ctrl_pressed, is_alt_pressed
-from pycmd_public import color, appearance
+from pycmd.console import get_buffer_size, get_viewport, get_cursor, move_cursor, set_cursor_attributes
+from pycmd.console import read_input, erase_to, is_ctrl_pressed, is_alt_pressed
+from pycmd.pycmd_public import color, appearance
 from math import log10, ceil
 from sys import stdout
-from common import fuzzy_match
+from pycmd.common import fuzzy_match
 import sys
-from common import debug
+from pycmd.common import debug
 if sys.platform == 'linux':
-    import pty_control
+    from pycmd import pty_control
 
 
 class Window(object):

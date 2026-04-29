@@ -4,7 +4,8 @@ Public constants, objects and utilities exported by PyCmd.
 These are meant to be used in init.py files; users can rely on them being kept
 unchanged (interface-wise) throughout later versions.
 """
-import os, sys, common, console, subprocess
+import os, sys, subprocess
+from pycmd import common, console
 
 def abbrev_path(path = None):
     """

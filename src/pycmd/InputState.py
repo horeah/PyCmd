@@ -1,9 +1,9 @@
 from enum import Enum, auto
 import sys, subprocess
-from CommandHistory import CommandHistory
-from common import word_sep, tokenize, seq_tokens
-from completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
-from common import word_sep
+from pycmd.CommandHistory import CommandHistory
+from pycmd.common import word_sep, tokenize, seq_tokens
+from pycmd.completion import complete_file, complete_env_var, has_wildcards, ends_in_env_var
+from pycmd.common import word_sep
 import re
 
 

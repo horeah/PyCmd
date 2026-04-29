@@ -1,5 +1,5 @@
 import sys, os, threading, tty, pty, fcntl, array, termios, tempfile, select
-from common import debug
+from pycmd.common import debug
 
 input_processed = threading.Event()
 input_available = threading.Event()

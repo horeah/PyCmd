@@ -4,8 +4,8 @@
 
 import sys
 from unittest import TestCase, TestSuite, defaultTestLoader
-from completion import wildcard_to_regex, find_common_prefix, adjust_completion
-from completion import  complete_file, complete_wildcard, complete_env_var
+from pycmd.completion import wildcard_to_regex, find_common_prefix, adjust_completion
+from pycmd.completion import  complete_file, complete_wildcard, complete_env_var
 
 class TestWildcardMatching(TestCase):
     matches = [

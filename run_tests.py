@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 import unittest
 from tests import common_tests, completion_tests, console_tests, command_tests
 from tests import InputState_tests, Window_tests
