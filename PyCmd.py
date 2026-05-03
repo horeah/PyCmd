@@ -405,17 +405,16 @@ def main():
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
                 elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
-            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):  # Ctrl-Alt-Something 
-                if rec.VirtualKeyCode == 75:                # Ctrl-Alt-K
-                    update_history('remove', state.line, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
-                    state.handle(ActionCode.ACTION_ZAP)
-                elif rec.VirtualKeyCode == 73:              # Ctrl-Alt-I
-                    if state.line or not behavior.chat.template:
-                        state.bell = True
-                    else:
-                        change_state = state_chat if state == state_command else state_command
-                        force_repaint = True
-                        auto_select = False
+            elif is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 75:  # Ctrl-Alt-K
+                update_history('remove', state.line, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
+                state.handle(ActionCode.ACTION_ZAP)
+            elif is_ctrl_pressed(rec) and is_alt_pressed(rec) and rec.VirtualKeyCode == 73:  # Ctrl-Alt-I
+                if state.line or not behavior.chat.template:
+                    state.bell = True
+                else:
+                    change_state = state_chat if state == state_command else state_command
+                    force_repaint = True
+                    auto_select = False
             elif is_shift_pressed(rec) and rec.VirtualKeyCode == 33:    # Shift-PgUp
                 (_, t, _, b) = get_viewport()
                 scroll_buffer(t - b + 2)
