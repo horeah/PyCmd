@@ -69,7 +69,7 @@ dist_whl: clean doc
 
 test_whl:
 	$(PYTHON) -m venv --clear .venv
-	$(VENV_BIN)/pip install $(wildcard dist/*whl)
+	$(VENV_BIN)/pip install $(wildcard dist/*whl)[chat]
 	$(VENV_BIN)/pycmd
 
 .PHONY: clean

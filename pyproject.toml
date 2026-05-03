@@ -26,7 +26,6 @@ dependencies = [
   "patchelf; platform_system!='Windows'",
   "pefile; platform_system=='Windows'",
   "pywin32; platform_system=='Windows'",
-  "chatlas[google]",
 ]
 description = "Improved interactive shell"
 dynamic = ["version"]
@@ -44,6 +43,10 @@ maintainers = [
 name = "py-cmd"
 readme = "README-WHL.txt"
 requires-python = ">=3.10"
+
+[project.optional-dependencies]
+chat = ["chatlas[google]"]
+all = ["chatlas[google]"]
 
 [project.scripts]
 pycmd = "pycmd.PyCmd:_main"
