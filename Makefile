@@ -34,12 +34,15 @@ VERSION = $(shell $(PYTHON) -m setuptools_scm --strip-dev)
 .PHONY: all
 ifeq ($(OS),Windows_NT)
 all:
-	$(MAKE) dist_w32 
+	$(MAKE) dist_w32
+	$(MAKE) dist_w32_chat
 	$(MAKE) dist_w64
+	$(MAKE) dist_w64_chat
 	$(MAKE) dist_whl
 else
 all:
 	$(MAKE) dist_linux64
+	$(MAKE) dist_linux64_chat
 endif
 
 doc: src/pycmd/pycmd_public.py
@@ -50,19 +53,43 @@ dist_w32: clean doc
 	$(PYTHON_W32) -m cx_Freeze build
 	$(MV) build/exe.win32-3.10 PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(VERSION)-w32.zip PyCmd
+	$(ZIP) -r dist/PyCmd-$(VERSION)-w32.zip PyCmd
+
+dist_w32_chat: clean doc
+	echo packages = ["chatlas", "google"] >> pyproject.toml
+	$(PYTHON) -m cx_Freeze build
+	git checkout pyproject.toml
+	$(MV) build/exe.win32-3.10 PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r dist/PyCmd-$(VERSION)-w32.zip PyCmd
 
 dist_w64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.win-amd64-3.10 PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(VERSION)-w64.zip PyCmd
+	$(ZIP) -r dist/PyCmd-$(VERSION)-w64.zip PyCmd
+
+dist_w64_chat: clean doc
+	echo packages = ["chatlas", "google"] >> pyproject.toml
+	$(PYTHON) -m cx_Freeze build
+	git checkout pyproject.toml
+	$(MV) build/exe.win-amd64-3.10 PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r dist/PyCmd-chat-$(VERSION)-w64.zip PyCmd
 
 dist_linux64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
-	$(ZIP) -r PyCmd-$(VERSION)-linux64.zip PyCmd
+	$(ZIP) -r dist/yCmd-$(VERSION)-linux64.zip PyCmd
+
+dist_linux64_chat: clean doc
+	echo packages = ["chatlas", "google"] >> pyproject.toml
+	$(PYTHON) -m cx_Freeze build
+	git checkout pyproject.toml
+	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
+	$(ZIP) -r dist/PyCmd-$(VERSION)-linux64.zip PyCmd
 
 dist_whl: clean doc
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > src/pycmd/NEWS.txt
@@ -75,4 +102,4 @@ test_whl:
 
 .PHONY: clean
 clean:
-	git clean -xdf
+	git clean -xdf -e dist
