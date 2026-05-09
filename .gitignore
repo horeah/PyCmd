@@ -4,9 +4,9 @@
 /dist
 /PyCmd/
 /PyCmd-*-w??.zip
-/README-WHL.txt
-/src/py_cmd.egg-info
+/src/PyCmd_shell.egg-info
 /src/pycmd/buildinfo.py
+/src/pycmd/NEWS.txt
 /src/pycmd/PyCmd.egg-info
 /src/pycmd/pycmd_public.html
 

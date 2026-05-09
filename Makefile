@@ -6,6 +6,7 @@
 #	* zip
 #	* patchelf (for Linux)
 #	* cx_freeze python package
+#   * 'setuptools_scm' python package for auto versioning
 #   * 'build' python package for building a .whl
 # 	* pywin32 and pefile python packages (for Windows)
 #
@@ -28,7 +29,7 @@ else
 	VENV_BIN = .venv/bin
 endif
 
-BUILD_DATE = $(shell $(PYTHON) create_buildinfo.py)
+VERSION = $(shell $(PYTHON) -m setuptools_scm --strip-dev)
 
 .PHONY: all
 ifeq ($(OS),Windows_NT)
@@ -48,23 +49,23 @@ doc: src/pycmd/pycmd_public.py
 dist_w32: clean doc
 	$(PYTHON_W32) -m cx_Freeze build
 	$(MV) build/exe.win32-3.10 PyCmd
-	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_DATE)-w32.zip PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r PyCmd-$(VERSION)-w32.zip PyCmd
 
 dist_w64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.win-amd64-3.10 PyCmd
-	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_DATE)-w64.zip PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
+	$(ZIP) -r PyCmd-$(VERSION)-w64.zip PyCmd
 
 dist_linux64: clean doc
 	$(PYTHON) -m cx_Freeze build
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
-	(echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
-	$(ZIP) -r PyCmd-$(BUILD_DATE)-linux64.zip PyCmd
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
+	$(ZIP) -r PyCmd-$(VERSION)-linux64.zip PyCmd
 
 dist_whl: clean doc
-	($(CAT) README.txt && echo Release $(BUILD_DATE) && $(CAT) NEWS.txt) > README-WHL.txt
+	(echo Release $(VERSION) && $(CAT) NEWS.txt) > src/pycmd/NEWS.txt
 	$(PYTHON) -m build
 
 test_whl:

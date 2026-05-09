@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-scm[simple]"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -40,8 +40,8 @@ license = {text = ""}
 maintainers = [
   {name = "Horea Haitonic", email = "horeah@gmail.com"},
 ]
-name = "py-cmd"
-readme = "README-WHL.txt"
+name = "PyCmd-shell"
+readme = "README.txt"
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
@@ -58,11 +58,14 @@ Homepage = "https://github.com/horeah/PyCmd"
 Issues = "https://github.com/horeah/PyCmd/issues"
 Repository = "https://github.com/horeah/PyCmd"
 
-[tool.setuptools.dynamic]
-version = {attr = "pycmd.buildinfo.build_date"}
-
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+version_file = "src/pycmd/buildinfo.py"
+
+[tool.setuptools_scm.scm.git]
+describe_command = "git describe --dirty --tags --long"
 
 [tool.cxfreeze]
 executables = [

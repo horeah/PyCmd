@@ -158,11 +158,12 @@ def main():
         arch_names = { '32bit': 'x86', '64bit': 'x64' }
         bits = platform.architecture()[0]
         try:
-            from pycmd.buildinfo import build_date
+            from pycmd.buildinfo import version
+            version = version.split("+")[0]
         except ImportError as ie:
-            build_date = '<no build date>'
+            version = '<no version info>'
         print()
-        print('Welcome to PyCmd %s-%s!' % (build_date, arch_names[bits]))
+        print('Welcome to PyCmd %s-%s!' % (version, arch_names[bits]))
         print()
 
     # Main loop

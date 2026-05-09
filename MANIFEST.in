@@ -1,1 +1,2 @@
+include src/pycmd/NEWS.txt
 include src/pycmd/pycmd_public.html
