@@ -49,7 +49,7 @@ chat = ["chatlas[google]"]
 all = ["chatlas[google]"]
 
 [project.scripts]
-pycmd = "pycmd.PyCmd:_main"
+PyCmd = "pycmd.PyCmd:_main"
 
 [project.urls]
 Changelog = "https://github.com/horeah/PyCmd/blob/master/NEWS.txt"
@@ -81,4 +81,3 @@ include_files = [
     "src/pycmd/example-init.py",
     "src/pycmd/pycmd_public.html",
 ]
-packages = ["chatlas", "google"]

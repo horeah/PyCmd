@@ -57,11 +57,11 @@ dist_w32: clean doc
 
 dist_w32_chat: clean doc
 	echo packages = ["chatlas", "google"] >> pyproject.toml
-	$(PYTHON) -m cx_Freeze build
+	$(PYTHON_W32) -m cx_Freeze build
 	git checkout pyproject.toml
 	$(MV) build/exe.win32-3.10 PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r dist/PyCmd-$(VERSION)-w32.zip PyCmd
+	$(ZIP) -r dist/PyCmd-$(VERSION)[chat]-w32.zip PyCmd
 
 dist_w64: clean doc
 	$(PYTHON) -m cx_Freeze build
@@ -75,7 +75,7 @@ dist_w64_chat: clean doc
 	git checkout pyproject.toml
 	$(MV) build/exe.win-amd64-3.10 PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd\NEWS.txt
-	$(ZIP) -r dist/PyCmd-chat-$(VERSION)-w64.zip PyCmd
+	$(ZIP) -r dist/PyCmd-$(VERSION)[chat]-w64.zip PyCmd
 
 dist_linux64: clean doc
 	$(PYTHON) -m cx_Freeze build
@@ -89,7 +89,7 @@ dist_linux64_chat: clean doc
 	git checkout pyproject.toml
 	$(MV) build/exe.linux-x86_64-3.10/ PyCmd
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > PyCmd/NEWS.txt
-	$(ZIP) -r dist/PyCmd-$(VERSION)-linux64.zip PyCmd
+	$(ZIP) -r dist/PyCmd-$(VERSION)[chat]-linux64.zip PyCmd
 
 dist_whl: clean doc
 	(echo Release $(VERSION) && $(CAT) NEWS.txt) > src/pycmd/NEWS.txt
