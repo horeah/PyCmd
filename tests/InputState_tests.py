@@ -3,7 +3,7 @@
 #
 
 from unittest import TestCase, TestSuite, defaultTestLoader
-from InputState import InputState
+from pycmd.InputState import InputState
 
 class TestInputState(TestCase):
     """Test the handling of the Input State"""

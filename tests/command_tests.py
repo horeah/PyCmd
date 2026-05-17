@@ -3,8 +3,8 @@
 #
 
 from unittest import TestCase, TestSuite, defaultTestLoader
-import PyCmd
-from common import expand_env_vars
+from pycmd import PyCmd
+from pycmd.common import expand_env_vars
 import os, time, sys
 
 test_dir = os.path.split(__file__)[0]

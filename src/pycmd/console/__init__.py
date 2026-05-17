@@ -1,10 +1,10 @@
 import sys
-from . import console_common
+from pycmd.console import console_common
 
 if sys.platform == 'win32':
-    from .console_win32 import *
+    from pycmd.console.console_win32 import *
 else:
-    from .console_linux import *
+    from pycmd.console.console_linux import *
 
 def get_current_foreground():
     """Get the current foreground setting as a color string"""
@@ -47,7 +47,7 @@ def cursor_backward(count):
     move_cursor(x, y)
 
 def erase_to(end):
-    from pycmd_public import color
+    from pycmd.pycmd_public import color
     to_erase = count_chars(get_cursor(), end)
     sys.stdout.write(color.Fore.DEFAULT + color.Back.DEFAULT + ' ' * to_erase)
     cursor_backward(to_erase)
@@ -100,7 +100,7 @@ def write_str(s):
             else:
                 operator = lambda x, y: x ^ y
 
-            import console
+            from pycmd import console
             # We use the bit masks defined at the end of console.py by computing
             # the name and accessing the module's dictionary (FOREGROUND_RED,
             # BACKGROUND_BRIGHT etc)

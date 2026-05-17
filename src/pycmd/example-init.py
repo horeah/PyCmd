@@ -34,7 +34,7 @@ print('\n***  Hi, there!  ***')
 # Note that importing symbols from pycmd_public is optional, as PyCmd automatically
 # makes them available within the init.py files; still, having them explicitly
 # imported might help you get coding assistance from your Python environment
-from pycmd_public import appearance, behavior, abbrev_path        # Redundant
+from pycmd.pycmd_public import appearance, behavior, abbrev_path        # Redundant
 
 # Color configuration is performed by including color specification sequences
 # (defined by pycmd_public.color) in your strings, similarly to the ANSI escape
@@ -54,7 +54,7 @@ from pycmd_public import appearance, behavior, abbrev_path        # Redundant
 #
 # The console's default color attributes are available as color.Fore.DEFAULT and
 # color.Back.DEFAULT.
-from pycmd_public import color        # Redundant
+from pycmd.pycmd_public import color        # Redundant
 
 # The color of the regular user text (relative to the console's default)
 #
