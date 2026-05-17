@@ -124,7 +124,7 @@ class TestAdjustCompletion(TestCase):
         (('"%PROGRAMFILES', '', False), ('"%PROGRAMFILES', '')),
         (('copy tests\\bench\\dir1\\f1.txt', '.txt C:\\Users', True), ('copy tests\\bench\\dir1\\f1.txt ', 'C:\\Users')),
         (('set PATH=%PATH', '', False), ('set PATH=%PATH', '')),
-        (('ls "tests\\bench\\dir2\subdir with space\\subsubdir', 'subsubdir"\\', True), ('ls "tests\\bench\\dir2\\subdir with space\\subsubdir"\\', '')),
+        (('ls "tests\\bench\\dir2\\subdir with space\\subsubdir', 'subsubdir"\\', True), ('ls "tests\\bench\\dir2\\subdir with space\\subsubdir"\\', '')),
         (('ls "C:\\Windows\\', '', True), ('ls C:\\Windows\\', '')),
         (('ls "~\\Desktop\\', '', True), ('ls ~\\Desktop\\', '')),
         (('ls "~\\with space\\', '', True), ('ls "~\\with space"\\', '')),

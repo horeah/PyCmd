@@ -197,7 +197,7 @@ class TestInputState(TestCase):
         self.assertEqual(self.state.selection_start, len(self.state.before_cursor) + len('"d:\\Util\\KDE Mover-Sizer.exe"'))
 
     def testExtendSelectionAtEnd(self):
-        self.state.before_cursor = 'ls "c:\Program Files (x86)\scenview.py" '
+        self.state.before_cursor = 'ls "c:\\Program Files (x86)\\scenview.py" '
         self.state.after_cursor = ''
         self.state.reset_selection()
 

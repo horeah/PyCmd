@@ -151,8 +151,8 @@ class TestParseLine(TestCase):
         ('echo %RAILS_GEM_VERSION%',
          ['echo', '%RAILS_GEM_VERSION%']),
 
-        ('cat ~\PUTTY.RND',
-         ['cat', '~\PUTTY.RND']),
+        ('cat ~\\PUTTY.RND',
+         ['cat', '~\\PUTTY.RND']),
 
         ('CmBoxPgm.exe /QN1:F /F10 /P0 /CD /P0 /CD',
          ['CmBoxPgm.exe', '/QN1:F', '/F10', '/P0', '/CD', '/P0', '/CD']),
@@ -245,8 +245,8 @@ class TestAppIdentification(TestCase):
                       'c:\\windows\\system32\\___cxxxxxx___.exe': None,
                       'cmd': 'c:\\windows\\system32\\cmd.exe',
                       'cmd.exe': 'c:\\windows\\system32\\cmd.exe',
-                      'c:\\windows\system32\\cmd': 'c:\\windows\\system32\\cmd.exe',
-                      'c:\\windows\system32\\cmd.exe': 'c:\\windows\\system32\\cmd.exe',
+                      'c:\\windows\\system32\\cmd': 'c:\\windows\\system32\\cmd.exe',
+                      'c:\\windows\\system32\\cmd.exe': 'c:\\windows\\system32\\cmd.exe',
                       'winhlp32': 'c:\\windows\\winhlp32.exe',
                       'winhlp32.exe': 'c:\\windows\\winhlp32.exe',
                       'c:\\windows\\winhlp32': 'c:\\windows\\winhlp32.exe',
