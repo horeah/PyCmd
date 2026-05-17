@@ -86,24 +86,20 @@ persistent history, etc.)
 
 5. How do I download/install/run it?
 ------------------------------------   
- a. Download a binary distribution (created with cx_freeze, see
-    https://pypi.org/project/cx-Freeze/) from
+ a. Download a standalone binary distribution from 
           https://github.com/horeah/PyCmd/releases
     Then, unpack and start PyCmd.exe. No installation is necessary.
 
- b. Clone the repository, then:
-       (1) `python run_tests.py` to run tests
-       (2) `python PyCmd.py` to start the application
-           You will need:
-               - Python 3.10+ from http://www.python.org/download/
-               - The pywin32 package (pip install pywin32)
-               - The pefile package (pip install pefile)
-               - The chatlas package (pip install chatlas)
-               - The google package (pip install google)
-       (3) `make` to to build a binary distribution
-           You will also need:
-               - cx_freeze (pip install cx_freeze)
-               - MinGW from http://www.mingw.org/ 
+ b. Download and install a wheel distribution from 
+          https://github.com/horeah/PyCmd/releases
+    Then run `pip install Pycmd-<version>.whl` to install (this will also create
+    a starter script/executable). 
+    
+ c. Clone the repository and run/build directly with Python (>=3.10):
+       (1) `pip install -r requirements.txt` to install dependencies
+       (2) `python run_tests.py` to run tests
+       (3) `python PyCmd.py` to start the application
+       (4) `make` to build the binary distributions
 
 
 6. How do I report a crash/problem?

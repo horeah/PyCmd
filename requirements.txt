@@ -1,0 +1,5 @@
+cx-Freeze
+pywin32
+pefile
+chatlas
+google
