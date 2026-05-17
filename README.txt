@@ -1,10 +1,8 @@
 1. What is PyCmd?  
 -----------------
-PyCmd is a smart command prompt extension for Windows' cmd.exe; its purpose is
-to emulate a few power features of UNIX shells (decent Tab-completion,
-persistent history, etc.)
-
-[Experimental] PyCmd now also runs on Linux, acting as a front-end for bash
+PyCmd is a front-end for `cmd.exe` (on Windows) and respectively `bash` 
+(on Linux/WSL); it brings a powerful, modern and efficient interactive 
+experience to classic, ubiquitous shells.
 
 
 2. What are some important features?
@@ -43,11 +41,21 @@ persistent history, etc.)
     - smart word-by-word navigation
     - lexical selection (Shift-Up/Down)
 
- d. Navigation
+ d. Chat ("AI") mode
+    - only enabled if
+      - the "chat" variant of the PyCmd distribution has been downloaded/installed
+      - `behavior.chat.template` is configured in `init.py` (see `example-init.py`)
+    - Ctrl-Alt-I to switch to "chat" mode
+    - describe what you want to do, get a suggested command
+    - each switch to "chat" mode is a brand new "session"
+      - but the inputs are stored in a dedicated history, so it's easy to iterate
+    - feel free to experiment with providers, system prompts etc. in your `init.py`
+
+ e. Navigation
     - history of recently visited directories (Alt-Left/Right/D on empty line)
     - cd to parent (Alt-Up)
 
- e. Other
+ f. Other
     - smart prompt:
       - highlighted for readability
       - abbreviates path to save space
