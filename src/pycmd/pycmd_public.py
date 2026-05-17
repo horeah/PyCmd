@@ -53,7 +53,7 @@ def abbrev_path(path = None):
                     # In this case, we use the entire name
                     elem_abbrev = elem
                     break
-        except PermissionError:
+        except (PermissionError, FileNotFoundError):
             # we were unable to list parent directory to check for collisions
             elem_abbrev = elem
         current_dir += os.sep + elem

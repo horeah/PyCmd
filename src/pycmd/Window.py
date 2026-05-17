@@ -47,7 +47,9 @@ class Window(object):
             # We print multiple columns to save space
             self.num_columns = (self.width - 1) // self.column_width
         else:
-            # We print a single column for clarity
+            self.num_columns = 1
+        if self.num_columns <= 1:
+            # Single column: use the full available width
             self.num_columns = 1
             self.column_width = self.width - 1
         self.num_lines = len(self.entries) // self.num_columns
