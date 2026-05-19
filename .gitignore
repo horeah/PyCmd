@@ -1,9 +1,8 @@
 # leading `/' means at top level only
 /.venv
 /build/
-/dist
+/dist/
 /PyCmd/
-/PyCmd-*-w??.zip
 /src/PyCmd_shell.egg-info
 /src/pycmd/buildinfo.py
 /src/pycmd/NEWS.txt
