@@ -100,7 +100,6 @@ def main():
             # Run the specified command and continue
             if rest != []:
                 run_command(rest)
-                dir_hist.visit_cwd()
                 break
         elif switch in ['/C', '-C']:
             # Run the specified command end exit
