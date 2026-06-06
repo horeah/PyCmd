@@ -148,6 +148,10 @@ def is_alt_pressed(record):
     """Check whether the Alt key is pressed"""
     return record.ControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED) != 0
 
+def is_left_alt_pressed(record):
+    """Check whether the left Alt key is pressed (excludes AltGr, which sets right Alt)"""
+    return record.ControlKeyState & LEFT_ALT_PRESSED != 0
+
 def is_shift_pressed(record):
     """Check whether the Shift key is pressed"""
     return record.ControlKeyState & SHIFT_PRESSED != 0

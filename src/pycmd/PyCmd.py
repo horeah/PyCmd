@@ -14,7 +14,7 @@ import copy
 from sys import stdout, stderr
 from pycmd.console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from pycmd.console import read_input, write_input
-from pycmd.console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+from pycmd.console import is_ctrl_pressed, is_alt_pressed, is_left_alt_pressed, is_shift_pressed, is_control_only
 from pycmd.console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
 from pycmd.console import remove_escape_sequences
 from pycmd.Window import Window
@@ -405,7 +405,7 @@ def main():
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
                 elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
-            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):  # Ctrl-Alt-Something 
+            elif is_ctrl_pressed(rec) and is_left_alt_pressed(rec) and ord(rec.Char) < 32:  # Ctrl-Alt-Something
                 if rec.VirtualKeyCode == 75:                # Ctrl-Alt-K
                     update_history('remove', state.line, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
                     state.handle(ActionCode.ACTION_ZAP)
