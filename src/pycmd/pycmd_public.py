@@ -152,10 +152,10 @@ def git_prompt():
         stdout=subprocess.PIPE,
         stderr=-1).communicate()[0].decode(sys.stdout.encoding)
     lines = stdout.split('\n')
-    match_branch = re.match('## (.+)\.\.\.(.+)?.*', lines[0])
+    match_branch = re.match(r'## (.+)\.\.\.(.+)?.*', lines[0])
     if not match_branch:
         # Maybe this is not a tracking branch, fallback
-        match_branch = re.match('## (.+)', lines[0])
+        match_branch = re.match(r'## (.+)', lines[0])
 
     if match_branch:
         head_name = ""
@@ -169,7 +169,7 @@ def git_prompt():
             head_name = branch_name
 
         ahead = behind = ''
-        match_ahead_behind = re.match('## .* \[(ahead (\d+))?(, )?(behind (\d+))?\]', lines[0])
+        match_ahead_behind = re.match(r'## .* \[(ahead (\d+))?(, )?(behind (\d+))?\]', lines[0])
         if match_ahead_behind:
             ahead = match_ahead_behind.group(2)
             behind = match_ahead_behind.group(5)
