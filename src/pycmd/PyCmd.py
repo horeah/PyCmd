@@ -466,7 +466,7 @@ def main():
                         stdout.write(state.after_cursor)
                         stdout.write(' ' * len(state.suggestion))
                         cursor_backward(len(state.suggestion))
-                        state.history.add(state.line)
+                        state.history.add(state.line.strip())
                         update_history('add', state.history.list[-1], pycmd_data_dir + '/chat_history', save_history_limit)
                         chat = copy.deepcopy(behavior.chat.template)
                         try:
@@ -637,7 +637,7 @@ def main():
             run_command(tokens)
 
         # Add to history
-        state.history.add(line)
+        state.history.add(line.strip())
         update_history('add', state.history.list[-1],
                        pycmd_data_dir + '/history',
                        save_history_limit)
@@ -935,7 +935,7 @@ def update_history(action, line, filename, length):
     if os.path.isfile(filename):
         # Read previously saved history and merge with current
         history_file = open(filename, 'r', encoding='utf8', errors='replace')
-        history_to_save = [l.rstrip(u'\n') for l in history_file.readlines()]
+        history_to_save = [l.rstrip(u'\r\n') for l in history_file]
         history_file.close()
         if line in history_to_save:
             history_to_save.remove(line)
@@ -950,7 +950,7 @@ def update_history(action, line, filename, length):
 
     # Write merged history to history file
     history_file = open(filename, 'w', encoding='utf8')
-    history_file.writelines([l + u'\n' for l in history_to_save])
+    history_file.writelines([l + '\n' for l in history_to_save])
     history_file.close()
 
 
@@ -960,7 +960,7 @@ def read_history(filename):
     """
     if os.path.isfile(filename):
         history_file = open(filename, 'r', encoding='utf8', errors='replace')
-        history = [line.rstrip(u'\n\r') for line in history_file.readlines()]
+        history = [line.rstrip('\r\n') for line in history_file]
         history_file.close()
     else:
         print('Warning: Can\'t open ' + os.path.basename(filename) + '!')
