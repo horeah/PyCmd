@@ -14,7 +14,7 @@ import copy
 from sys import stdout, stderr
 from pycmd.console import move_cursor, get_cursor, cursor_backward, set_cursor_attributes
 from pycmd.console import read_input, write_input
-from pycmd.console import is_ctrl_pressed, is_alt_pressed, is_shift_pressed, is_control_only
+from pycmd.console import is_ctrl_pressed, is_left_ctrl_pressed, is_right_ctrl_pressed, is_alt_pressed, is_left_alt_pressed, is_right_alt_pressed, is_shift_pressed, is_control_only
 from pycmd.console import scroll_buffer, get_viewport, get_buffer_size, clear_screen
 from pycmd.console import remove_escape_sequences
 from pycmd.Window import Window
@@ -254,6 +254,7 @@ def main():
             force_repaint = not is_control_only(rec)
 
             #print('\n\n', rec.KeyDown, rec.Char, rec.VirtualKeyCode, rec.ControlKeyState, '\n\n')
+            #print(f'\n\n{is_left_ctrl_pressed(rec)} {is_right_ctrl_pressed(rec)} {is_left_alt_pressed(rec)} {is_right_alt_pressed(rec)} {ord(rec.Char)}\n\n')
             if is_ctrl_pressed(rec) and not is_alt_pressed(rec):  # Ctrl-Something
                 if rec.Char == chr(4):                  # Ctrl-D
                     if state.line == '':
@@ -405,7 +406,9 @@ def main():
                     state.handle(ActionCode.ACTION_BACKSPACE_WORD)
                 elif rec.VirtualKeyCode == 191:         # Alt-/
                     state.handle(ActionCode.ACTION_EXPAND)
-            elif is_ctrl_pressed(rec) and is_alt_pressed(rec):  # Ctrl-Alt-Something 
+            elif (is_ctrl_pressed(rec) and is_alt_pressed(rec) and 
+                # Left-Ctrl + Right-Alt with rec.Char != '\0' typically comes from an AltGr-combo
+                not (is_left_ctrl_pressed(rec) and is_right_alt_pressed(rec) and rec.Char != '\0' )):  # Ctrl-Alt-Something
                 if rec.VirtualKeyCode == 75:                # Ctrl-Alt-K
                     update_history('remove', state.line, pycmd_data_dir + ('/history' if state == state_command else '/chat_history'), save_history_limit)
                     state.handle(ActionCode.ACTION_ZAP)

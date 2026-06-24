@@ -431,25 +431,6 @@ def remove_escape_sequences(s):
                   escape_sequences_fore,
                   s)
 
-def is_ctrl_pressed(record):
-    """Check whether the Ctrl key is pressed"""
-    return record.ControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) != 0
-
-def is_alt_pressed(record):
-    """Check whether the Alt key is pressed"""
-    return record.ControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED) != 0
-
-def is_shift_pressed(record):
-    """Check whether the Shift key is pressed"""
-    return record.ControlKeyState & SHIFT_PRESSED != 0
-
-def is_control_only(record):
-    """
-    Check whether this is a control-key-only press, i.e. just a modifier
-    key w/out an "actual" key
-    """
-    return record.VirtualKeyCode in [16, 17, 18]
-
 def write_with_sane_cursor(s):
     """Write simple text (i.e. no escape sequences) and track the
     (relative) cursor position; also ensure that the cursor is

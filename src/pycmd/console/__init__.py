@@ -6,6 +6,41 @@ if sys.platform == 'win32':
 else:
     from pycmd.console.console_linux import *
 
+def is_left_ctrl_pressed(record):
+    """Check whether the left Ctrl key is pressed"""
+    return record.ControlKeyState & LEFT_CTRL_PRESSED != 0
+
+def is_right_ctrl_pressed(record):
+    """Check whether the right Ctrl key is pressed"""
+    return record.ControlKeyState & RIGHT_CTRL_PRESSED != 0
+
+def is_ctrl_pressed(record):
+    """Check whether the Ctrl key is pressed"""
+    return is_left_ctrl_pressed(record) or is_right_ctrl_pressed(record)
+
+def is_left_alt_pressed(record):
+    """Check whether the left Alt key is pressed"""
+    return record.ControlKeyState & LEFT_ALT_PRESSED != 0
+
+def is_right_alt_pressed(record):
+    """Check whether the right Alt key is pressed"""
+    return record.ControlKeyState & RIGHT_ALT_PRESSED != 0
+
+def is_alt_pressed(record):
+    """Check whether the Alt key is pressed"""
+    return is_left_alt_pressed(record) or is_right_alt_pressed(record)
+
+def is_shift_pressed(record):
+    """Check whether the Shift key is pressed"""
+    return record.ControlKeyState & SHIFT_PRESSED != 0
+
+def is_control_only(record):
+    """
+    Check whether this is a control-key-only press, i.e. just a modifier
+    key w/out an "actual" key
+    """
+    return record.VirtualKeyCode in [16, 17, 18]
+
 def get_current_foreground():
     """Get the current foreground setting as a color string"""
     color = ''
