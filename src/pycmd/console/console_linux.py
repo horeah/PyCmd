@@ -116,6 +116,14 @@ class PyINPUT_RECORDType:
     ControlKeyState: int = 0
 
 KEYMAP_IDENT = {ch: PyINPUT_RECORDType(True, 0, chr(ch)) for ch in range(128)}
+
+KEYMAP_UTF8_SEQ = {
+    start_byte: {
+        cont_byte: PyINPUT_RECORDType(True, 0, bytes([start_byte, cont_byte]).decode('utf-8'), 0)
+        for cont_byte in range(0x80, 0xC0)
+    } for start_byte in range(0xC2, 0xE0)
+}
+
 KEYMAP_NAVI = {
     0x44: PyINPUT_RECORDType(True, 37, chr(0), 0),  # Left arrow
     0x43: PyINPUT_RECORDType(True, 39, chr(0), 0),  # Right arrow
@@ -127,6 +135,7 @@ KEYMAP_NAVI = {
 
 KEYMAP = {
     **KEYMAP_IDENT,
+    **KEYMAP_UTF8_SEQ,
     0x00: PyINPUT_RECORDType(True, 32, chr(0), LEFT_CTRL_PRESSED),  # Ctrl-Space
     0x04: PyINPUT_RECORDType(True, 0, chr(0x04), LEFT_CTRL_PRESSED),  # Ctrl-D
     0x7F: PyINPUT_RECORDType(True, 0, chr(8), 0),  # Backspace
