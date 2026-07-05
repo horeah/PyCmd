@@ -413,12 +413,13 @@ class Behavior(_Settings):
             self.template = None
 
             # System prompt to be used in chat mode
-            self.system_prompt = 'Generate a shell command based on the user request.\n'
+            self.system_prompt = 'Translate the user request to a shell command.\n'
             if sys.platform == 'linux':
-                self.system_prompt += 'The command will be executed in a bash shell in Linux.\n'
+                self.system_prompt += 'The command is meant to be executed in a bash shell on Linux.\n'
             else:
-                self.system_prompt += 'The command will be executed in a Windows command prompt.\n'
-            self.system_prompt += 'Produce just the command text, without any markup or explanation.\n'
+                self.system_prompt += 'The command is meant to be executed in a Windows command prompt.\n'
+            self.system_prompt += 'You are just supposed to produce the command; don\'t attempt to execute it!\n'
+            self.system_prompt += 'Produce just the command, with all formatting and markdown stripped.\n'
 
     def __init__(self):
         # Skip splash message (welcome and bye).
