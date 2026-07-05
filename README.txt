@@ -100,8 +100,9 @@ experience to classic, ubiquitous shells.
 
  b. Download and install a wheel distribution from 
           https://github.com/horeah/PyCmd/releases
-    Then run `pip install Pycmd-<version>.whl` to install (this will also create
-    a starter script/executable). 
+    Then run `pip install pycmd_shell-<version>.whl` to install (this will also create
+    a starter script/executable). Use `pycmd_shell-<version>.whl[chat]` to bring in
+    additional dependencies useful for the AI ("chat") mode.
     
  c. Clone the repository and run/build directly with Python (>=3.10):
        (1) `pip install -r requirements.txt` to install dependencies

@@ -1,3 +1,13 @@
+ * Ctrl-Alt-I for AI-powered "chat" mode (disabled by default; requires 
+   configuration, see example-init.py)
+ * Wheel package for installing PyCmd with a package manager such as pip, 
+   uv, etc. (thanks @ufo)
+ * Fix AttributeError when using the -k flag (thanks @ufo)
+ * Fix zapping history entries (Ctrl-Alt-K) from line input
+ * Linux: handle 2-byte UTF8 sequences
+ * Linux: stability fixes
+
+Release 20251112
  * Ctrl-U to delete text to the beginning of the line
  * Busy indicator for slow completions
  * Improved completion ergonomics
